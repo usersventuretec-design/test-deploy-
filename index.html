@@ -864,11 +864,15 @@
       document.getElementById('dualSlipsWrapper').style.display = 'block';
     }
 
-    function createSlipHTMLTemplate(index, data) {
-      const fName = data.emp.name.split(' ')[0] || data.emp.name; 
-      const lName = data.emp.name.split(' ')[1] || '';
+   function createSlipHTMLTemplate(index, data) {
+      // ตรวจสอบความปลอดภัย: ถ้าไม่มีข้อมูลชื่อ หรือชื่อไม่เป็นข้อความ ให้กำหนดค่าเริ่มต้นเป็นความว่างเปล่า
+      const fullName = data && data.emp && data.emp.name ? String(data.emp.name).trim() : 'ไม่ระบุชื่อ';
+      
+      const fName = fullName.split(' ')[0] || fullName; 
+      const lName = fullName.split(' ')[1] || '';
+      
       return `
-        <div class="slip-box mb-6" id="slipBox_${index}" data-empid="${data.emp.id}" data-empname="${data.emp.name}" data-empemail="${data.emp.email || ''}">
+        <div class="slip-box mb-6" id="slipBox_${index}" data-empid="${data.emp.id || ''}" data-empname="${fullName}" data-empemail="${data.emp.email || ''}">
           <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; align-items: center;">
             <div style="display: flex; align-items: center; gap: 14px;">
               <strong style="font-size: 15px;">VENTURETEC MARKETING CO., LTD.</strong>
@@ -877,10 +881,10 @@
           </div>
           <div style="text-align: center; font-weight: 600; font-size: 16px; margin-bottom: 15px;">เอกสารแสดงรายได้ (Salary Slip)</div>
           <div class="slip-meta-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; font-size:12px; border-bottom:1px dashed #000; padding-bottom:10px;">
-            <div><b>Month:</b> ${data.month}</div>
+            <div><b>Month:</b> ${data.month || ''}</div>
             <div><b>Name:</b> ${fName} ${lName}</div>
-            <div><b>ID:</b> ${data.emp.id}</div>
-            <div><b>Dept:</b> ${data.emp.dept}</div>
+            <div><b>ID:</b> ${data.emp.id || ''}</div>
+            <div><b>Dept:</b> ${data.emp.dept || '-'}</div>
             <div><b>Bank A/C:</b> ${data.emp.bank_acc || '-'}</div>
             <div><b>Email:</b> ${data.emp.email || 'ไม่มีข้อมูล'}</div>
           </div>
@@ -895,14 +899,14 @@
             <tbody>
               <tr>
                 <td style="border:1px solid #000; padding:8px; vertical-align:top;">
-                  <div>Basic: <input type="number" class="slip-input e-calc_${index}" id="iBasic_${index}" value="${data.emp.salary}" oninput="recalculateIndividualTotals(${index})"></div>
-                  <div>Overtime: <input type="number" class="slip-input e-calc_${index}" id="iOvertime_${index}" value="${data.attendance.overtime}" oninput="recalculateIndividualTotals(${index})"></div>
+                  <div>Basic: <input type="number" class="slip-input e-calc_${index}" id="iBasic_${index}" value="${data.emp.salary || 0}" oninput="recalculateIndividualTotals(${index})"></div>
+                  <div>Overtime: <input type="number" class="slip-input e-calc_${index}" id="iOvertime_${index}" value="${data.attendance.overtime || 0}" oninput="recalculateIndividualTotals(${index})"></div>
                 </td>
                 <td style="border:1px solid #000; padding:8px; vertical-align:top;"><div>Other claims: 0</div></td>
                 <td style="border:1px solid #000; padding:8px; vertical-align:top;">
-                  <div>Social Sec: <input type="number" class="slip-input d-calc_${index}" id="iSocial_${index}" value="${data.attendance.social}" oninput="recalculateIndividualTotals(${index})"></div>
-                  <div>Late/NoWork: <input type="number" class="slip-input d-calc_${index}" id="iNoWork_${index}" value="${data.attendance.noWork}" oninput="recalculateIndividualTotals(${index})"></div>
-                  <div>Others: <input type="number" class="slip-input d-calc_${index}" id="iOtherDeduct_${index}" value="${data.attendance.othersDeduct}" oninput="recalculateIndividualTotals(${index})"></div>
+                  <div>Social Sec: <input type="number" class="slip-input d-calc_${index}" id="iSocial_${index}" value="${data.attendance.social || 0}" oninput="recalculateIndividualTotals(${index})"></div>
+                  <div>Late/NoWork: <input type="number" class="slip-input d-calc_${index}" id="iNoWork_${index}" value="${data.attendance.noWork || 0}" oninput="recalculateIndividualTotals(${index})"></div>
+                  <div>Others: <input type="number" class="slip-input d-calc_${index}" id="iOtherDeduct_${index}" value="${data.attendance.othersDeduct || 0}" oninput="recalculateIndividualTotals(${index})"></div>
                 </td>
               </tr>
               <tr style="font-weight:bold;">
