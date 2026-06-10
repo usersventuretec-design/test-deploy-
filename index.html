@@ -240,7 +240,6 @@
           <div class="grid-form">
               <div class="input-wrapper"><label>รหัสพนักงาน:</label><input type="text" id="empId" placeholder="เช่น 22"></div>
               <div class="input-wrapper"><label>ชื่อ-นามสกุล:</label><input type="text" id="empName" placeholder="ชื่อ นามสกุล"></div>
-              <div class="input-wrapper"><label>อีเมลพนักงาน (สำหรับส่งสลิป):</label><input type="email" id="empEmail" placeholder="employee@venturetec.co.th"></div>
               <div class="input-wrapper"><label>แผนก:</label><input type="text" id="empDept" placeholder="เช่น SALES, LGT, ACC"></div>
               <div class="input-wrapper"><label>ตำแหน่ง:</label><input type="text" id="empPosition" placeholder="เช่น PC ประจำห้าง"></div>
               <div class="input-wrapper"><label>เงินเดือน (บาท):</label><input type="number" id="empSalary" placeholder="30000"></div>
@@ -256,7 +255,7 @@
       <div class="card-ui overflow-auto">
           <h3><i class="fa-solid fa-list-check"></i> รายชื่อพนักงานปัจจุบัน</h3>
           <table class="data-table" id="empTable">
-              <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>อีเมล</th><th>แผนก/ตำแหน่ง</th><th>ประเภท</th><th>สาขาที่ดูแล</th><th>ฐานเงินเดือน</th><th>จัดการ</th></tr></thead>
+              <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>แผนก/ตำแหน่ง</th><th>ประเภท</th><th>สาขาที่ดูแล</th><th>ฐานเงินเดือน</th><th>จัดการ</th></tr></thead>
               <tbody id="empTableBody"></tbody>
           </table>
       </div>
@@ -315,7 +314,6 @@
 
       <div id="dualSlipsWrapper" style="display: none; margin-top: 20px;">
           <div class="control-panel-row" style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 15px;">
-              <button class="btn-ui" style="background-color: #f43f5e;" onclick="sendSalarySlipEmail()"><i class="fa-solid fa-paper-plane"></i> ส่งเมลสลิปเงินเดือนให้พนักงาน</button>
               <button class="btn-ui" style="background-color: #4b5563;" onclick="window.print()"><i class="fa-solid fa-print"></i> พิมพ์สลิปลง A4</button>
               <button class="btn-ui" style="background-color: var(--success);" onclick="saveDualSlipsFinal()"><i class="fa-solid fa-circle-check"></i> บันทึกยอดรายบุคคลลงสรุปบัญชี</button>
           </div>
@@ -425,7 +423,7 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
-        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, is_sales, assigned_branch, email');
+        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, is_sales, assigned_branch');
         if (empErr) throw empErr;
 
         const empMetaMap = {};
@@ -700,7 +698,6 @@
             tbody.innerHTML += `<tr>
               <td><strong>${e.id}</strong></td>
               <td>${e.name}</td>
-              <td class="text-slate-500">${e.email || '-'}</td>
               <td><span class="text-blue-600 font-bold">${e.dept}</span> / ${e.position}</td>
               <td>${e.is_sales?'<span class="text-blue-700 font-bold">ทีมเซลล์</span>':'พนักงานทั่วไป'}</td><td>${e.assigned_branch || '-'}</td>
               <td>${Number(e.salary).toLocaleString()} ฿</td>
@@ -714,7 +711,6 @@
     async function addNewEmployee() {
       const id = document.getElementById('empId').value.trim();
       const name = document.getElementById('empName').value.trim();
-      const email = document.getElementById('empEmail').value.trim();
       const dept = document.getElementById('empDept').value.trim();
       const position = document.getElementById('empPosition').value.trim();
       const salary = parseFloat(document.getElementById('empSalary').value) || 0;
@@ -728,7 +724,7 @@
       document.getElementById('empLoader').style.display = 'flex';
 
       try {
-        const { error } = await supabaseClient.from('employees').upsert([{ id, name, email, dept, position, salary, bank_acc, is_sales, assigned_branch, court_deduct, student_loan_deduct }]);
+        const { error } = await supabaseClient.from('employees').upsert([{ id, name, dept, position, salary, bank_acc, is_sales, assigned_branch, court_deduct, student_loan_deduct }]);
         if (error) throw error;
         alert('บันทึกข้อมูลพนักงานลง Supabase เรียบร้อย!');
         loadEmployeeList();
@@ -864,7 +860,7 @@
       const lName = fullName.split(' ')[1] || '';
       
       return `
-        <div class="slip-box" id="slipBox_${index}" data-empid="${data.emp.id || ''}" data-empname="${fullName}" data-empemail="${data.emp.email || ''}" style="background-color: white; border: 1px solid #000; padding: 25px 30px; color: #000; font-family: 'Prompt', sans-serif; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); max-width: 1000px; margin: 0 auto 25px auto;">
+        <div class="slip-box" id="slipBox_${index}" data-empid="${data.emp.id || ''}" data-empname="${fullName}" style="background-color: white; border: 1px solid #000; padding: 25px 30px; color: #000; font-family: 'Prompt', sans-serif; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); max-width: 1000px; margin: 0 auto 25px auto;">
           
           <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; align-items: center;">
             <div style="display: flex; align-items: center; gap: 14px;">
@@ -943,7 +939,6 @@
                 </td>
               </tr>
               
-              /* จ่ายเงินสุทธิ */
               <tr>
                 <td colspan="3" style="border: 1px solid #000; padding: 10px 12px; background: #fff;">
                   <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px;">
@@ -1114,41 +1109,6 @@
             alert('เกิดข้อผิดพลาดขณะส่งบันทึก: ' + err.message);
         } finally {
             document.getElementById('calcLoader').style.display = 'none';
-        }
-    }
-
-    function sendSalarySlipEmail() {
-        const slipBoxes = document.querySelectorAll('#slipsContainer .slip-box');
-        if(slipBoxes.length === 0) {
-            alert('ไม่พบเอกสารสลิปในหน้าต่างพรีวิว กรุณากดประมวลผลก่อนครับ');
-            return;
-        }
-
-        let sentEmailsList = [];
-        slipBoxes.forEach((box) => {
-            const empId = box.getAttribute('data-empid');
-            const empName = box.getAttribute('data-empname');
-            const empEmail = box.getAttribute('data-empemail');
-            
-            if(!empEmail || empEmail === '-') {
-                alert(`พนักงานรหัส [${empId}] ${empName} ยังไม่มีอีเมลในระบบฐานข้อมูล ไม่สามารถส่งได้ครับ`);
-                return;
-            }
-
-            const emailDataPayload = {
-                to: empEmail,
-                subject: `[Venturetec HR] สลิปเงินเดือนประจำงวดบัญชี ${document.getElementById('selectPayrollMonth1').value}`,
-                employee_id: empId,
-                employee_name: empName,
-                html_body: box.innerHTML
-            };
-
-            console.log("Sending email payroll secure payload:", emailDataPayload);
-            sentEmailsList.push(`${empName} (${empEmail})`);
-        });
-
-        if(sentEmailsList.length > 0) {
-            alert(`📨 ส่งสลิปเงินเดือนสำเร็จ!\nระบบได้ทำการจำลองส่งไฟล์เอกสารลับ (Confidential) ไปยังพนักงานแล้วดังนี้:\n${sentEmailsList.join('\n')}`);
         }
     }
 
