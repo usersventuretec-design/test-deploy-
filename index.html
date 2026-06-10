@@ -49,17 +49,10 @@
     .slip-outer-container { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 25px; }
     .slip-box { background-color: white; border: 1px solid #000; padding: 20px 30px; color: #000; font-family: 'Prompt', sans-serif; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
     .slip-header { display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding-bottom: 8px; margin-bottom: 12px; align-items: center; }
-    .slip-title { text-align: center; font-weight: 600; font-size: 16px; margin-bottom: 12px; }
     .slip-meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px; margin-bottom: 12px; border-bottom: 1px dashed #000; padding-bottom: 12px; }
-    .meta-cell { display: flex; gap: 5px; }
-    .meta-cell label { font-weight: 600; }
-    .meta-cell span { border-bottom: 1px dotted #888; flex: 1; padding-left: 5px; white-space: nowrap; overflow: hidden; }
     .slip-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12.5px; }
     .slip-table th { background: #f8fafc; border: 1px solid #000; padding: 6px; text-align: center; font-weight: 600; }
     .slip-table td { border: 1px solid #000; padding: 4px 8px; vertical-align: top; width: 33.33%; }
-    .row-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-    .slip-input { width: 80px; border: none; border-bottom: 1px dotted #ccc; text-align: right; font-family: inherit; font-size: 11.5px; color: #000; outline: none; padding: 1px; background: transparent; }
-    .slip-total-box { display: flex; justify-content: space-between; font-weight: 600; padding: 2px 0; }
     @media print {
         body { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; }
         .sidebar, .header-app, .card-ui, .btn-ui, .control-panel-row, .card-header { display: none !important; }
@@ -288,7 +281,7 @@
       </div>
     </div>
 
-    <!-- 💵 แท็บ 6: Payroll Slip Maker -->
+    <!-- 💵 แท็บ 6: General Payroll Slip Maker Module -->
     <div id="view-slip" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-calculator"></i> Option 1: Process Individual Salary Slips Preview (Select 1-2 Staffs)</h3>
@@ -338,7 +331,7 @@
       </div>
     </div>
 
-    <!-- 📊 แท็บ 7: Summary Report -->
+    <!-- 📊 แท็บ 7: Expense Summary Report -->
     <div id="view-report" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-sliders"></i> Filter Criteria & Parameters Configuration</h3>
@@ -352,7 +345,7 @@
           </div>
           <div class="grid-form" id="filterAreaIndividual" style="display: none;">
               <div class="input-wrapper"><label>Target Employee Name:</label><select id="filterReportEmployee" onchange="filterPayrollReportData()"><option value="">-- Choose Employee Profile --</option></select></div>
-              <div class="input-wrapper"><label>Month Period:</label><select id="filterReportEmployeeMonth" onchange="filterPayrollReportData()"><option value="ALL" selected>-- Full Calendar Year Statement --</option></select></div>
+              <div class="input-wrapper"><label>Month Period:</label><select id="filterReportEmployeeMonth" onchange="filterPayrollReportData()"><option value="ALL" selected>-- Show Full Calendar Year --</option></select></div>
           </div>
       </div>
       <div class="card-ui overflow-auto">
@@ -442,7 +435,8 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
-        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch, dept, joined_date, resigned_date');
+        // ⭐️ แก้ไขบั๊กจุดที่ 1: เพิ่มฟิลด์ 'bank_acc' เข้าไปในคำสั่งดึงข้อมูลสคริปต์หลักเพื่อให้มีข้อมูลติดมาลง General Cache
+        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch, dept, joined_date, resigned_date, bank_acc');
         if (empErr) throw empErr;
 
         const empMetaMap = {};
@@ -776,9 +770,9 @@
 
         localEmployeesCache.forEach(e => {
           const text = `[ID ${e.id}] ${e.name} (${e.dept})`;
-          if(d1) d1.innerHTML += `<option value="${e.id}">${text}</option>`;
-          if(d2) d2.innerHTML += `<option value="${e.id}">${text}</option>`;
-          if(dReport) dReport.innerHTML += `<option value="${e.id}">${text}</option>`;
+          if(d1) d1.innerHTML += `<option value="${e.id}">${text}</option>'; 
+          if(d2) d2.innerHTML += `<option value="${e.id}">${text}</option>';
+          if(dReport) dReport.innerHTML += `<option value="${e.id}">${text}</option>';
           if(e.is_sales && dKpiSalesSelect) dKpiSalesSelect.innerHTML += `<option value="${e.id}">${e.name}</option>`;
 
           if(tbody) {
@@ -936,7 +930,7 @@
         try {
             const { error } = await supabaseClient.from('employees').update({ resigned_date: selectedDate }).eq('id', empId);
             if (error) throw error;
-            alert(`🎉 บันทึกการพ้นสภาพพนักงานของคุณ ${empName} ลงระบบคลาวด์เสร็จสมบูรณ์!`);
+            alert("🎉 Record committed successfully!");
             renderTurnoverViewOperations(); loadEmployeeList();
         } catch (err) { alert('เกิดข้อผิดพลาด: ' + err.message); }
     }
@@ -1065,9 +1059,10 @@
     }
 
    function createSlipHTMLTemplate(index, data) {
-      const fullName = data && data.emp && data.emp.name ? String(data.emp.name).trim() : 'Unassigned';
-      const fName = fullName.split(' ')[0] || fullName; 
-      const lName = fullName.split(' ')[1] || '';
+      const fullName = data && data.emp && data.emp.name ? String(data.emp.name).trim().replace(/\s+/g, ' ') : 'Unassigned';
+      const nameParts = fullName.split(' ');
+      const fName = nameParts[0] || fullName; 
+      const lName = nameParts.slice(1).join(' ') || '-'; 
       
       return `
         <div class="slip-box" id="slipBox_${index}" data-empid="${data.emp.id || ''}" data-empname="${fullName}" style="background-color: white; border: 1px solid #000; padding: 25px 30px; color: #000; font-family: 'Prompt', sans-serif; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); max-width: 1000px; margin: 0 auto 25px auto;">
@@ -1095,12 +1090,11 @@
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Pay Slip in:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.month || ''}</span></div>
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Name:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${fName}</span></div>
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Surname:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${lName}</span></div>
-            
-            <!-- ⭐️ แก้ไขบั๊กจุดนี้: ดึงค่า data.emp.joined_date มาแสดงผลช่อง Start date แทนเครื่องหมายขีดขวางแบบเก่าเรียบร้อยครับ -->
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Start date:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.joined_date || '-'}</span></div>
-            
             <div style="display: flex; gap: 5px; grid-column: span 2;"><label style="font-weight: 600;">Positions:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.position || 'Staff'}</span></div>
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Department:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.dept || '-'}</span></div>
+            
+            <!-- ⭐️ แก้ไขบั๊กจุดที่ 2: ดึงค่าเลขบัญชีธนาคารจริง (${data.emp.bank_acc}) จากคลาวด์ลงสลิป A4 เรียบร้อยแล้วครับ -->
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Bank a/c no.:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.bank_acc || '-'}</span></div>
           </div>
           
