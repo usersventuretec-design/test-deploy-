@@ -46,7 +46,20 @@
     .loading { display: none; color: #2563eb; font-size: 14px; align-items: center; gap: 8px; margin-top: 10px; }
     .loading i { animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .slip-outer-container { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 25px; }
     .slip-box { background-color: white; border: 1px solid #000; padding: 20px 30px; color: #000; font-family: 'Prompt', sans-serif; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .slip-header { display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding-bottom: 8px; margin-bottom: 12px; align-items: center; }
+    .slip-title { text-align: center; font-weight: 600; font-size: 16px; margin-bottom: 12px; }
+    .slip-meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px; margin-bottom: 12px; border-bottom: 1px dashed #000; padding-bottom: 12px; }
+    .meta-cell { display: flex; gap: 5px; }
+    .meta-cell label { font-weight: 600; }
+    .meta-cell span { border-bottom: 1px dotted #888; flex: 1; padding-left: 5px; white-space: nowrap; overflow: hidden; }
+    .slip-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12.5px; }
+    .slip-table th { background: #f8fafc; border: 1px solid #000; padding: 6px; text-align: center; font-weight: 600; }
+    .slip-table td { border: 1px solid #000; padding: 4px 8px; vertical-align: top; width: 33.33%; }
+    .row-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .slip-input { width: 80px; border: none; border-bottom: 1px dotted #ccc; text-align: right; font-family: inherit; font-size: 11.5px; color: #000; outline: none; padding: 1px; background: transparent; }
+    .slip-total-box { display: flex; justify-content: space-between; font-weight: 600; padding: 2px 0; }
     @media print {
         body { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; }
         .sidebar, .header-app, .card-ui, .btn-ui, .control-panel-row, .card-header { display: none !important; }
@@ -195,9 +208,7 @@
                     <input type="number" id="kpiActualInput" placeholder="e.g. 272000" min="0">
                 </div>
             </div>
-            <div class="flex gap-2">
-                <button class="btn-ui" style="background-color: #d97706;" onclick="saveSalesRecordToSupabase()"><i class="fa-solid fa-cloud-arrow-up"></i> Sync Sales Records to Cloud Project</button>
-            </div>
+            <button class="btn-ui" style="background-color: #d97706;" onclick="saveSalesRecordToSupabase()"><i class="fa-solid fa-cloud-arrow-up"></i> Sync Sales Records to Cloud Project</button>
             <div class="loading" id="kpiLoader"><i class="fa-solid fa-circle-notch"></i> Syncing financial metrics with database server...</div>
         </div>
 
@@ -214,7 +225,7 @@
         </div>
     </div>
 
-    <!-- 👥 แท็บ 3: ฐานข้อมูลพนักงาน (ลบช่องวันที่ลาออกออกตามบรีฟชัวร์กว่า) -->
+    <!-- 👥 แท็บ 3: Employee Database -->
     <div id="view-employee" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-users-gear"></i> Corporate Employee Profile Management Form</h3>
@@ -243,17 +254,13 @@
       </div>
     </div>
 
-    <!-- 🚨 ใหม่! แท็บ 4: รายงานพนักงานเข้าออกเเละอัตราการลาออก (Employee Turnover Analytics) -->
+    <!-- 🚨 แท็บ 4: Employee Turnover Analytics -->
     <div id="view-turnover" class="tab-view">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6" id="turnover-kpi-container">
-          <!-- จะถูกเรนเดอร์ยอดสรุปเปอร์เซ็นต์ด้วย JS -->
-      </div>
-
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6" id="turnover-kpi-container"></div>
       <div class="card-ui">
           <h3><i class="fa-solid fa-chart-bar text-rose-600"></i> Turnover Rate Summary Chart By Divisions</h3>
           <div class="relative w-full" style="height: 280px;"><canvas id="turnoverChart"></canvas></div>
       </div>
-
       <div class="card-ui overflow-auto">
           <h3><i class="fa-solid fa-clipboard-user text-blue-800"></i> Corporate Workforce Lifecycle Ledger & Resignation Process</h3>
           <table class="data-table w-full">
@@ -269,7 +276,7 @@
       </div>
     </div>
 
-    <!-- 📑 แท็บ 5: นำเข้าเวลาสแกนนิ้ว -->
+    <!-- 📑 แท็บ 5: Attendance Logs (Fingerprint) -->
     <div id="view-scan" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-fingerprint"></i> Raw Working Attendance Records Box (Log Data Input)</h3>
@@ -281,7 +288,7 @@
       </div>
     </div>
 
-    <!-- 💵 แท็บ 6: ทำสลิปเงินเดือน -->
+    <!-- 💵 แท็บ 6: Payroll Slip Maker -->
     <div id="view-slip" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-calculator"></i> Option 1: Process Individual Salary Slips Preview (Select 1-2 Staffs)</h3>
@@ -331,7 +338,7 @@
       </div>
     </div>
 
-    <!-- 📊 แท็บ 7: สรุปรายงานรายจ่าย -->
+    <!-- 📊 แท็บ 7: Expense Summary Report -->
     <div id="view-report" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-sliders"></i> Filter Criteria & Parameters Configuration</h3>
@@ -414,7 +421,7 @@
       
       if(tabId === 'view-report') loadPayrollReport();
       if(tabId === 'view-ceo-setting') loadCompanyKPIHistoryList();
-      if(tabId === 'view-turnover') renderTurnoverViewOperations(); // โหลดหน้าวิเคราะห์อัตราลาออก
+      if(tabId === 'view-turnover') renderTurnoverViewOperations();
     }
 
     const normalize = (str) => String(str).replace(/\s+/g, ' ').trim().toLowerCase();
@@ -481,8 +488,8 @@
 
         const payrollGrowth = (((tTotalPayrollAllDept - cTotalPayrollAllDept) / cTotalPayrollAllDept) * 100).toFixed(1);
 
-        const currentMonthSalesRows = salesRecords.filter(s => s.month_period === currentTargetVal);
-        const prevMonthSalesRows = salesRecords.filter(s => s.month_period === currentCompareVal);
+        const currentMonthSalesRows = salesRecords.filter(s => s.branch_name === currentTargetVal);
+        const prevMonthSalesRows = salesRecords.filter(s => s.branch_name === currentCompareVal);
 
         const actualSalesRevenue = currentMonthSalesRows.length > 0 ? currentMonthSalesRows.reduce((sum, s) => sum + Number(s.actual_sales), 0) : (tSalesPayroll * 7.2);
         const prevSalesRevenue = prevMonthSalesRows.length > 0 ? prevMonthSalesRows.reduce((sum, s) => sum + Number(s.actual_sales), 0) : (cSalesPayroll * 7.0);
@@ -779,8 +786,7 @@
               <td><strong>${e.id}</strong></td>
               <td>${e.name}</td>
               <td><span class="text-blue-600 font-bold">${e.dept}</span> / ${e.position}</td>
-              <td>${e.is_sales?'<span class="text-blue-700 font-bold">Sales (PC)</span>':'General Staff'}</td>
-              <td>${e.assigned_branch || '-'}</td>
+              <td>${e.is_sales?'<span class="text-blue-700 font-bold">Sales (PC)</span>':'General Staff'}</td><td>${e.assigned_branch || '-'}</td>
               <td>${e.joined_date || '-'}</td>
               <td>${Number(e.salary).toLocaleString()} ฿</td>
               <td><button class="text-red-600" onclick="triggerDeleteEmp('${e.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
@@ -815,9 +821,7 @@
       } catch (err) { alert('Error: ' + err.message); } finally { document.getElementById('empLoader').style.display = 'none'; }
     }
 
-    // ==========================================
-    // 🚨 ใหม่! ระบบจัดการแถวพนักงานเข้าออกเเละคำนวณอัตราลาออก (Turnover View Operations)
-    // ==========================================
+    // 🚨 ฟังก์ชันแสดงผลเมนูอัตราลาออก และMarkพนักงานลาออกรายบุคคล
     async function renderTurnoverViewOperations() {
         const kpiContainer = document.getElementById('turnover-kpi-container');
         const ledgerBody = document.getElementById('turnoverLedgerTableBody');
@@ -826,7 +830,6 @@
         kpiContainer.innerHTML = '<div class="card-ui p-4 text-center animate-pulse text-blue-500 col-span-4"><i class="fa fa-spinner fa-spin mr-1"></i>Syncing workforce logs...</div>';
         
         try {
-            // 1. ดึงสถิติพนักงานเรียลไทม์ทั้งหมดมาคำนวณสัดส่วน
             const { data: staffs, error } = await supabaseClient.from('employees').select('*').order('id', {ascending: true});
             if (error) throw error;
             localEmployeesCache = staffs || [];
@@ -837,7 +840,6 @@
             const totalActive = totalRegistered - totalResigned;
             const turnoverPercent = totalRegistered > 0 ? ((totalResigned / totalRegistered) * 100).toFixed(1) : "0.0";
 
-            // เรนเดอร์การ์ดสรุปตัวเลขด้านบนเมนูลาออก
             kpiContainer.innerHTML = `
               <div class="card-ui p-4 flex flex-col items-center border-t-4 border-rose-500"><p class="text-xs text-slate-500 font-bold mb-1">Company Turnover Rate</p><h2 class="text-2xl font-black text-rose-600">${turnoverPercent}%</h2><p class="text-xs text-slate-400 mt-1">Lifecycle accumulated metric</p></div>
               <div class="card-ui p-4 flex flex-col items-center border-t-4 border-blue-500"><p class="text-xs text-slate-500 font-bold mb-1">Total Registered Profiles</p><h2 class="text-2xl font-black text-slate-800">${totalRegistered} PPL</h2><p class="text-xs text-slate-400 mt-1">Workforce size registry</p></div>
@@ -845,10 +847,7 @@
               <div class="card-ui p-4 flex flex-col items-center border-t-4 border-slate-500"><p class="text-xs text-slate-500 font-bold mb-1">Accumulated Resigned</p><h2 class="text-2xl font-black text-slate-700">${totalResigned} PPL</h2><p class="text-xs text-slate-400 mt-1">Total staff turnover count</p></div>
             `;
 
-            // 2. วาดตารางบัญชีรายชื่อ และ เพิ่มปุ่มกดลาออก (Mark as Resigned Button)
             ledgerBody.innerHTML = '';
-            
-            // ตัวแปรสะสมผลรวมท้ายตาราง
             let activeSum = 0;
             let resignedSum = 0;
 
@@ -881,7 +880,6 @@
                 `;
             });
 
-            // เพิ่มแถวผลรวมแสดงยอดสรุปท้ายตารางพนักงานเข้าออก
             if (staffs.length > 0) {
                 ledgerBody.innerHTML += `
                     <tr class="total-row bg-slate-100 font-bold border-t border-slate-300">
@@ -894,7 +892,6 @@
                 `;
             }
 
-            // 3. วาดอัปเดตกราฟ Turnover Rate แบบแท่งแยกตามแผนก (SALES, LGT, ACC, HR)
             const targetDepts = ['SALES', 'LGT', 'ACC', 'HR'];
             const departmentTurnoverRates = targetDepts.map(dCode => {
                 const dStaffs = staffs.filter(s => String(s.dept).toUpperCase() === dCode);
@@ -925,12 +922,10 @@
         } catch (err) { alert('Turnover sync failure: ' + err.message); }
     }
 
-    // ฟังก์ชันสั่งอัปเดตบันทึกวันลาออกรายบุคคลเมื่อคลิกปุ่ม (Action Execution)
     async function processStaffResignationPrompt(empId, empName) {
         const selectedDate = prompt(`กรุณาระบุ "วันที่ลาออก" ของคุณ ${empName} (รูปแบบ: YYYY-MM-DD เช่น 2026-06-15):`);
-        if (!selectedDate) return; // กดยกเลิก
+        if (!selectedDate) return; 
         
-        // ตรวจสอบ Regex วันที่เบื้องต้นเพื่อความปลอดภัย
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
         if (!dateRegex.test(selectedDate)) {
             alert("รูปแบบวันที่ไม่ถูกต้อง! กรุณากรอกในรูปแบบ YYYY-MM-DD เท่านั้นครับ");
@@ -1175,6 +1170,16 @@
           
         </div>
       `;
+    }
+
+    // ⭐️ เพิ่มฟังก์ชันบวกตัวเลขคำนวณสลิปรายบุคคลที่หายไปกลับคืนให้เรียบร้อยแล้วครับ
+    function recalculateIndividualTotals(index) {
+      let e = 0; let d = 0;
+      document.querySelectorAll(`.e-calc_${index}`).forEach(i => { e += (parseFloat(i.value) || 0); });
+      document.querySelectorAll(`.d-calc_${index}`).forEach(i => { d += (parseFloat(i.value) || 0); });
+      document.getElementById(`txtTotalEarnings_${index}`).textContent = e.toLocaleString(undefined, {minimumFractionDigits: 2});
+      document.getElementById(`txtTotalDeductions_${index}`).textContent = d.toLocaleString(undefined, {minimumFractionDigits: 2});
+      document.getElementById(`txtNetAmount_${index}`).textContent = (e - d).toLocaleString(undefined, {minimumFractionDigits: 2});
     }
 
     async function loadPayrollReport() {
