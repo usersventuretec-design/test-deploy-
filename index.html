@@ -338,7 +338,7 @@
       </div>
     </div>
 
-    <!-- 📊 แท็บ 7: Expense Summary Report -->
+    <!-- 📊 แท็บ 7: Summary Report -->
     <div id="view-report" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-sliders"></i> Filter Criteria & Parameters Configuration</h3>
@@ -821,7 +821,6 @@
       } catch (err) { alert('Error: ' + err.message); } finally { document.getElementById('empLoader').style.display = 'none'; }
     }
 
-    // 🚨 ฟังก์ชันแสดงผลเมนูอัตราลาออก และMarkพนักงานลาออกรายบุคคล
     async function renderTurnoverViewOperations() {
         const kpiContainer = document.getElementById('turnover-kpi-container');
         const ledgerBody = document.getElementById('turnoverLedgerTableBody');
@@ -1096,7 +1095,10 @@
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Pay Slip in:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.month || ''}</span></div>
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Name:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${fName}</span></div>
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Surname:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${lName}</span></div>
-            <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Start date:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">-</span></div>
+            
+            <!-- ⭐️ แก้ไขบั๊กจุดนี้: ดึงค่า data.emp.joined_date มาแสดงผลช่อง Start date แทนเครื่องหมายขีดขวางแบบเก่าเรียบร้อยครับ -->
+            <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Start date:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.joined_date || '-'}</span></div>
+            
             <div style="display: flex; gap: 5px; grid-column: span 2;"><label style="font-weight: 600;">Positions:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.position || 'Staff'}</span></div>
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Department:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.dept || '-'}</span></div>
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Bank a/c no.:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.bank_acc || '-'}</span></div>
@@ -1172,7 +1174,6 @@
       `;
     }
 
-    // ⭐️ เพิ่มฟังก์ชันบวกตัวเลขคำนวณสลิปรายบุคคลที่หายไปกลับคืนให้เรียบร้อยแล้วครับ
     function recalculateIndividualTotals(index) {
       let e = 0; let d = 0;
       document.querySelectorAll(`.e-calc_${index}`).forEach(i => { e += (parseFloat(i.value) || 0); });
