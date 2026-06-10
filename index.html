@@ -256,7 +256,7 @@
       <div class="card-ui overflow-auto">
           <h3><i class="fa-solid fa-list-check"></i> รายชื่อพนักงานปัจจุบัน</h3>
           <table class="data-table" id="empTable">
-              <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>แผนก/ตำแหน่ง</th><th>ประเภท</th><th>สาขาที่ดูแล</th><th>ฐานเงินเดือน</th><th>จัดการ</th></tr></thead>
+              <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>อีเมล</th><th>แผนก/ตำแหน่ง</th><th>ประเภท</th><th>สาขาที่ดูแล</th><th>ฐานเงินเดือน</th><th>จัดการ</th></tr></thead>
               <tbody id="empTableBody"></tbody>
           </table>
       </div>
@@ -361,7 +361,7 @@
     let loadedSlipsData = [];
     let localEmployeesCache = [];
     let cachedTargetSalesRows = [];
-    let bulkProcessedPayloads = []; // เก็บชุดข้อมูลของทุกคนรอยิงขึ้น Supabase ทั้งหมด
+    let bulkProcessedPayloads = []; 
 
     window.onload = function() { 
       generateDynamicMonths(); 
@@ -369,9 +369,6 @@
       loadEmployeeList();    
     };
 
-    // ==========================================
-    // 🗓️ ฟังก์ชันสร้าง Dropdown เดือน/ปี อัตโนมัติ
-    // ==========================================
     function generateDynamicMonths() {
         const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const currentDate = new Date();
@@ -415,7 +412,6 @@
     function getArrow(val) { return parseFloat(val) >= 0 ? '<i class="fa fa-arrow-up text-green-500"></i>' : '<i class="fa fa-arrow-down text-red-500"></i>'; }
     function getColor(val) { return parseFloat(val) >= 0 ? 'text-green-500' : 'text-red-500'; }
 
-    // --- 2. ส่วนดึงข้อมูลเพื่อประมวลผลแดชบอร์ดหลัก (CEO Dashboard) ---
     async function loadDashboardData() {
       if(!document.getElementById('error-container')) return;
       document.getElementById('error-container').innerHTML = '';
@@ -429,7 +425,7 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
-        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, is_sales, assigned_branch');
+        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, is_sales, assigned_branch, email');
         if (empErr) throw empErr;
 
         const empMetaMap = {};
@@ -628,7 +624,6 @@
       } catch (e) { console.error(e); }
     }
 
-    // --- 4. ส่วนฟังก์ชันกรอกบันทึกข้อมูลเป้าหมายรายห้างรายเซลล์ (CEO Settings) ---
     async function saveSalesRecordToSupabase() {
         const month_period = document.getElementById('kpiPeriodMonth').value;
         const salesperson_id = document.getElementById('kpiSalespersonSelect').value;
@@ -675,7 +670,6 @@
         document.getElementById('kpiBranchInput').value = matchEmp ? (matchEmp.assigned_branch || 'ไม่ระบุห้าง') : '';
     }
 
-    // --- 5. ส่วนระบบฐานข้อมูลพนักงาน ---
     async function loadEmployeeList() {
       try {
         const { data: employees, error } = await supabaseClient.from('employees').select('*').order('id', { ascending: true });
@@ -704,7 +698,9 @@
 
           if(tbody) {
             tbody.innerHTML += `<tr>
-              <td><strong>${e.id}</strong></td><td>${e.name}</td>
+              <td><strong>${e.id}</strong></td>
+              <td>${e.name}</td>
+              <td class="text-slate-500">${e.email || '-'}</td>
               <td><span class="text-blue-600 font-bold">${e.dept}</span> / ${e.position}</td>
               <td>${e.is_sales?'<span class="text-blue-700 font-bold">ทีมเซลล์</span>':'พนักงานทั่วไป'}</td><td>${e.assigned_branch || '-'}</td>
               <td>${Number(e.salary).toLocaleString()} ฿</td>
@@ -739,7 +735,6 @@
       } catch (err) { alert('ผิดพลาด: ' + err.message); } finally { document.getElementById('empLoader').style.display = 'none'; }
     }
 
-    // --- 6. ระบบนำเข้า Log และคำนวณประวัติเวลา ---
     async function importLogs() {
       const rawText = document.getElementById('rawFingerprintText').value.trim();
       if(!rawText) { alert('กรุณาวางข้อความดิบประวัติการสแกนนิ้วมือก่อนครับ'); return; }
@@ -811,7 +806,6 @@
       } catch (err) { alert('เกิดข้อผิดพลาด: ' + err.message); } finally { document.getElementById('scanLoader').style.display = 'none'; }
     }
 
-    // --- 7. ส่วนงานประมวลผลสลิปเงินเดือน A4 ---
     async function loadDualEmployeesSlips() {
       const id1 = document.getElementById('selectEmployeeSlip1').value; 
       const id2 = document.getElementById('selectEmployeeSlip2').value; 
@@ -865,7 +859,6 @@
     }
 
    function createSlipHTMLTemplate(index, data) {
-      // ตรวจสอบความปลอดภัย: ป้องกันบั๊ก 'split' หากในฐานข้อมูลไม่ได้กรอกชื่อ-นามสกุลมา
       const fullName = data && data.emp && data.emp.name ? String(data.emp.name).trim() : 'ไม่ระบุชื่อ';
       const fName = fullName.split(' ')[0] || fullName; 
       const lName = fullName.split(' ')[1] || '';
@@ -950,6 +943,7 @@
                 </td>
               </tr>
               
+              /* จ่ายเงินสุทธิ */
               <tr>
                 <td colspan="3" style="border: 1px solid #000; padding: 10px 12px; background: #fff;">
                   <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px;">
@@ -1011,9 +1005,6 @@
       } catch (err) { alert(err.message); }
     }
 
-    // ==========================================
-    // 📊 ใหม่! ระบบประมวลผลพนักงานทุกคนพร้อมกันทั้งเดือน (Bulk Monthly Process)
-    // ==========================================
     async function processAllEmployeesBulk() {
         const selectedMonth = document.getElementById('selectBulkPayrollMonth').value;
         document.getElementById('calcLoader').style.display = 'flex';
@@ -1021,16 +1012,13 @@
         bulkProcessedPayloads = [];
 
         try {
-            // 1. โหลดพนักงานทั้งหมดจากระบบปัจจุบันมาเก็บไว้ก่อน
             const { data: allEmployees, error: empErr } = await supabaseClient.from('employees').select('*');
             if (empErr) throw empErr;
             if (!allEmployees || allEmployees.length === 0) { alert('ไม่พบข้อมูลพนักงานในระบบ'); return; }
 
-            // 2. ดึง Log เวลาทั้งหมดในเดือนนี้มาจัดกลุ่มคำนวณทีเดียว
             const { data: logs, error: logErr } = await supabaseClient.from('attendance_logs').select('*').eq('payroll_period', selectedMonth);
             if (logErr) throw logErr;
 
-            // จัดกลุ่ม Log ตาม Employee ID
             const logMap = {};
             if(logs) {
                 logs.forEach(l => {
@@ -1044,7 +1032,6 @@
             tbody.innerHTML = '';
             document.getElementById('lblBulkMonthText').textContent = selectedMonth;
 
-            // 3. วนลูปคำนวณสรุปของทุกคน
             allEmployees.forEach(emp => {
                 const empLogs = logMap[emp.id] || { late: 0, ot: 0 };
                 const salary = Number(emp.salary || 0);
@@ -1059,7 +1046,6 @@
                 const totalDeductions = socialSecurity + noWorkNoPay + othersDeduct;
                 const netAmount = totalIncome - totalDeductions;
 
-                // ผลักข้อมูลเข้า Payload ชุดใหญ่เตรียมส่งคลาวด์
                 bulkProcessedPayloads.push({
                     payroll_month: selectedMonth,
                     employee_id: emp.id,
@@ -1076,7 +1062,6 @@
                     dept: emp.dept || '-'
                 });
 
-                // แสดงข้อมูลบนตารางพรีวิวหน้า UI
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-slate-50">
                         <td><b>${emp.id}</b></td>
@@ -1112,7 +1097,6 @@
         try {
             let successCount = 0;
             for (const payload of bulkProcessedPayloads) {
-                // ค้นหาว่ามีข้อมูลเก่าอยู่แล้วไหม ถ้ามีให้ทำการเขียนทับ (Upsert Logic ด้วยการลบ/อัปเดตแบบแม่นยำ)
                 const { data: existingRow } = await supabaseClient.from('monthly_payroll_summary')
                     .select('id').eq('payroll_month', payload.payroll_month).eq('employee_id', payload.employee_id).maybeSingle();
 
@@ -1133,9 +1117,6 @@
         }
     }
 
-    // ==========================================
-    // 📨 ใหม่! ฟังก์ชันจำลองการส่งสลิปเงินเดือนทาง Email รายบุคคล
-    // ==========================================
     function sendSalarySlipEmail() {
         const slipBoxes = document.querySelectorAll('#slipsContainer .slip-box');
         if(slipBoxes.length === 0) {
@@ -1149,12 +1130,11 @@
             const empName = box.getAttribute('data-empname');
             const empEmail = box.getAttribute('data-empemail');
             
-            if(!empEmail) {
+            if(!empEmail || empEmail === '-') {
                 alert(`พนักงานรหัส [${empId}] ${empName} ยังไม่มีอีเมลในระบบฐานข้อมูล ไม่สามารถส่งได้ครับ`);
                 return;
             }
 
-            // ในหน้างานจริง โครงสร้าง Payload นี้จะถูกยิง POST ไปยัง API Backend เช่น Webhook (Google Apps Script), SendGrid, หรือ Email Service
             const emailDataPayload = {
                 to: empEmail,
                 subject: `[Venturetec HR] สลิปเงินเดือนประจำงวดบัญชี ${document.getElementById('selectPayrollMonth1').value}`,
@@ -1172,7 +1152,6 @@
         }
     }
 
-    // --- 8. ส่วนจัดแจงรายงานรายจ่ายรายปี (Report View) ---
     async function loadPayrollReport() {
         try {
           const { data } = await supabaseClient.from('monthly_payroll_summary').select('*');
@@ -1184,6 +1163,7 @@
           populateReportDropdowns(cachedReportData); filterPayrollReportData();
         } catch (err) { console.error(err); }
     }
+    
     function populateReportDropdowns(data) {
         const months = [...new Set(data.map(item => String(item.month).trim()))];
         const dropdownOverview = document.getElementById('filterReportMonth');
@@ -1191,12 +1171,14 @@
         dropdownOverview.innerHTML = '<option value="ALL">-- แสดงทุกเดือน --</option>';
         months.forEach(m => { dropdownOverview.innerHTML += `<option value="${m}">${m}</option>`; });
     }
+    
     function toggleReportFilterMode() {
       const mode = document.querySelector('input[name="reportMode"]:checked').value;
       document.getElementById('filterAreaOverview').style.display = mode === 'OVERVIEW' ? 'grid' : 'none';
       document.getElementById('filterAreaIndividual').style.display = mode === 'INDIVIDUAL' ? 'grid' : 'none';
       filterPayrollReportData(); 
     }
+    
     function filterPayrollReportData() {
       const mode = document.querySelector('input[name="reportMode"]:checked').value;
       const tbody = document.getElementById('reportTableBody'); if(!tbody) return;
