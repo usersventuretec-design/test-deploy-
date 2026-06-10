@@ -161,8 +161,8 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 transition-opacity duration-300" id="sales-kpi-result">
           <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">ห้าง/สาขาที่ดูแล (Branch)</p><h4 id="lbl-sales-branch" class="text-lg font-bold text-slate-800">-</h4></div>
           <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">ยอดขายเดือนนี้ (Actual)</p><h4 id="lbl-sales-actual" class="text-lg font-bold text-slate-800">0 ฿</h4></div>
-          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">เทียบงวดเปรียบเทียบ (MoM Growth)</p><h4 id="lbl-sales-mom" class="text-lg font-black text-slate-800">0%</h4></div>
-          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">KPI Achievement / ประเมินเกรด</p><h4 id="lbl-sales-kpi" class="text-lg font-black text-slate-800">0% <span id="lbl-sales-grade" class="text-sm">(-)</span></h4></div>
+          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">เทียบงวดเปรียบเทียบ (MoM Growth)</p><h4 id="lbl-s-mom" class="text-lg font-black text-slate-800">0%</h4></div>
+          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">KPI Achievement / ประเมินเกรด</p><h4 id="lbl-s-kpi" class="text-lg font-black text-slate-800">0% <span id="lbl-s-grade" class="text-sm">(-)</span></h4></div>
         </div>
       </div>
 
@@ -181,9 +181,9 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div class="card-ui flex flex-col items-center"><h3 class="card-header text-sm font-bold text-slate-600 mb-4">SALES DEPT HEADCOUNT</h3><div class="relative w-full flex justify-center mt-4" style="height: 200px;"><canvas id="headcountChart"></canvas></div></div>
+        <div class="card-ui flex flex-col items-center"><h3 class="card-header text-sm font-bold text-slate-600 mb-4">S DEPT HEADCOUNT</h3><div class="relative w-full flex justify-center mt-4" style="height: 200px;"><canvas id="headcountChart"></canvas></div></div>
         <div class="card-ui lg:col-span-2 overflow-auto"><h3 class="card-header text-sm font-bold text-slate-600 mb-4">MALL / BRANCH PERFORMANCE</h3>
-          <table class="data-table" id="branchTable"><thead><tr><th>ห้าง / สาขาที่ดูแล</th><th>ยอดขายห้างนั้น (Sales)</th><th>จำนวนเซลหน้าห้าง</th><th>ค่าแรงทีมเซลรวม</th><th>สัดส่วนค่าแรงต่อยอดขาย (%)</th><th>เกรดประเมินสาขา</th></tr></thead><tbody></tbody></table>
+          <table class="data-table" id="branchTable"><thead><tr><th>ห้าง / สาขาที่ดูแล</th><th>ยอดขายห้างนั้น (s)</th><th>จำนวนเซลหน้าห้าง</th><th>ค่าแรงทีมเซลรวม</th><th>สัดส่วนค่าแรงต่อยอดขาย (%)</th><th>เกรดประเมินสาขา</th></tr></thead><tbody></tbody></table>
         </div>
       </div>
     </div>
@@ -198,7 +198,7 @@
                 </div>
                 <div class="input-wrapper">
                     <label>เลือกชื่อพนักงานขาย:</label>
-                    <select id="kpiSalespersonSelect" onchange="autoFillBranchFromCache()">
+                    <select id="kpispersonSelect" onchange="autoFillBranchFromCache()">
                         <option value="">-- กำลังดึงรายชื่อเซลล์ --</option>
                     </select>
                 </div>
@@ -330,7 +330,7 @@
           </div>
           <div class="grid-form" id="filterAreaOverview">
               <div class="input-wrapper"><label>เลือกงวดประจำเดือน:</label><select id="filterReportMonth" onchange="filterPayrollReportData()"><option value="ALL">-- แสดงทุกเดือน --</option></select></div>
-              <div class="input-wrapper"><label>แผนก:</label><select id="filterReportDept" onchange="filterPayrollReportData()"><option value="ALL">-- แสดงทุกแผนก --</option><option value="SALES">SALES</option><option value="LGT">LGT</option><option value="ACC">ACC</option><option value="HR">HR</option></select></div>
+              <div class="input-wrapper"><label>แผนก:</label><select id="filterReportDept" onchange="filterPayrollReportData()"><option value="ALL">-- แสดงทุกแผนก --</option><option value="MDT">MDT</option><option value="HRC">HRC</option><option value="HR">HR</option><option value="MKT">MKT</option><option value="BSU">BSU</option><option value="EXP">EXP</option><option value="LGT">LGT</option><option value="ACC">ACC</option><option value="HR">HR</option></select></div>
           </div>
           <div class="grid-form" id="filterAreaIndividual" style="display: none;">
               <div class="input-wrapper"><label>ชื่อพนักงาน:</label><select id="filterReportEmployee" onchange="filterPayrollReportData()"><option value="">-- เลือก --</option></select></div>
