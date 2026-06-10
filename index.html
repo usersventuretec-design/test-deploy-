@@ -49,10 +49,17 @@
     .slip-outer-container { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 25px; }
     .slip-box { background-color: white; border: 1px solid #000; padding: 20px 30px; color: #000; font-family: 'Prompt', sans-serif; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
     .slip-header { display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding-bottom: 8px; margin-bottom: 12px; align-items: center; }
+    .slip-title { text-align: center; font-weight: 600; font-size: 16px; margin-bottom: 12px; }
     .slip-meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px; margin-bottom: 12px; border-bottom: 1px dashed #000; padding-bottom: 12px; }
+    .meta-cell { display: flex; gap: 5px; }
+    .meta-cell label { font-weight: 600; }
+    .meta-cell span { border-bottom: 1px dotted #888; flex: 1; padding-left: 5px; white-space: nowrap; overflow: hidden; }
     .slip-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12.5px; }
     .slip-table th { background: #f8fafc; border: 1px solid #000; padding: 6px; text-align: center; font-weight: 600; }
     .slip-table td { border: 1px solid #000; padding: 4px 8px; vertical-align: top; width: 33.33%; }
+    .row-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .slip-input { width: 80px; border: none; border-bottom: 1px dotted #ccc; text-align: right; font-family: inherit; font-size: 11.5px; color: #000; outline: none; padding: 1px; background: transparent; }
+    .slip-total-box { display: flex; justify-content: space-between; font-weight: 600; padding: 2px 0; }
     @media print {
         body { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; }
         .sidebar, .header-app, .card-ui, .btn-ui, .control-panel-row, .card-header { display: none !important; }
@@ -113,7 +120,6 @@
       </div>
     </div>
 
-    <!-- 📊 แท็บ 1: CEO Dashboard -->
     <div id="view-summary" class="tab-view active">
       <div id="error-container"></div>
       
@@ -171,7 +177,6 @@
       </div>
     </div>
 
-    <!-- ⚙️ แท็บ 2: Executive Settings -->
     <div id="view-ceo-setting" class="tab-view">
         <div class="card-ui">
             <h3><i class="fa-solid fa-sliders text-amber-500"></i> Executive Sales Target & Budgeting Input Form</h3>
@@ -218,7 +223,6 @@
         </div>
     </div>
 
-    <!-- 👥 แท็บ 3: Employee Database -->
     <div id="view-employee" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-users-gear"></i> Corporate Employee Profile Management Form</h3>
@@ -247,7 +251,6 @@
       </div>
     </div>
 
-    <!-- 🚨 แท็บ 4: Employee Turnover Analytics -->
     <div id="view-turnover" class="tab-view">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6" id="turnover-kpi-container"></div>
       <div class="card-ui">
@@ -269,7 +272,6 @@
       </div>
     </div>
 
-    <!-- 📑 แท็บ 5: Attendance Logs (Fingerprint) -->
     <div id="view-scan" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-fingerprint"></i> Raw Working Attendance Records Box (Log Data Input)</h3>
@@ -281,7 +283,6 @@
       </div>
     </div>
 
-    <!-- 💵 แท็บ 6: General Payroll Slip Maker Module -->
     <div id="view-slip" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-calculator"></i> Option 1: Process Individual Salary Slips Preview (Select 1-2 Staffs)</h3>
@@ -331,7 +332,6 @@
       </div>
     </div>
 
-    <!-- 📊 แท็บ 7: Expense Summary Report -->
     <div id="view-report" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-sliders"></i> Filter Criteria & Parameters Configuration</h3>
@@ -435,8 +435,7 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
-        // ⭐️ แก้ไขบั๊กจุดที่ 1: เพิ่มฟิลด์ 'bank_acc' เข้าไปในคำสั่งดึงข้อมูลสคริปต์หลักเพื่อให้มีข้อมูลติดมาลง General Cache
-        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch, dept, joined_date, resigned_date, bank_acc');
+        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch, dept, joined_date, resigned_date');
         if (empErr) throw empErr;
 
         const empMetaMap = {};
@@ -770,9 +769,9 @@
 
         localEmployeesCache.forEach(e => {
           const text = `[ID ${e.id}] ${e.name} (${e.dept})`;
-          if(d1) d1.innerHTML += `<option value="${e.id}">${text}</option>'; 
-          if(d2) d2.innerHTML += `<option value="${e.id}">${text}</option>';
-          if(dReport) dReport.innerHTML += `<option value="${e.id}">${text}</option>';
+          if(d1) d1.innerHTML += `<option value="${e.id}">${text}</option>`;
+          if(d2) d2.innerHTML += `<option value="${e.id}">${text}</option>`;
+          if(dReport) dReport.innerHTML += `<option value="${e.id}">${text}</option>`;
           if(e.is_sales && dKpiSalesSelect) dKpiSalesSelect.innerHTML += `<option value="${e.id}">${e.name}</option>`;
 
           if(tbody) {
@@ -1058,8 +1057,11 @@
       document.getElementById('dualSlipsWrapper').style.display = 'block';
     }
 
+   // ⭐️ ตารางทำสลิป: อัปเกรดระบบจัดระเบียบ Regex ชื่อ-นามสกุล และดึงวันเริ่มงาน Joined Date ผูกสำเร็จแล้วครับ
    function createSlipHTMLTemplate(index, data) {
       const fullName = data && data.emp && data.emp.name ? String(data.emp.name).trim().replace(/\s+/g, ' ') : 'Unassigned';
+      
+      // แยกส่วนคำด้วย Regex ป้องกันบั๊กนามสกุลหายเพราะช่องว่างเว้นวรรคยาวเกิน
       const nameParts = fullName.split(' ');
       const fName = nameParts[0] || fullName; 
       const lName = nameParts.slice(1).join(' ') || '-'; 
@@ -1093,8 +1095,6 @@
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Start date:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.joined_date || '-'}</span></div>
             <div style="display: flex; gap: 5px; grid-column: span 2;"><label style="font-weight: 600;">Positions:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.position || 'Staff'}</span></div>
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Department:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.dept || '-'}</span></div>
-            
-            <!-- ⭐️ แก้ไขบั๊กจุดที่ 2: ดึงค่าเลขบัญชีธนาคารจริง (${data.emp.bank_acc}) จากคลาวด์ลงสลิป A4 เรียบร้อยแล้วครับ -->
             <div style="display: flex; gap: 5px;"><label style="font-weight: 600;">Bank a/c no.:</label><span style="border-bottom: 1px dotted #000; flex: 1; padding-left: 5px;">${data.emp.bank_acc || '-'}</span></div>
           </div>
           
@@ -1175,6 +1175,176 @@
       document.getElementById(`txtTotalEarnings_${index}`).textContent = e.toLocaleString(undefined, {minimumFractionDigits: 2});
       document.getElementById(`txtTotalDeductions_${index}`).textContent = d.toLocaleString(undefined, {minimumFractionDigits: 2});
       document.getElementById(`txtNetAmount_${index}`).textContent = (e - d).toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+
+    async function saveDualSlipsFinal() {
+      const selectedMonth = document.getElementById('selectPayrollMonth1').value;
+      try {
+        for (let index = 0; index < loadedSlipsData.length; index++) {
+          const data = loadedSlipsData[index];
+          let e = 0; let d = 0;
+          document.querySelectorAll(`.e-calc_${index}`).forEach(i => e += (parseFloat(i.value)||0));
+          document.querySelectorAll(`.d-calc_${index}`).forEach(i => d += (parseFloat(i.value)||0));
+
+          const payload = {
+            payroll_month: selectedMonth, employee_id: data.emp.id, name: data.emp.name, position: data.emp.position || '-',
+            basic_salary: parseFloat(document.getElementById(`iBasic_${index}`).value)||0,
+            ot_earnings: parseFloat(document.getElementById(`iOvertime_${index}`).value)||0,
+            social_security: parseFloat(document.getElementById(`iSocial_${index}`).value)||0,
+            no_work_no_pay: parseFloat(document.getElementById(`iNoWork_${index}`).value)||0,
+            others_deduct: parseFloat(document.getElementById(`iOtherDeduct_${index}`).value)||0,
+            total_earnings: e, total_deductions: d, net_amount: e - d, dept: data.emp.dept || '-'
+          };
+
+          const { data: existingRow } = await supabaseClient.from('monthly_payroll_summary').select('id').eq('payroll_month', selectedMonth).eq('employee_id', data.emp.id).maybeSingle();
+          if (existingRow) {
+            await supabaseClient.from('monthly_payroll_summary').update(payload).eq('id', existingRow.id);
+          } else {
+            await supabaseClient.from('monthly_payroll_summary').insert([payload]);
+          }
+        }
+        alert('🎉 Financial statement saved successfully.'); loadDashboardData();
+      } catch (err) { alert(err.message); }
+    }
+
+    async function processAllEmployeesBulk() {
+        const selectedMonth = document.getElementById('selectBulkPayrollMonth').value;
+        document.getElementById('calcLoader').style.display = 'flex';
+        document.getElementById('bulkPreviewSection').style.display = 'none';
+        bulkProcessedPayloads = [];
+
+        try {
+            const { data: allEmployees, error: empErr } = await supabaseClient.from('employees').select('*');
+            if (empErr) throw empErr;
+            if (!allEmployees || allEmployees.length === 0) { alert('No active employee profiles registered.'); return; }
+
+            const { data: logs, error: logErr } = await supabaseClient.from('attendance_logs').select('*').eq('payroll_period', selectedMonth);
+            if (logErr) throw logErr;
+
+            const logMap = {};
+            if(logs) {
+                logs.forEach(l => {
+                    if(!logMap[l.employee_id]) logMap[l.employee_id] = { late: 0, ot: 0 };
+                    logMap[l.employee_id].late += Number(l.late_minutes || 0);
+                    logMap[l.employee_id].ot += Number(l.ot_minutes || 0);
+                });
+            }
+
+            const tbody = document.getElementById('bulkPreviewTableBody');
+            tbody.innerHTML = '';
+            document.getElementById('lblBulkMonthText').textContent = selectedMonth;
+
+            let totalBulkSalary = 0;
+            let totalBulkOT = 0;
+            let totalBulkNoWork = 0;
+            let totalBulkSocial = 0;
+            let totalBulkOthers = 0;
+            let totalBulkNet = 0;
+
+            allEmployees.forEach(emp => {
+                const empLogs = logMap[emp.id] || { late: 0, ot: 0 };
+                const salary = Number(emp.salary || 0);
+                const minuteRate = ((salary / 30) / 8) / 60;
+
+                const noWorkNoPay = Math.round((empLogs.late * minuteRate) * 100) / 100;
+                const overtimeEarnings = Math.round((empLogs.ot * minuteRate * 1.5) * 100) / 100;
+                const socialSecurity = Math.min(750, Math.round((salary * 0.05) * 100) / 100);
+                const othersDeduct = Number(emp.court_deduct || 0) + Number(emp.student_loan_deduct || 0);
+
+                const totalIncome = salary + overtimeEarnings;
+                const totalDeductions = socialSecurity + noWorkNoPay + othersDeduct;
+                const netAmount = totalIncome - totalDeductions;
+
+                totalBulkSalary += salary;
+                totalBulkOT += overtimeEarnings;
+                totalBulkNoWork += noWorkNoPay;
+                totalBulkSocial += socialSecurity;
+                totalBulkOthers += othersDeduct;
+                totalBulkNet += netAmount;
+
+                bulkProcessedPayloads.push({
+                    payroll_month: selectedMonth,
+                    employee_id: emp.id,
+                    name: emp.name,
+                    position: emp.position || '-',
+                    basic_salary: salary,
+                    ot_earnings: overtimeEarnings,
+                    social_security: socialSecurity,
+                    no_work_no_pay: noWorkNoPay,
+                    others_deduct: othersDeduct,
+                    total_earnings: totalIncome,
+                    total_deductions: totalDeductions,
+                    net_amount: netAmount,
+                    dept: emp.dept || '-'
+                });
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td><b>${emp.id}</b></td>
+                        <td>${emp.name}</td>
+                        <td>฿${salary.toLocaleString()}</td>
+                        <td class="text-blue-600">฿${overtimeEarnings.toLocaleString()}</td>
+                        <td class="text-red-500">฿${noWorkNoPay.toLocaleString()}</td>
+                        <td>฿${socialSecurity.toLocaleString()}</td>
+                        <td>฿${othersDeduct.toLocaleString()}</td>
+                        <td class="font-bold text-slate-900">฿${netAmount.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            if (allEmployees.length > 0) {
+                tbody.innerHTML += `
+                    <tr class="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 sticky bottom-0 shadow-md">
+                        <td colspan="2" class="p-3 text-center text-slate-700 font-bold">Total:</td>
+                        <td class="p-3">฿${totalBulkSalary.toLocaleString()}</td>
+                        <td class="p-3 text-blue-600">฿${totalBulkOT.toLocaleString()}</td>
+                        <td class="p-3 text-red-500">฿${totalBulkNoWork.toLocaleString()}</td>
+                        <td class="p-3">฿${totalBulkSocial.toLocaleString()}</td>
+                        <td class="p-3">฿${totalBulkOthers.toLocaleString()}</td>
+                        <td class="p-3 font-extrabold text-blue-900">฿${totalBulkNet.toLocaleString()}</td>
+                    </tr>
+                `;
+            }
+
+            document.getElementById('bulkPreviewSection').style.display = 'block';
+        } catch (err) {
+            alert('Bulk process failed execution: ' + err.message);
+        } finally {
+            document.getElementById('calcLoader').style.display = 'none';
+        }
+    }
+
+    function clearBulkSection() {
+        bulkProcessedPayloads = [];
+        document.getElementById('bulkPreviewSection').style.display = 'none';
+    }
+
+    async function saveBulkSlipsFinal() {
+        if(bulkProcessedPayloads.length === 0) return;
+        if(!confirm(`⚠️ Are you sure you want to lock and commit payroll ledgers for total ${bulkProcessedPayloads.length} employees onto cloud project server?`)) return;
+
+        document.getElementById('calcLoader').style.display = 'flex';
+        try {
+            let successCount = 0;
+            for (const payload of bulkProcessedPayloads) {
+                const { data: existingRow } = await supabaseClient.from('monthly_payroll_summary')
+                    .select('id').eq('payroll_month', payload.payroll_month).eq('employee_id', payload.employee_id).maybeSingle();
+
+                if (existingRow) {
+                    await supabaseClient.from('monthly_payroll_summary').update(payload).eq('id', existingRow.id);
+                } else {
+                    await supabaseClient.from('monthly_payroll_summary').insert([payload]);
+                }
+                successCount++;
+            }
+            alert(`🎉 Accounting period locked successfully! Committed total ${successCount} payroll ledgers to cloud server.`);
+            clearBulkSection();
+            loadDashboardData();
+        } catch (err) {
+            alert('Committed failure execution error: ' + err.message);
+        } finally {
+            document.getElementById('calcLoader').style.display = 'none';
+        }
     }
 
     async function loadPayrollReport() {
