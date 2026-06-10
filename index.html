@@ -143,6 +143,14 @@
         </div>
       </div>
 
+      <!-- ⭐️ ใหม่! เซกชันวิเคราะห์อัตราการลาออกแยกตามแผนก (Turnover Late Analytics Chart Block) -->
+      <div class="grid grid-cols-1 gap-6 mb-6">
+        <div class="card-ui">
+          <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa-solid fa-user-slash text-rose-600"></i> ORGANIZATION TURNOVER RATE ANALYTICS (BY DIVISION)</h3>
+          <div class="relative w-full" style="height: 260px;"><canvas id="turnoverChart"></canvas></div>
+        </div>
+      </div>
+
       <div class="card-ui mb-6">
         <div class="flex justify-between items-center mb-4 border-b pb-3">
           <h3 class="text-sm font-bold text-slate-700 m-0"><i class="fa-solid fa-user-tie text-blue-600"></i> SALESPERSON PERFORMANCE KPI (Individual)</h3>
@@ -252,10 +260,12 @@
           <div class="grid-form">
               <div class="input-wrapper"><label>Employee ID:</label><input type="text" id="empId" placeholder="e.g. 22"></div>
               <div class="input-wrapper"><label>Full Name:</label><input type="text" id="empName" placeholder="Firstname Lastname"></div>
-              <div class="input-wrapper"><label>Department Code:</label><input type="text" id="empDept" placeholder="e.g. SALES, LGT, ACC"></div>
+              <div class="input-wrapper"><label>Department Code:</label><input type="text" id="empDept" placeholder="e.g. SALES, LGT, ACC, HR"></div>
               <div class="input-wrapper"><label>Job Position:</label><input type="text" id="empPosition" placeholder="e.g. PC Store Agent"></div>
               <div class="input-wrapper"><label>Basic Salary (THB):</label><input type="number" id="empSalary" placeholder="30000"></div>
               <div class="input-wrapper"><label>Bank Account Number:</label><input type="text" id="empBank" placeholder="34534535434"></div>
+              <div class="input-wrapper"><label>Joined Date (วันเข้าทำงาน):</label><input type="date" id="empJoinedDate"></div>
+              <div class="input-wrapper"><label>Resigned Date (วันลาออก - ถ้ามี):</label><input type="date" id="empResignedDate"></div>
               <div class="input-wrapper flex flex-row items-center gap-2 pt-6"><input type="checkbox" id="empIsSales" class="w-5 h-5 cursor-pointer"><label for="empIsSales" class="text-sm font-bold text-blue-700 cursor-pointer">Set as Sales Team Member (PC)</label></div>
               <div class="input-wrapper"><label>Assigned Branch / Mall (For Sales only):</label><input type="text" id="empBranch" placeholder="e.g. Siam Paragon"></div>
               <div class="input-wrapper" style="border: 1px dashed #f43f5e; padding: 8px; border-radius: 6px;"><label style="color:#dc2626;"><i class="fa-solid fa-gavel"></i> Court Legal Deduction:</label><input type="number" id="empCourt" value="0"></div>
@@ -267,7 +277,7 @@
       <div class="card-ui overflow-auto">
           <h3><i class="fa-solid fa-list-check"></i> Current Active Employees Roster</h3>
           <table class="data-table" id="empTable">
-              <thead><tr><th>ID</th><th>Employee Name</th><th>Dept / Position</th><th>Staff Type</th><th>Assigned Branch</th><th>Basic Salary</th><th>Action</th></tr></thead>
+              <thead><tr><th>ID</th><th>Employee Name</th><th>Dept / Position</th><th>Staff Type</th><th>Assigned Branch</th><th>Working Dates</th><th>Basic Salary</th><th>Action</th></tr></thead>
               <tbody id="empTableBody"></tbody>
           </table>
       </div>
@@ -435,7 +445,8 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
-        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch');
+        // ⭐️ เรียกดึงข้อมูลฟิลด์วันที่เริ่มงานและลาออกสะสมมาจากหลังบ้าน Supabase
+        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch, dept, joined_date, resigned_date');
         if (empErr) throw empErr;
 
         const empMetaMap = {};
@@ -470,9 +481,13 @@
         const tSalesHeadcount = targetRowsSales.length;
         const tSalesPayroll = targetRowsSales.reduce((sum, r) => sum + (Number(r.net_amount) || 0), 0);
 
-        // ⭐️ คำนวณจำนวนพนักงานฝั่ง Office Staff (พนักงานทั่วไปที่ไม่ได้เปิด checkbox เป็นพนักงานทีมเซลล์)
         const tTotalHeadcount = targetRowsAll.length;
         const tOfficeHeadcount = tTotalHeadcount - tSalesHeadcount;
+
+        // ⭐️ Logic คำนวณอัตราการลาออก (Turnover Rate) ภาพรวมทั้งบริษัท
+        const resignedTotalCount = rawEmployees.filter(e => e.resigned_date && e.resigned_date !== '').length;
+        const baseTotalStaffs = rawEmployees.length || 1;
+        const companyTurnoverRatePercent = ((resignedTotalCount / baseTotalStaffs) * 100).toFixed(1);
 
         const cSalesHeadcount = compareRowsSales.length || 1;
         const cSalesPayroll = compareRowsSales.reduce((sum, r) => sum + (Number(r.net_amount) || 0), 0) || 1;
@@ -496,13 +511,13 @@
 
         const vsText = `<span class="text-[10px] text-slate-400 font-normal ml-1">vs ${currentCompareVal}</span>`;
 
-        // ⭐️ แก้ไขกล่องการ์ดที่ 1 (Company Headcount) ให้แสดงผลแยกประเภท Sales และ Office Staff ตามรูปเรียบร้อยครับ
+        // แสดงผลกล่องแดชบอร์ดพร้อมระบุค่าอัตราการลาออกสะสมรวมขององค์กร (Turnover Rate Block)
         document.getElementById('kpi-container').innerHTML = `
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-blue-500"><p class="text-xs text-slate-500 font-bold mb-1">Company Headcount (Total)</p><h2 class="text-2xl font-black text-slate-800">${tTotalHeadcount} PPL</h2><p class="text-xs text-slate-400 mt-1">PC Sales: ${tSalesHeadcount} PPL \| Office: ${tOfficeHeadcount} PPL</p></div>
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-green-500"><p class="text-xs text-slate-500 font-bold mb-1">Total All Payroll Cost</p><h2 class="text-2xl font-black text-slate-800">${formatM(tTotalPayrollAllDept)}</h2><p class="text-sm ${getColor(payrollGrowth)} mt-1">${payrollGrowth}% ${getArrow(payrollGrowth)} ${vsText}</p></div>
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-purple-500"><p class="text-xs text-slate-500 font-bold mb-1">All Payroll % to Sales</p><h2 class="text-2xl font-black text-slate-800">${payRatioVal}%</h2><p class="text-sm ${getColor(payRatioDiff)} mt-1">${Math.abs(payRatioDiff)}% ${getArrow(payRatioDiff)} ${vsText}</p></div>
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-orange-500"><p class="text-xs text-slate-500 font-bold mb-1">Total Mall Revenue</p><h2 class="text-2xl font-black text-slate-800">${formatM(actualSalesRevenue)}</h2><p class="text-sm ${getColor(salesGrowth)} mt-1">${salesGrowth}% ${getArrow(salesGrowth)} ${vsText}</p></div>
-          <div class="card-ui p-4 flex flex-col items-center border-t-4 border-emerald-500"><p class="text-xs text-slate-500 font-bold mb-1">Net Operating Operation Profit</p><h2 class="text-2xl font-black text-slate-800">${formatM(grossProfit - tTotalPayrollAllDept)}</h2><p class="text-xs text-slate-400 mt-1">Accrued GP 35%: ${formatM(grossProfit)}</p></div>
+          <div class="card-ui p-4 flex flex-col items-center border-t-4 border-rose-500"><p class="text-xs text-slate-500 font-bold mb-1">Turnover Rate (รวม)</p><h2 class="text-2xl font-black text-rose-600">${companyTurnoverRatePercent}%</h2><p class="text-xs text-slate-400 mt-1">Total Resigned: ${resignedTotalCount} PPL</p></div>
         `;
 
         const branchGroup = {};
@@ -514,9 +529,38 @@
           branchGroup[bName].payrollCost += Number(r.net_amount);
         });
 
+        // ⭐️ คำนวณสัดส่วน Turnover Rate แยกแต่ละแผนก เพื่อวาดลงกราฟแท่ง (SALES, LGT, ACC, HR)
+        const targetDepartments = ['SALES', 'LGT', 'ACC', 'HR'];
+        const departmentTurnoverRates = targetDepartments.map(dept => {
+            const deptStaffs = rawEmployees.filter(e => String(e.dept).toUpperCase() === dept);
+            const deptResigned = deptStaffs.filter(e => e.resigned_date && e.resigned_date !== '').length;
+            const rate = deptStaffs.length > 0 ? ((deptResigned / deptStaffs.length) * 100).toFixed(1) : 0;
+            return parseFloat(rate);
+        });
+
         charts.payroll = new Chart(document.getElementById('payrollTrendChart'), { type: 'bar', data: { labels: [currentCompareVal, currentTargetVal], datasets: [{ label: 'Total Company Revenue', data: [prevSalesRevenue, actualSalesRevenue], backgroundColor: '#1e3a8a' }, { label: 'All Dept Payroll Cost', data: [cTotalPayrollAllDept, tTotalPayrollAllDept], backgroundColor: '#dc2626' }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.sales = new Chart(document.getElementById('salesPayrollChart'), { type: 'line', data: { labels: [currentCompareVal, currentTargetVal], datasets: [{ label: 'Gross Profit Line (35%)', data: [prevSalesRevenue * 0.35, grossProfit], borderColor: '#16a34a', tension: 0.2 }, { label: 'Total Payroll Expenses', data: [cTotalPayrollAllDept, tTotalPayrollAllDept], borderColor: '#2563eb', tension: 0.2 }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.donut = new Chart(document.getElementById('headcountChart'), { type: 'doughnut', data: { labels: Object.keys(branchGroup).length > 0 ? Object.keys(branchGroup) : ['No Data'], datasets: [{ data: Object.keys(branchGroup).length > 0 ? Object.values(branchGroup).map(b => b.headcount) : [0], backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#06b6d4'], cutout: '70%' }] }, options: { responsive: true, maintainAspectRatio: false } });
+        
+        // ⭐️ วาดกราฟแท่งอันใหม่แสดงอัตราการลาออกเปรียบเทียบแต่ละแผนก (Turnover Bar Chart Render)
+        charts.turnover = new Chart(document.getElementById('turnoverChart'), { 
+            type: 'bar', 
+            data: { 
+                labels: targetDepartments, 
+                datasets: [{ 
+                    label: 'Turnover Rate (%) By Division', 
+                    data: departmentTurnoverRates, 
+                    backgroundColor: ['#f43f5e', '#fb923c', '#38bdf8', '#a78bfa'],
+                    borderWidth: 1,
+                    borderRadius: 4
+                }] 
+            }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Percentage (%)' } } }
+            } 
+        });
 
         const chronologicalPeriods = Array.from(periodsSet).sort((a, b) => new Date(a) - new Date(b));
         const revenueDataTimeline = [];
@@ -776,12 +820,18 @@
           if(dReport) dReport.innerHTML += `<option value="${e.id}">${text}</option>`;
           if(e.is_sales && dKpiSalesSelect) dKpiSalesSelect.innerHTML += `<option value="${e.id}">${e.name}</option>`;
 
+          // จัดรูปแบบข้อความแสดงวันที่เริ่มงาน และ วันที่ลาออกบนตารางพนักงาน
+          const joinTxt = e.joined_date ? e.joined_date : '-';
+          const resignTxt = e.resigned_date ? `<span class="text-red-600 font-semibold">${e.resigned_date}</span>` : '<span class="text-green-600 font-medium">Active</span>';
+
           if(tbody) {
             tbody.innerHTML += `<tr>
               <td><strong>${e.id}</strong></td>
               <td>${e.name}</td>
               <td><span class="text-blue-600 font-bold">${e.dept}</span> / ${e.position}</td>
-              <td>${e.is_sales?'<span class="text-blue-700 font-bold">Sales (PC)</span>':'General Staff'}</td><td>${e.assigned_branch || '-'}</td>
+              <td>${e.is_sales?'<span class="text-blue-700 font-bold">Sales (PC)</span>':'General Staff'}</td>
+              <td>${e.assigned_branch || '-'}</td>
+              <td class="text-xs text-slate-600">In: ${joinTxt}<br>Out: ${resignTxt}</td>
               <td>${Number(e.salary).toLocaleString()} ฿</td>
               <td><button class="text-red-600" onclick="triggerDeleteEmp('${e.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
             </tr>`;
@@ -797,6 +847,11 @@
       const position = document.getElementById('empPosition').value.trim();
       const salary = parseFloat(document.getElementById('empSalary').value) || 0;
       const bank_acc = document.getElementById('empBank').value.trim();
+      
+      // ⭐️ ดึงข้อมูลค่าวันที่จากฟอร์มเพื่อส่งเข้าโครงสร้างตารางข้อมูลหลังบ้าน
+      const joined_date = document.getElementById('empJoinedDate').value || null;
+      const resigned_date = document.getElementById('empResignedDate').value || null;
+
       const is_sales = document.getElementById('empIsSales').checked;
       const assigned_branch = document.getElementById('empBranch').value.trim();
       const court_deduct = parseFloat(document.getElementById('empCourt').value) || 0;
@@ -806,7 +861,7 @@
       document.getElementById('empLoader').style.display = 'flex';
 
       try {
-        const { error } = await supabaseClient.from('employees').upsert([{ id, name, dept, position, salary, bank_acc, is_sales, assigned_branch, court_deduct, student_loan_deduct }]);
+        const { error } = await supabaseClient.from('employees').upsert([{ id, name, dept, position, salary, bank_acc, is_sales, assigned_branch, court_deduct, student_loan_deduct, joined_date, resigned_date }]);
         if (error) throw error;
         alert('Employee schema updated successfully.');
         loadEmployeeList();
