@@ -11,8 +11,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-        --primary: #1e3a8a;
-        --primary-light: #2563eb;
+        --primary: #0f172a;
+        --primary-light: #1e293b;
+        --accent: #2563eb;
         --success: #16a34a;
         --danger: #dc2626;
         --border-color: #cbd5e1;
@@ -29,41 +30,26 @@
     .tab-view.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .card-ui { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); padding: 25px; margin-bottom: 25px;}
-    .card-ui h3 { font-size: 16px; margin-bottom: 20px; color: var(--primary); display: flex; align-items: center; gap: 8px; font-weight: 600;}
+    .card-ui h3 { font-size: 16px; margin-bottom: 20px; color: #1e3a8a; display: flex; align-items: center; gap: 8px; font-weight: 600;}
     .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
     .input-wrapper { display: flex; flex-direction: column; gap: 6px; }
     .input-wrapper label { font-size: 13px; font-weight: 500; color: var(--text-gray); }
     input, select, textarea { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px; outline: none; background: rgba(255, 255, 255, 0.9); color: #1e293b;}
     textarea { height: 120px; resize: none; font-family: monospace; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; background: rgba(255, 255, 255, 0.9); color: #1e293b; }
     input:focus, select:focus, textarea:focus { background: #ffffff; border-color: rgba(37, 99, 235, 0.6); box-shadow: 0 0 12px rgba(37, 99, 235, 0.15); }
-    .btn-ui { background-color: var(--primary); color: white; padding: 10px 24px; border: none; border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;}
-    .btn-ui:hover { background-color: var(--primary-light); }
+    .btn-ui { background-color: #1e3a8a; color: white; padding: 10px 24px; border: none; border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;}
+    .btn-ui:hover { background-color: #2563eb; }
     table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    table.data-table th { background-color: #f8fafc; padding: 12px; color: var(--primary); border-bottom: 2px solid var(--border-color); border-top: 1px solid var(--border-color); text-align: left; font-weight: bold;}
+    table.data-table th { background-color: #f8fafc; padding: 12px; color: #1e3a8a; border-bottom: 2px solid var(--border-color); border-top: 1px solid var(--border-color); text-align: left; font-weight: bold;}
     table.data-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
     table.data-table tr.total-row td { background-color: #e2e8f0; font-weight: 600; color: #0f172a; border-top: 2px solid #94a3b8; border-bottom: 2px double #94a3b8; }
-    .loading { display: none; color: var(--primary-light); font-size: 14px; align-items: center; gap: 8px; margin-top: 10px; }
+    .loading { display: none; color: #2563eb; font-size: 14px; align-items: center; gap: 8px; margin-top: 10px; }
     .loading i { animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .slip-outer-container { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 25px; }
     .slip-box { background-color: white; border: 1px solid #000; padding: 20px 30px; color: #000; font-family: 'Prompt', sans-serif; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-    .slip-header { display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding-bottom: 8px; margin-bottom: 12px; align-items: center; }
-    .company-brand { display: flex; align-items: center; gap: 12px; }
-    .company-logo { width: 45px; height: auto; object-fit: contain; }
-    .slip-title { text-align: center; font-weight: 600; font-size: 16px; margin-bottom: 12px; }
-    .slip-meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px; margin-bottom: 12px; border-bottom: 1px dashed #000; padding-bottom: 12px; }
-    .meta-cell { display: flex; gap: 5px; }
-    .meta-cell label { font-weight: 600; }
-    .meta-cell span { border-bottom: 1px dotted #888; flex: 1; padding-left: 5px; white-space: nowrap; overflow: hidden; }
-    .slip-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11.5px; }
-    .slip-table th { background: #f8fafc; border: 1px solid #000; padding: 6px; text-align: center; font-weight: 600; }
-    .slip-table td { border: 1px solid #000; padding: 4px 8px; vertical-align: top; width: 33.33%; }
-    .row-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-    .slip-input { width: 80px; border: none; border-bottom: 1px dotted #ccc; text-align: right; font-family: inherit; font-size: 11.5px; color: #000; outline: none; padding: 1px; background: transparent; }
-    .slip-total-box { display: flex; justify-content: space-between; font-weight: 600; padding: 2px 0; }
     @media print {
         body { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; }
-        .sidebar, .header-app, .card-ui, .btn-ui, .control-panel-row, .card-header, .slip-warning-text { display: none !important; }
+        .sidebar, .header-app, .card-ui, .btn-ui, .control-panel-row, .card-header { display: none !important; }
         body * { visibility: hidden; }
         .slip-outer-container, .slip-outer-container * { visibility: visible; }
         .slip-outer-container { position: absolute; left: 0; top: 0; width: 100%; max-width: 100% !important; display: flex !important; flex-direction: column !important; gap: 0 !important; padding: 0 !important; margin: 0 !important; }
@@ -82,6 +68,7 @@
       <div class="nav-item active" onclick="switchTab('view-summary', this)"><i class="fa-solid fa-chart-pie"></i> CEO Dashboard</div>
       <div class="nav-item" onclick="switchTab('view-ceo-setting', this)"><i class="fa-solid fa-sliders text-amber-500"></i> Executive & KPI Setup</div>
       <div class="nav-item" onclick="switchTab('view-employee', this)"><i class="fa-solid fa-users-gear"></i> Employee Database</div>
+      <div class="nav-item" onclick="switchTab('view-turnover', this)"><i class="fa-solid fa-user-slash text-rose-500"></i> Employee Turnover Analytics</div>
       <div class="nav-item" onclick="switchTab('view-scan', this)"><i class="fa-solid fa-fingerprint"></i> Attendance Logs (Fingerprint)</div>
       <div class="nav-item" onclick="switchTab('view-slip', this)"><i class="fa-solid fa-file-invoice-dollar"></i> Payroll Slip Maker</div>
       <div class="nav-item" onclick="switchTab('view-report', this)"><i class="fa-solid fa-table-list"></i> Expense Summary Report</div>
@@ -120,6 +107,7 @@
       </div>
     </div>
 
+    <!-- 📊 แท็บ 1: CEO Dashboard -->
     <div id="view-summary" class="tab-view active">
       <div id="error-container"></div>
       
@@ -140,37 +128,6 @@
         <div class="card-ui">
           <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa-solid fa-chart-bar text-violet-600"></i> COMPENSATION TREND EXPENSES</h3>
           <div class="relative w-full" style="height: 300px;"><canvas id="executiveCompTrendChart"></canvas></div>
-        </div>
-      </div>
-
-      <!-- ⭐️ ใหม่! เซกชันวิเคราะห์อัตราการลาออกแยกตามแผนก (Turnover Late Analytics Chart Block) -->
-      <div class="grid grid-cols-1 gap-6 mb-6">
-        <div class="card-ui">
-          <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa-solid fa-user-slash text-rose-600"></i> ORGANIZATION TURNOVER RATE ANALYTICS (BY DIVISION)</h3>
-          <div class="relative w-full" style="height: 260px;"><canvas id="turnoverChart"></canvas></div>
-        </div>
-      </div>
-
-      <div class="card-ui mb-6">
-        <div class="flex justify-between items-center mb-4 border-b pb-3">
-          <h3 class="text-sm font-bold text-slate-700 m-0"><i class="fa-solid fa-user-tie text-blue-600"></i> SALESPERSON PERFORMANCE KPI (Individual)</h3>
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2">
-              <label class="text-xs font-bold text-slate-500">Filter by Branch/Mall:</label>
-              <select id="branchFilterSelect" onchange="filterSalespersonListByBranch()" class="border p-2 rounded bg-white text-sm font-semibold outline-none w-48 shadow-sm"></select>
-            </div>
-            <div class="flex items-center gap-2">
-              <label class="text-xs font-bold text-slate-500">Select Sales Staff:</label>
-              <select id="salespersonFilter" onchange="loadSalespersonKPI()" class="border p-2 rounded bg-white text-sm font-semibold outline-none w-52 shadow-sm"></select>
-            </div>
-          </div>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 transition-opacity duration-300" id="sales-kpi-result">
-          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">Assigned Mall / Branch</p><h4 id="lbl-sales-branch" class="text-lg font-bold text-slate-800">-</h4></div>
-          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">Monthly Actual Sales</p><h4 id="lbl-sales-actual" class="text-lg font-bold text-slate-800">0 ฿</h4></div>
-          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">MoM Revenue Growth</p><h4 id="lbl-sales-mom" class="text-lg font-black text-slate-800">0%</h4></div>
-          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">KPI Achievement & Evaluation</p><h4 id="lbl-sales-kpi" class="text-lg font-black text-slate-800">0% <span id="lbl-sales-grade" class="text-sm">(-)</span></h4></div>
         </div>
       </div>
 
@@ -208,6 +165,7 @@
       </div>
     </div>
 
+    <!-- ⚙️ แท็บ 2: Executive Settings -->
     <div id="view-ceo-setting" class="tab-view">
         <div class="card-ui">
             <h3><i class="fa-solid fa-sliders text-amber-500"></i> Executive Sales Target & Budgeting Input Form</h3>
@@ -237,7 +195,9 @@
                     <input type="number" id="kpiActualInput" placeholder="e.g. 272000" min="0">
                 </div>
             </div>
-            <button class="btn-ui" style="background-color: #d97706;" onclick="saveSalesRecordToSupabase()"><i class="fa-solid fa-cloud-arrow-up"></i> Sync Sales Records to Cloud Project</button>
+            <div class="flex gap-2">
+                <button class="btn-ui" style="background-color: #d97706;" onclick="saveSalesRecordToSupabase()"><i class="fa-solid fa-cloud-arrow-up"></i> Sync Sales Records to Cloud Project</button>
+            </div>
             <div class="loading" id="kpiLoader"><i class="fa-solid fa-circle-notch"></i> Syncing financial metrics with database server...</div>
         </div>
 
@@ -254,9 +214,10 @@
         </div>
     </div>
 
+    <!-- 👥 แท็บ 3: ฐานข้อมูลพนักงาน (ลบช่องวันที่ลาออกออกตามบรีฟชัวร์กว่า) -->
     <div id="view-employee" class="tab-view">
       <div class="card-ui">
-          <h3><i class="fa-solid fa-user-gear"></i> Corporate Employee Profile Management Form</h3>
+          <h3><i class="fa-solid fa-users-gear"></i> Corporate Employee Profile Management Form</h3>
           <div class="grid-form">
               <div class="input-wrapper"><label>Employee ID:</label><input type="text" id="empId" placeholder="e.g. 22"></div>
               <div class="input-wrapper"><label>Full Name:</label><input type="text" id="empName" placeholder="Firstname Lastname"></div>
@@ -265,7 +226,6 @@
               <div class="input-wrapper"><label>Basic Salary (THB):</label><input type="number" id="empSalary" placeholder="30000"></div>
               <div class="input-wrapper"><label>Bank Account Number:</label><input type="text" id="empBank" placeholder="34534535434"></div>
               <div class="input-wrapper"><label>Joined Date (วันเข้าทำงาน):</label><input type="date" id="empJoinedDate"></div>
-              <div class="input-wrapper"><label>Resigned Date (วันลาออก - ถ้ามี):</label><input type="date" id="empResignedDate"></div>
               <div class="input-wrapper flex flex-row items-center gap-2 pt-6"><input type="checkbox" id="empIsSales" class="w-5 h-5 cursor-pointer"><label for="empIsSales" class="text-sm font-bold text-blue-700 cursor-pointer">Set as Sales Team Member (PC)</label></div>
               <div class="input-wrapper"><label>Assigned Branch / Mall (For Sales only):</label><input type="text" id="empBranch" placeholder="e.g. Siam Paragon"></div>
               <div class="input-wrapper" style="border: 1px dashed #f43f5e; padding: 8px; border-radius: 6px;"><label style="color:#dc2626;"><i class="fa-solid fa-gavel"></i> Court Legal Deduction:</label><input type="number" id="empCourt" value="0"></div>
@@ -277,12 +237,39 @@
       <div class="card-ui overflow-auto">
           <h3><i class="fa-solid fa-list-check"></i> Current Active Employees Roster</h3>
           <table class="data-table" id="empTable">
-              <thead><tr><th>ID</th><th>Employee Name</th><th>Dept / Position</th><th>Staff Type</th><th>Assigned Branch</th><th>Working Dates</th><th>Basic Salary</th><th>Action</th></tr></thead>
+              <thead><tr><th>ID</th><th>Employee Name</th><th>Dept / Position</th><th>Staff Type</th><th>Assigned Branch</th><th>Joined Date</th><th>Basic Salary</th><th>Action</th></tr></thead>
               <tbody id="empTableBody"></tbody>
           </table>
       </div>
     </div>
 
+    <!-- 🚨 ใหม่! แท็บ 4: รายงานพนักงานเข้าออกเเละอัตราการลาออก (Employee Turnover Analytics) -->
+    <div id="view-turnover" class="tab-view">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6" id="turnover-kpi-container">
+          <!-- จะถูกเรนเดอร์ยอดสรุปเปอร์เซ็นต์ด้วย JS -->
+      </div>
+
+      <div class="card-ui">
+          <h3><i class="fa-solid fa-chart-bar text-rose-600"></i> Turnover Rate Summary Chart By Divisions</h3>
+          <div class="relative w-full" style="height: 280px;"><canvas id="turnoverChart"></canvas></div>
+      </div>
+
+      <div class="card-ui overflow-auto">
+          <h3><i class="fa-solid fa-clipboard-user text-blue-800"></i> Corporate Workforce Lifecycle Ledger & Resignation Process</h3>
+          <table class="data-table w-full">
+              <thead>
+                  <tr class="bg-slate-100 border-b text-xs uppercase">
+                      <th>ID</th><th>Employee Name</th><th>Division</th><th>Position</th><th>Employment Status</th><th>Joined Date</th><th>Resigned Date</th><th>Terminate / Resign Action</th>
+                  </tr>
+              </thead>
+              <tbody id="turnoverLedgerTableBody" class="text-sm">
+                  <tr><td colspan="8" class="text-center py-4 text-slate-400">Loading workforce registry records...</td></tr>
+              </tbody>
+          </table>
+      </div>
+    </div>
+
+    <!-- 📑 แท็บ 5: นำเข้าเวลาสแกนนิ้ว -->
     <div id="view-scan" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-fingerprint"></i> Raw Working Attendance Records Box (Log Data Input)</h3>
@@ -294,6 +281,7 @@
       </div>
     </div>
 
+    <!-- 💵 แท็บ 6: ทำสลิปเงินเดือน -->
     <div id="view-slip" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-calculator"></i> Option 1: Process Individual Salary Slips Preview (Select 1-2 Staffs)</h3>
@@ -343,6 +331,7 @@
       </div>
     </div>
 
+    <!-- 📊 แท็บ 7: สรุปรายงานรายจ่าย -->
     <div id="view-report" class="tab-view">
       <div class="card-ui">
           <h3><i class="fa-solid fa-sliders"></i> Filter Criteria & Parameters Configuration</h3>
@@ -425,6 +414,7 @@
       
       if(tabId === 'view-report') loadPayrollReport();
       if(tabId === 'view-ceo-setting') loadCompanyKPIHistoryList();
+      if(tabId === 'view-turnover') renderTurnoverViewOperations(); // โหลดหน้าวิเคราะห์อัตราลาออก
     }
 
     const normalize = (str) => String(str).replace(/\s+/g, ' ').trim().toLowerCase();
@@ -445,7 +435,6 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
-        // ⭐️ เรียกดึงข้อมูลฟิลด์วันที่เริ่มงานและลาออกสะสมมาจากหลังบ้าน Supabase
         const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch, dept, joined_date, resigned_date');
         if (empErr) throw empErr;
 
@@ -484,11 +473,6 @@
         const tTotalHeadcount = targetRowsAll.length;
         const tOfficeHeadcount = tTotalHeadcount - tSalesHeadcount;
 
-        // ⭐️ Logic คำนวณอัตราการลาออก (Turnover Rate) ภาพรวมทั้งบริษัท
-        const resignedTotalCount = rawEmployees.filter(e => e.resigned_date && e.resigned_date !== '').length;
-        const baseTotalStaffs = rawEmployees.length || 1;
-        const companyTurnoverRatePercent = ((resignedTotalCount / baseTotalStaffs) * 100).toFixed(1);
-
         const cSalesHeadcount = compareRowsSales.length || 1;
         const cSalesPayroll = compareRowsSales.reduce((sum, r) => sum + (Number(r.net_amount) || 0), 0) || 1;
 
@@ -511,13 +495,12 @@
 
         const vsText = `<span class="text-[10px] text-slate-400 font-normal ml-1">vs ${currentCompareVal}</span>`;
 
-        // แสดงผลกล่องแดชบอร์ดพร้อมระบุค่าอัตราการลาออกสะสมรวมขององค์กร (Turnover Rate Block)
         document.getElementById('kpi-container').innerHTML = `
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-blue-500"><p class="text-xs text-slate-500 font-bold mb-1">Company Headcount (Total)</p><h2 class="text-2xl font-black text-slate-800">${tTotalHeadcount} PPL</h2><p class="text-xs text-slate-400 mt-1">PC Sales: ${tSalesHeadcount} PPL \| Office: ${tOfficeHeadcount} PPL</p></div>
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-green-500"><p class="text-xs text-slate-500 font-bold mb-1">Total All Payroll Cost</p><h2 class="text-2xl font-black text-slate-800">${formatM(tTotalPayrollAllDept)}</h2><p class="text-sm ${getColor(payrollGrowth)} mt-1">${payrollGrowth}% ${getArrow(payrollGrowth)} ${vsText}</p></div>
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-purple-500"><p class="text-xs text-slate-500 font-bold mb-1">All Payroll % to Sales</p><h2 class="text-2xl font-black text-slate-800">${payRatioVal}%</h2><p class="text-sm ${getColor(payRatioDiff)} mt-1">${Math.abs(payRatioDiff)}% ${getArrow(payRatioDiff)} ${vsText}</p></div>
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-orange-500"><p class="text-xs text-slate-500 font-bold mb-1">Total Mall Revenue</p><h2 class="text-2xl font-black text-slate-800">${formatM(actualSalesRevenue)}</h2><p class="text-sm ${getColor(salesGrowth)} mt-1">${salesGrowth}% ${getArrow(salesGrowth)} ${vsText}</p></div>
-          <div class="card-ui p-4 flex flex-col items-center border-t-4 border-rose-500"><p class="text-xs text-slate-500 font-bold mb-1">Turnover Rate (รวม)</p><h2 class="text-2xl font-black text-rose-600">${companyTurnoverRatePercent}%</h2><p class="text-xs text-slate-400 mt-1">Total Resigned: ${resignedTotalCount} PPL</p></div>
+          <div class="card-ui p-4 flex flex-col items-center border-t-4 border-emerald-500"><p class="text-xs text-slate-500 font-bold mb-1">Net Operation Profit</p><h2 class="text-2xl font-black text-slate-800">${formatM(grossProfit - tTotalPayrollAllDept)}</h2><p class="text-xs text-slate-400 mt-1">GP 35%: ${formatM(grossProfit)}</p></div>
         `;
 
         const branchGroup = {};
@@ -529,38 +512,9 @@
           branchGroup[bName].payrollCost += Number(r.net_amount);
         });
 
-        // ⭐️ คำนวณสัดส่วน Turnover Rate แยกแต่ละแผนก เพื่อวาดลงกราฟแท่ง (SALES, LGT, ACC, HR)
-        const targetDepartments = ['SALES', 'LGT', 'ACC', 'HR'];
-        const departmentTurnoverRates = targetDepartments.map(dept => {
-            const deptStaffs = rawEmployees.filter(e => String(e.dept).toUpperCase() === dept);
-            const deptResigned = deptStaffs.filter(e => e.resigned_date && e.resigned_date !== '').length;
-            const rate = deptStaffs.length > 0 ? ((deptResigned / deptStaffs.length) * 100).toFixed(1) : 0;
-            return parseFloat(rate);
-        });
-
         charts.payroll = new Chart(document.getElementById('payrollTrendChart'), { type: 'bar', data: { labels: [currentCompareVal, currentTargetVal], datasets: [{ label: 'Total Company Revenue', data: [prevSalesRevenue, actualSalesRevenue], backgroundColor: '#1e3a8a' }, { label: 'All Dept Payroll Cost', data: [cTotalPayrollAllDept, tTotalPayrollAllDept], backgroundColor: '#dc2626' }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.sales = new Chart(document.getElementById('salesPayrollChart'), { type: 'line', data: { labels: [currentCompareVal, currentTargetVal], datasets: [{ label: 'Gross Profit Line (35%)', data: [prevSalesRevenue * 0.35, grossProfit], borderColor: '#16a34a', tension: 0.2 }, { label: 'Total Payroll Expenses', data: [cTotalPayrollAllDept, tTotalPayrollAllDept], borderColor: '#2563eb', tension: 0.2 }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.donut = new Chart(document.getElementById('headcountChart'), { type: 'doughnut', data: { labels: Object.keys(branchGroup).length > 0 ? Object.keys(branchGroup) : ['No Data'], datasets: [{ data: Object.keys(branchGroup).length > 0 ? Object.values(branchGroup).map(b => b.headcount) : [0], backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#06b6d4'], cutout: '70%' }] }, options: { responsive: true, maintainAspectRatio: false } });
-        
-        // ⭐️ วาดกราฟแท่งอันใหม่แสดงอัตราการลาออกเปรียบเทียบแต่ละแผนก (Turnover Bar Chart Render)
-        charts.turnover = new Chart(document.getElementById('turnoverChart'), { 
-            type: 'bar', 
-            data: { 
-                labels: targetDepartments, 
-                datasets: [{ 
-                    label: 'Turnover Rate (%) By Division', 
-                    data: departmentTurnoverRates, 
-                    backgroundColor: ['#f43f5e', '#fb923c', '#38bdf8', '#a78bfa'],
-                    borderWidth: 1,
-                    borderRadius: 4
-                }] 
-            }, 
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Percentage (%)' } } }
-            } 
-        });
 
         const chronologicalPeriods = Array.from(periodsSet).sort((a, b) => new Date(a) - new Date(b));
         const revenueDataTimeline = [];
@@ -820,10 +774,6 @@
           if(dReport) dReport.innerHTML += `<option value="${e.id}">${text}</option>`;
           if(e.is_sales && dKpiSalesSelect) dKpiSalesSelect.innerHTML += `<option value="${e.id}">${e.name}</option>`;
 
-          // จัดรูปแบบข้อความแสดงวันที่เริ่มงาน และ วันที่ลาออกบนตารางพนักงาน
-          const joinTxt = e.joined_date ? e.joined_date : '-';
-          const resignTxt = e.resigned_date ? `<span class="text-red-600 font-semibold">${e.resigned_date}</span>` : '<span class="text-green-600 font-medium">Active</span>';
-
           if(tbody) {
             tbody.innerHTML += `<tr>
               <td><strong>${e.id}</strong></td>
@@ -831,7 +781,7 @@
               <td><span class="text-blue-600 font-bold">${e.dept}</span> / ${e.position}</td>
               <td>${e.is_sales?'<span class="text-blue-700 font-bold">Sales (PC)</span>':'General Staff'}</td>
               <td>${e.assigned_branch || '-'}</td>
-              <td class="text-xs text-slate-600">In: ${joinTxt}<br>Out: ${resignTxt}</td>
+              <td>${e.joined_date || '-'}</td>
               <td>${Number(e.salary).toLocaleString()} ฿</td>
               <td><button class="text-red-600" onclick="triggerDeleteEmp('${e.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
             </tr>`;
@@ -847,10 +797,7 @@
       const position = document.getElementById('empPosition').value.trim();
       const salary = parseFloat(document.getElementById('empSalary').value) || 0;
       const bank_acc = document.getElementById('empBank').value.trim();
-      
-      // ⭐️ ดึงข้อมูลค่าวันที่จากฟอร์มเพื่อส่งเข้าโครงสร้างตารางข้อมูลหลังบ้าน
       const joined_date = document.getElementById('empJoinedDate').value || null;
-      const resigned_date = document.getElementById('empResignedDate').value || null;
 
       const is_sales = document.getElementById('empIsSales').checked;
       const assigned_branch = document.getElementById('empBranch').value.trim();
@@ -861,11 +808,143 @@
       document.getElementById('empLoader').style.display = 'flex';
 
       try {
-        const { error } = await supabaseClient.from('employees').upsert([{ id, name, dept, position, salary, bank_acc, is_sales, assigned_branch, court_deduct, student_loan_deduct, joined_date, resigned_date }]);
+        const { error } = await supabaseClient.from('employees').upsert([{ id, name, dept, position, salary, bank_acc, is_sales, assigned_branch, court_deduct, student_loan_deduct, joined_date }]);
         if (error) throw error;
         alert('Employee schema updated successfully.');
         loadEmployeeList();
       } catch (err) { alert('Error: ' + err.message); } finally { document.getElementById('empLoader').style.display = 'none'; }
+    }
+
+    // ==========================================
+    // 🚨 ใหม่! ระบบจัดการแถวพนักงานเข้าออกเเละคำนวณอัตราลาออก (Turnover View Operations)
+    // ==========================================
+    async function renderTurnoverViewOperations() {
+        const kpiContainer = document.getElementById('turnover-kpi-container');
+        const ledgerBody = document.getElementById('turnoverLedgerTableBody');
+        if(!kpiContainer || !ledgerBody) return;
+
+        kpiContainer.innerHTML = '<div class="card-ui p-4 text-center animate-pulse text-blue-500 col-span-4"><i class="fa fa-spinner fa-spin mr-1"></i>Syncing workforce logs...</div>';
+        
+        try {
+            // 1. ดึงสถิติพนักงานเรียลไทม์ทั้งหมดมาคำนวณสัดส่วน
+            const { data: staffs, error } = await supabaseClient.from('employees').select('*').order('id', {ascending: true});
+            if (error) throw error;
+            localEmployeesCache = staffs || [];
+
+            const totalRegistered = staffs.length;
+            const resignedStaffs = staffs.filter(e => e.resigned_date && e.resigned_date !== '');
+            const totalResigned = resignedStaffs.length;
+            const totalActive = totalRegistered - totalResigned;
+            const turnoverPercent = totalRegistered > 0 ? ((totalResigned / totalRegistered) * 100).toFixed(1) : "0.0";
+
+            // เรนเดอร์การ์ดสรุปตัวเลขด้านบนเมนูลาออก
+            kpiContainer.innerHTML = `
+              <div class="card-ui p-4 flex flex-col items-center border-t-4 border-rose-500"><p class="text-xs text-slate-500 font-bold mb-1">Company Turnover Rate</p><h2 class="text-2xl font-black text-rose-600">${turnoverPercent}%</h2><p class="text-xs text-slate-400 mt-1">Lifecycle accumulated metric</p></div>
+              <div class="card-ui p-4 flex flex-col items-center border-t-4 border-blue-500"><p class="text-xs text-slate-500 font-bold mb-1">Total Registered Profiles</p><h2 class="text-2xl font-black text-slate-800">${totalRegistered} PPL</h2><p class="text-xs text-slate-400 mt-1">Workforce size registry</p></div>
+              <div class="card-ui p-4 flex flex-col items-center border-t-4 border-green-500"><p class="text-xs text-slate-500 font-bold mb-1">Active Headcount</p><h2 class="text-2xl font-black text-green-600">${totalActive} PPL</h2><p class="text-xs text-slate-400 mt-1">Currently on general payroll</p></div>
+              <div class="card-ui p-4 flex flex-col items-center border-t-4 border-slate-500"><p class="text-xs text-slate-500 font-bold mb-1">Accumulated Resigned</p><h2 class="text-2xl font-black text-slate-700">${totalResigned} PPL</h2><p class="text-xs text-slate-400 mt-1">Total staff turnover count</p></div>
+            `;
+
+            // 2. วาดตารางบัญชีรายชื่อ และ เพิ่มปุ่มกดลาออก (Mark as Resigned Button)
+            ledgerBody.innerHTML = '';
+            
+            // ตัวแปรสะสมผลรวมท้ายตาราง
+            let activeSum = 0;
+            let resignedSum = 0;
+
+            staffs.forEach(e => {
+                const isResigned = (e.resigned_date && e.resigned_date !== '');
+                let statusBadge = '';
+                let actionButtonHTML = '';
+
+                if (isResigned) {
+                    resignedSum++;
+                    statusBadge = `<span class="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800"><i class="fa fa-circle text-[8px] mr-1 text-rose-600"></i>Resigned</span>`;
+                    actionButtonHTML = `<span class="text-xs text-slate-400 italic">Settled Log</span>`;
+                } else {
+                    activeSum++;
+                    statusBadge = `<span class="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-800"><i class="fa fa-circle text-[8px] mr-1 text-green-600"></i>Active</span>`;
+                    actionButtonHTML = `<button onclick="processStaffResignationPrompt('${e.id}', '${e.name}')" class="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded text-xs hover:bg-red-600 hover:text-white font-medium transition"><i class="fa-solid fa-user-xmark mr-1"></i>Mark Resigned</button>`;
+                }
+
+                ledgerBody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50/50">
+                        <td><b>${e.id}</b></td>
+                        <td class="font-medium text-slate-800">${e.name}</td>
+                        <td class="font-bold text-slate-600">${e.dept || '-'}</td>
+                        <td>${e.position || '-'}</td>
+                        <td>${statusBadge}</td>
+                        <td>${e.joined_date || '-'}</td>
+                        <td>${e.resigned_date || '-'}</td>
+                        <td>${actionButtonHTML}</td>
+                    </tr>
+                `;
+            });
+
+            // เพิ่มแถวผลรวมแสดงยอดสรุปท้ายตารางพนักงานเข้าออก
+            if (staffs.length > 0) {
+                ledgerBody.innerHTML += `
+                    <tr class="total-row bg-slate-100 font-bold border-t border-slate-300">
+                        <td colspan="4" class="p-3 text-right font-bold text-slate-700">Workforce Balance Summary:</td>
+                        <td colspan="4" class="p-3 text-slate-800">
+                            Total Active: <span class="text-green-700 font-black mr-4">${activeSum} PPL</span> | 
+                            Total Resigned: <span class="text-rose-600 font-black">${resignedSum} PPL</span>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // 3. วาดอัปเดตกราฟ Turnover Rate แบบแท่งแยกตามแผนก (SALES, LGT, ACC, HR)
+            const targetDepts = ['SALES', 'LGT', 'ACC', 'HR'];
+            const departmentTurnoverRates = targetDepts.map(dCode => {
+                const dStaffs = staffs.filter(s => String(s.dept).toUpperCase() === dCode);
+                const dResigned = dStaffs.filter(s => s.resigned_date && s.resigned_date !== '').length;
+                return dStaffs.length > 0 ? parseFloat(((dResigned / dStaffs.length) * 100).toFixed(1)) : 0;
+            });
+
+            if (charts.turnoverViewChart) charts.turnoverViewChart.destroy();
+            charts.turnoverViewChart = new Chart(document.getElementById('turnoverChart'), { 
+                type: 'bar', 
+                data: { 
+                    labels: targetDepts, 
+                    datasets: [{ 
+                        label: 'Turnover Percentage Rate (%)', 
+                        data: departmentTurnoverRates, 
+                        backgroundColor: ['#f43f5e', '#fb923c', '#38bdf8', '#a78bfa'],
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Turnover Ratio %' } } }
+                } 
+            });
+
+        } catch (err) { alert('Turnover sync failure: ' + err.message); }
+    }
+
+    // ฟังก์ชันสั่งอัปเดตบันทึกวันลาออกรายบุคคลเมื่อคลิกปุ่ม (Action Execution)
+    async function processStaffResignationPrompt(empId, empName) {
+        const selectedDate = prompt(`กรุณาระบุ "วันที่ลาออก" ของคุณ ${empName} (รูปแบบ: YYYY-MM-DD เช่น 2026-06-15):`);
+        if (!selectedDate) return; // กดยกเลิก
+        
+        // ตรวจสอบ Regex วันที่เบื้องต้นเพื่อความปลอดภัย
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(selectedDate)) {
+            alert("รูปแบบวันที่ไม่ถูกต้อง! กรุณากรอกในรูปแบบ YYYY-MM-DD เท่านั้นครับ");
+            return;
+        }
+
+        if(!confirm(`คุณยืนยันที่จะบันทึกให้ คุณ ${empName} พ้นสภาพการเป็นพนักงานในวันที่ ${selectedDate} ใช่หรือไม่?`)) return;
+
+        try {
+            const { error } = await supabaseClient.from('employees').update({ resigned_date: selectedDate }).eq('id', empId);
+            if (error) throw error;
+            alert(`🎉 บันทึกการพ้นสภาพพนักงานของคุณ ${empName} ลงระบบคลาวด์เสร็จสมบูรณ์!`);
+            renderTurnoverViewOperations(); loadEmployeeList();
+        } catch (err) { alert('เกิดข้อผิดพลาด: ' + err.message); }
     }
 
     async function importLogs() {
@@ -1096,185 +1175,6 @@
           
         </div>
       `;
-    }
-
-    function recalculateIndividualTotals(index) {
-      let e = 0; let d = 0;
-      document.querySelectorAll(`.e-calc_${index}`).forEach(i => { e += (parseFloat(i.value) || 0); });
-      document.querySelectorAll(`.d-calc_${index}`).forEach(i => { d += (parseFloat(i.value) || 0); });
-      document.getElementById(`txtTotalEarnings_${index}`).textContent = e.toLocaleString(undefined, {minimumFractionDigits: 2});
-      document.getElementById(`txtTotalDeductions_${index}`).textContent = d.toLocaleString(undefined, {minimumFractionDigits: 2});
-      document.getElementById(`txtNetAmount_${index}`).textContent = (e - d).toLocaleString(undefined, {minimumFractionDigits: 2});
-    }
-
-    async function saveDualSlipsFinal() {
-      const selectedMonth = document.getElementById('selectPayrollMonth1').value;
-      try {
-        for (let index = 0; index < loadedSlipsData.length; index++) {
-          const data = loadedSlipsData[index];
-          let e = 0; let d = 0;
-          document.querySelectorAll(`.e-calc_${index}`).forEach(i => e += (parseFloat(i.value)||0));
-          document.querySelectorAll(`.d-calc_${index}`).forEach(i => d += (parseFloat(i.value)||0));
-
-          const payload = {
-            payroll_month: selectedMonth, employee_id: data.emp.id, name: data.emp.name, position: data.emp.position || '-',
-            basic_salary: parseFloat(document.getElementById(`iBasic_${index}`).value)||0,
-            ot_earnings: parseFloat(document.getElementById(`iOvertime_${index}`).value)||0,
-            social_security: parseFloat(document.getElementById(`iSocial_${index}`).value)||0,
-            no_work_no_pay: parseFloat(document.getElementById(`iNoWork_${index}`).value)||0,
-            others_deduct: parseFloat(document.getElementById(`iOtherDeduct_${index}`).value)||0,
-            total_earnings: e, total_deductions: d, net_amount: e - d, dept: data.emp.dept || '-'
-          };
-
-          const { data: existingRow } = await supabaseClient.from('monthly_payroll_summary').select('id').eq('payroll_month', selectedMonth).eq('employee_id', data.emp.id).maybeSingle();
-          if (existingRow) {
-            await supabaseClient.from('monthly_payroll_summary').update(payload).eq('id', existingRow.id);
-          } else {
-            await supabaseClient.from('monthly_payroll_summary').insert([payload]);
-          }
-        }
-        alert('🎉 Financial statement saved successfully.'); loadDashboardData();
-      } catch (err) { alert(err.message); }
-    }
-
-    async function processAllEmployeesBulk() {
-        const selectedMonth = document.getElementById('selectBulkPayrollMonth').value;
-        document.getElementById('calcLoader').style.display = 'flex';
-        document.getElementById('bulkPreviewSection').style.display = 'none';
-        bulkProcessedPayloads = [];
-
-        try {
-            const { data: allEmployees, error: empErr } = await supabaseClient.from('employees').select('*');
-            if (empErr) throw empErr;
-            if (!allEmployees || allEmployees.length === 0) { alert('No active employee profiles registered.'); return; }
-
-            const { data: logs, error: logErr } = await supabaseClient.from('attendance_logs').select('*').eq('payroll_period', selectedMonth);
-            if (logErr) throw logErr;
-
-            const logMap = {};
-            if(logs) {
-                logs.forEach(l => {
-                    if(!logMap[l.employee_id]) logMap[l.employee_id] = { late: 0, ot: 0 };
-                    logMap[l.employee_id].late += Number(l.late_minutes || 0);
-                    logMap[l.employee_id].ot += Number(l.ot_minutes || 0);
-                });
-            }
-
-            const tbody = document.getElementById('bulkPreviewTableBody');
-            tbody.innerHTML = '';
-            document.getElementById('lblBulkMonthText').textContent = selectedMonth;
-
-            let totalBulkSalary = 0;
-            let totalBulkOT = 0;
-            let totalBulkNoWork = 0;
-            let totalBulkSocial = 0;
-            let totalBulkOthers = 0;
-            let totalBulkNet = 0;
-
-            allEmployees.forEach(emp => {
-                const empLogs = logMap[emp.id] || { late: 0, ot: 0 };
-                const salary = Number(emp.salary || 0);
-                const minuteRate = ((salary / 30) / 8) / 60;
-
-                const noWorkNoPay = Math.round((empLogs.late * minuteRate) * 100) / 100;
-                const overtimeEarnings = Math.round((empLogs.ot * minuteRate * 1.5) * 100) / 100;
-                const socialSecurity = Math.min(750, Math.round((salary * 0.05) * 100) / 100);
-                const othersDeduct = Number(emp.court_deduct || 0) + Number(emp.student_loan_deduct || 0);
-
-                const totalIncome = salary + overtimeEarnings;
-                const totalDeductions = socialSecurity + noWorkNoPay + othersDeduct;
-                const netAmount = totalIncome - totalDeductions;
-
-                totalBulkSalary += salary;
-                totalBulkOT += overtimeEarnings;
-                totalBulkNoWork += noWorkNoPay;
-                totalBulkSocial += socialSecurity;
-                totalBulkOthers += othersDeduct;
-                totalBulkNet += netAmount;
-
-                bulkProcessedPayloads.push({
-                    payroll_month: selectedMonth,
-                    employee_id: emp.id,
-                    name: emp.name,
-                    position: emp.position || '-',
-                    basic_salary: salary,
-                    ot_earnings: overtimeEarnings,
-                    social_security: socialSecurity,
-                    no_work_no_pay: noWorkNoPay,
-                    others_deduct: othersDeduct,
-                    total_earnings: totalIncome,
-                    total_deductions: totalDeductions,
-                    net_amount: netAmount,
-                    dept: emp.dept || '-'
-                });
-
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-slate-50">
-                        <td><b>${emp.id}</b></td>
-                        <td>${emp.name}</td>
-                        <td>฿${salary.toLocaleString()}</td>
-                        <td class="text-blue-600">฿${overtimeEarnings.toLocaleString()}</td>
-                        <td class="text-red-500">฿${noWorkNoPay.toLocaleString()}</td>
-                        <td>฿${socialSecurity.toLocaleString()}</td>
-                        <td>฿${othersDeduct.toLocaleString()}</td>
-                        <td class="font-bold text-slate-900">฿${netAmount.toLocaleString()}</td>
-                    </tr>
-                `;
-            });
-
-            if (allEmployees.length > 0) {
-                tbody.innerHTML += `
-                    <tr class="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 sticky bottom-0 shadow-md">
-                        <td colspan="2" class="p-3 text-center text-slate-700 font-bold">Total:</td>
-                        <td class="p-3">฿${totalBulkSalary.toLocaleString()}</td>
-                        <td class="p-3 text-blue-600">฿${totalBulkOT.toLocaleString()}</td>
-                        <td class="p-3 text-red-500">฿${totalBulkNoWork.toLocaleString()}</td>
-                        <td class="p-3">฿${totalBulkSocial.toLocaleString()}</td>
-                        <td class="p-3">฿${totalBulkOthers.toLocaleString()}</td>
-                        <td class="p-3 font-extrabold text-blue-900">฿${totalBulkNet.toLocaleString()}</td>
-                    </tr>
-                `;
-            }
-
-            document.getElementById('bulkPreviewSection').style.display = 'block';
-        } catch (err) {
-            alert('Bulk process failed execution: ' + err.message);
-        } finally {
-            document.getElementById('calcLoader').style.display = 'none';
-        }
-    }
-
-    function clearBulkSection() {
-        bulkProcessedPayloads = [];
-        document.getElementById('bulkPreviewSection').style.display = 'none';
-    }
-
-    async function saveBulkSlipsFinal() {
-        if(bulkProcessedPayloads.length === 0) return;
-        if(!confirm(`⚠️ Are you sure you want to lock and commit payroll ledgers for total ${bulkProcessedPayloads.length} employees onto cloud project server?`)) return;
-
-        document.getElementById('calcLoader').style.display = 'flex';
-        try {
-            let successCount = 0;
-            for (const payload of bulkProcessedPayloads) {
-                const { data: existingRow } = await supabaseClient.from('monthly_payroll_summary')
-                    .select('id').eq('payroll_month', payload.payroll_month).eq('employee_id', payload.employee_id).maybeSingle();
-
-                if (existingRow) {
-                    await supabaseClient.from('monthly_payroll_summary').update(payload).eq('id', existingRow.id);
-                } else {
-                    await supabaseClient.from('monthly_payroll_summary').insert([payload]);
-                }
-                successCount++;
-            }
-            alert(`🎉 Accounting period locked successfully! Committed total ${successCount} payroll ledgers to cloud server.`);
-            clearBulkSection();
-            loadDashboardData();
-        } catch (err) {
-            alert('Committed failure execution error: ' + err.message);
-        } finally {
-            document.getElementById('calcLoader').style.display = 'none';
-        }
     }
 
     async function loadPayrollReport() {
