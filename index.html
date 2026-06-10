@@ -161,8 +161,8 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 transition-opacity duration-300" id="sales-kpi-result">
           <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">ห้าง/สาขาที่ดูแล (Branch)</p><h4 id="lbl-sales-branch" class="text-lg font-bold text-slate-800">-</h4></div>
           <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">ยอดขายเดือนนี้ (Actual)</p><h4 id="lbl-sales-actual" class="text-lg font-bold text-slate-800">0 ฿</h4></div>
-          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">เทียบงวดเปรียบเทียบ (MoM Growth)</p><h4 id="lbl-s-mom" class="text-lg font-black text-slate-800">0%</h4></div>
-          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">KPI Achievement / ประเมินเกรด</p><h4 id="lbl-s-kpi" class="text-lg font-black text-slate-800">0% <span id="lbl-s-grade" class="text-sm">(-)</span></h4></div>
+          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">เทียบงวดเปรียบเทียบ (MoM Growth)</p><h4 id="lbl-sales-mom" class="text-lg font-black text-slate-800">0%</h4></div>
+          <div class="p-4 bg-slate-50 rounded-lg border text-center"><p class="text-xs text-slate-500 font-bold mb-1">KPI Achievement / ประเมินเกรด</p><h4 id="lbl-sales-kpi" class="text-lg font-black text-slate-800">0% <span id="lbl-sales-grade" class="text-sm">(-)</span></h4></div>
         </div>
       </div>
 
@@ -181,9 +181,9 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div class="card-ui flex flex-col items-center"><h3 class="card-header text-sm font-bold text-slate-600 mb-4">S DEPT HEADCOUNT</h3><div class="relative w-full flex justify-center mt-4" style="height: 200px;"><canvas id="headcountChart"></canvas></div></div>
+        <div class="card-ui flex flex-col items-center"><h3 class="card-header text-sm font-bold text-slate-600 mb-4">SALES DEPT HEADCOUNT</h3><div class="relative w-full flex justify-center mt-4" style="height: 200px;"><canvas id="headcountChart"></canvas></div></div>
         <div class="card-ui lg:col-span-2 overflow-auto"><h3 class="card-header text-sm font-bold text-slate-600 mb-4">MALL / BRANCH PERFORMANCE</h3>
-          <table class="data-table" id="branchTable"><thead><tr><th>ห้าง / สาขาที่ดูแล</th><th>ยอดขายห้างนั้น (s)</th><th>จำนวนเซลหน้าห้าง</th><th>ค่าแรงทีมเซลรวม</th><th>สัดส่วนค่าแรงต่อยอดขาย (%)</th><th>เกรดประเมินสาขา</th></tr></thead><tbody></tbody></table>
+          <table class="data-table" id="branchTable"><thead><tr><th>ห้าง / สาขาที่ดูแล</th><th>ยอดขายห้างนั้น (Sales)</th><th>จำนวนเซลหน้าห้าง</th><th>ค่าแรงทีมเซลรวม</th><th>สัดส่วนค่าแรงต่อยอดขาย (%)</th><th>เกรดประเมินสาขา</th></tr></thead><tbody></tbody></table>
         </div>
       </div>
     </div>
@@ -198,7 +198,7 @@
                 </div>
                 <div class="input-wrapper">
                     <label>เลือกชื่อพนักงานขาย:</label>
-                    <select id="kpispersonSelect" onchange="autoFillBranchFromCache()">
+                    <select id="kpiSalespersonSelect" onchange="autoFillBranchFromCache()">
                         <option value="">-- กำลังดึงรายชื่อเซลล์ --</option>
                     </select>
                 </div>
@@ -330,7 +330,7 @@
           </div>
           <div class="grid-form" id="filterAreaOverview">
               <div class="input-wrapper"><label>เลือกงวดประจำเดือน:</label><select id="filterReportMonth" onchange="filterPayrollReportData()"><option value="ALL">-- แสดงทุกเดือน --</option></select></div>
-              <div class="input-wrapper"><label>แผนก:</label><select id="filterReportDept" onchange="filterPayrollReportData()"><option value="ALL">-- แสดงทุกแผนก --</option><option value="MDT">MDT</option><option value="HRC">HRC</option><option value="HR">HR</option><option value="MKT">MKT</option><option value="BSU">BSU</option><option value="EXP">EXP</option><option value="LGT">LGT</option><option value="ACC">ACC</option><option value="HR">HR</option></select></div>
+              <div class="input-wrapper"><label>แผนก:</label><select id="filterReportDept" onchange="filterPayrollReportData()"><option value="ALL">-- แสดงทุกแผนก --</option><option value="SALES">SALES</option><option value="LGT">LGT</option><option value="ACC">ACC</option><option value="HR">HR</option></select></div>
           </div>
           <div class="grid-form" id="filterAreaIndividual" style="display: none;">
               <div class="input-wrapper"><label>ชื่อพนักงาน:</label><select id="filterReportEmployee" onchange="filterPayrollReportData()"><option value="">-- เลือก --</option></select></div>
@@ -423,7 +423,8 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
-        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, is_sales, assigned_branch');
+        // ⭐️ แก้ไขบั๊กจุดนี้: เพิ่มคอลัมน์ 'name' เข้าไปในคำสั่ง SELECT เพื่อนำมาใช้ประมวลผลในดร็อปดาวน์
+        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch');
         if (empErr) throw empErr;
 
         const empMetaMap = {};
@@ -1065,7 +1066,6 @@
       } catch (err) { alert(err.message); }
     }
 
-    // ⭐️ ตารางที่ 1: เพิ่มผลรวมท้ายตาราง พรีวิวก่อนปิดงบแบบเหมาเดือน (Bulk Preview)
     async function processAllEmployeesBulk() {
         const selectedMonth = document.getElementById('selectBulkPayrollMonth').value;
         document.getElementById('calcLoader').style.display = 'flex';
@@ -1093,7 +1093,6 @@
             tbody.innerHTML = '';
             document.getElementById('lblBulkMonthText').textContent = selectedMonth;
 
-            // ตัวแปรสะสมผลรวมท้ายตาราง Bulk Preview
             let totalBulkSalary = 0;
             let totalBulkOT = 0;
             let totalBulkNoWork = 0;
@@ -1115,7 +1114,6 @@
                 const totalDeductions = socialSecurity + noWorkNoPay + othersDeduct;
                 const netAmount = totalIncome - totalDeductions;
 
-                // บวกสะสมค่า
                 totalBulkSalary += salary;
                 totalBulkOT += overtimeEarnings;
                 totalBulkNoWork += noWorkNoPay;
@@ -1153,7 +1151,6 @@
                 `;
             });
 
-            // ใส่แถวสรุปยอดรวม (Total Row) ของตารางพรีวิวก่อนปิดงบ
             if (allEmployees.length > 0) {
                 tbody.innerHTML += `
                     <tr class="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 sticky bottom-0 shadow-md">
@@ -1236,13 +1233,11 @@
       filterPayrollReportData(); 
     }
     
-    // ⭐️ ตารางที่ 2: เพิ่มผลรวมท้ายตาราง สรุปรายงานรายจ่าย (Report View)
     function filterPayrollReportData() {
       const mode = document.querySelector('input[name="reportMode"]:checked').value;
       const tbody = document.getElementById('reportTableBody'); if(!tbody) return;
       tbody.innerHTML = '';
 
-      // ตัวแปรสะสมผลรวมท้ายตารางรายงาน
       let reportTotalBasic = 0;
       let reportTotalOT = 0;
       let reportTotalNoWork = 0;
@@ -1262,7 +1257,6 @@
         
         if(match) {
           hasRows = true;
-          // สะสมค่าตัวเลขเข้าตัวแปรส่วนกลาง
           reportTotalBasic += r.basic;
           reportTotalOT += r.ot;
           reportTotalNoWork += r.noWork;
@@ -1284,7 +1278,6 @@
         }
       });
 
-      // แทรกบรรทัดสรุปผลรวม (Total Row) ปิดท้ายตารางรายงานรายจ่ายตามเงื่อนไขที่คัดกรอง
       if (hasRows) {
           tbody.innerHTML += `
               <tr class="total-row bg-slate-100 font-bold border-t-2 border-slate-400">
