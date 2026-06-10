@@ -31,7 +31,6 @@
     .card-ui { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); padding: 25px; margin-bottom: 25px;}
     .card-ui h3 { font-size: 16px; margin-bottom: 20px; color: var(--primary); display: flex; align-items: center; gap: 8px; font-weight: 600;}
     .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
     .input-wrapper { display: flex; flex-direction: column; gap: 6px; }
     .input-wrapper label { font-size: 13px; font-weight: 500; color: var(--text-gray); }
     input, select, textarea { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px; outline: none; background: rgba(255, 255, 255, 0.9); color: #1e293b;}
@@ -42,7 +41,7 @@
     table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     table.data-table th { background-color: #f8fafc; padding: 12px; color: var(--primary); border-bottom: 2px solid var(--border-color); border-top: 1px solid var(--border-color); text-align: left; font-weight: bold;}
     table.data-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
-    table.data-table tr.total-row td { background-color: #f1f5f9; font-weight: 600; color: var(--primary); border-top: 2px solid var(--primary); }
+    table.data-table tr.total-row td { background-color: #e2e8f0; font-weight: 600; color: #0f172a; border-top: 2px solid #94a3b8; border-bottom: 2px double #94a3b8; }
     .loading { display: none; color: var(--primary-light); font-size: 14px; align-items: center; gap: 8px; margin-top: 10px; }
     .loading i { animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -542,7 +541,6 @@
             </tr>`;
         });
 
-        // ⭐️ ส่วนอัปเดตตารางสรุปงบดุลภาพรวมบริษัท (COMPANY PROFITABILITY STATEMENT) พร้อมเพิ่มผลรวมสะสม
         const statementTbody = document.getElementById('companyProfitStatementTableBody');
         statementTbody.innerHTML = '';
 
@@ -1067,6 +1065,7 @@
       } catch (err) { alert(err.message); }
     }
 
+    // ⭐️ ตารางที่ 1: เพิ่มผลรวมท้ายตาราง พรีวิวก่อนปิดงบแบบเหมาเดือน (Bulk Preview)
     async function processAllEmployeesBulk() {
         const selectedMonth = document.getElementById('selectBulkPayrollMonth').value;
         document.getElementById('calcLoader').style.display = 'flex';
@@ -1094,6 +1093,14 @@
             tbody.innerHTML = '';
             document.getElementById('lblBulkMonthText').textContent = selectedMonth;
 
+            // ตัวแปรสะสมผลรวมท้ายตาราง Bulk Preview
+            let totalBulkSalary = 0;
+            let totalBulkOT = 0;
+            let totalBulkNoWork = 0;
+            let totalBulkSocial = 0;
+            let totalBulkOthers = 0;
+            let totalBulkNet = 0;
+
             allEmployees.forEach(emp => {
                 const empLogs = logMap[emp.id] || { late: 0, ot: 0 };
                 const salary = Number(emp.salary || 0);
@@ -1107,6 +1114,14 @@
                 const totalIncome = salary + overtimeEarnings;
                 const totalDeductions = socialSecurity + noWorkNoPay + othersDeduct;
                 const netAmount = totalIncome - totalDeductions;
+
+                // บวกสะสมค่า
+                totalBulkSalary += salary;
+                totalBulkOT += overtimeEarnings;
+                totalBulkNoWork += noWorkNoPay;
+                totalBulkSocial += socialSecurity;
+                totalBulkOthers += othersDeduct;
+                totalBulkNet += netAmount;
 
                 bulkProcessedPayloads.push({
                     payroll_month: selectedMonth,
@@ -1131,12 +1146,27 @@
                         <td>฿${salary.toLocaleString()}</td>
                         <td class="text-blue-600">฿${overtimeEarnings.toLocaleString()}</td>
                         <td class="text-red-500">฿${noWorkNoPay.toLocaleString()}</td>
-                        <td>฿${socialSecurity}</td>
-                        <td>฿${othersDeduct}</td>
+                        <td>฿${socialSecurity.toLocaleString()}</td>
+                        <td>฿${othersDeduct.toLocaleString()}</td>
                         <td class="font-bold text-slate-900">฿${netAmount.toLocaleString()}</td>
                     </tr>
                 `;
             });
+
+            // ใส่แถวสรุปยอดรวม (Total Row) ของตารางพรีวิวก่อนปิดงบ
+            if (allEmployees.length > 0) {
+                tbody.innerHTML += `
+                    <tr class="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 sticky bottom-0 shadow-md">
+                        <td colspan="2" class="p-3 text-center text-slate-700 font-bold">รวมทั้งหมด (Total):</td>
+                        <td class="p-3">฿${totalBulkSalary.toLocaleString()}</td>
+                        <td class="p-3 text-blue-600">฿${totalBulkOT.toLocaleString()}</td>
+                        <td class="p-3 text-red-500">฿${totalBulkNoWork.toLocaleString()}</td>
+                        <td class="p-3">฿${totalBulkSocial.toLocaleString()}</td>
+                        <td class="p-3">฿${totalBulkOthers.toLocaleString()}</td>
+                        <td class="p-3 font-extrabold text-blue-900">฿${totalBulkNet.toLocaleString()}</td>
+                    </tr>
+                `;
+            }
 
             document.getElementById('bulkPreviewSection').style.display = 'block';
         } catch (err) {
@@ -1206,10 +1236,20 @@
       filterPayrollReportData(); 
     }
     
+    // ⭐️ ตารางที่ 2: เพิ่มผลรวมท้ายตาราง สรุปรายงานรายจ่าย (Report View)
     function filterPayrollReportData() {
       const mode = document.querySelector('input[name="reportMode"]:checked').value;
       const tbody = document.getElementById('reportTableBody'); if(!tbody) return;
       tbody.innerHTML = '';
+
+      // ตัวแปรสะสมผลรวมท้ายตารางรายงาน
+      let reportTotalBasic = 0;
+      let reportTotalOT = 0;
+      let reportTotalNoWork = 0;
+      let reportTotalOthers = 0;
+      let reportTotalNet = 0;
+      let hasRows = false;
+
       cachedReportData.forEach(r => {
         let match = false;
         if (mode === 'OVERVIEW') {
@@ -1219,10 +1259,46 @@
           const eFilter = document.getElementById('filterReportEmployee').value;
           if(String(r.id) === String(eFilter)) match = true;
         }
+        
         if(match) {
-          tbody.innerHTML += `<tr><td>${r.month}</td><td><strong>${r.id}</strong></td><td>${r.name}</td><td>${r.dept}</td><td>${r.position}</td><td>${r.basic.toLocaleString()} ฿</td><td style="color:blue;">${r.ot?r.ot.toLocaleString()+' ฿':'-'}</td><td style="color:red;">${r.noWork?r.noWork.toLocaleString()+' ฿':'-'}</td><td style="color:red;">${r.othersDeduct?r.othersDeduct.toLocaleString()+' ฿':'-'}</td><td><strong>${r.netAmount.toLocaleString()} ฿</strong></td></tr>`;
+          hasRows = true;
+          // สะสมค่าตัวเลขเข้าตัวแปรส่วนกลาง
+          reportTotalBasic += r.basic;
+          reportTotalOT += r.ot;
+          reportTotalNoWork += r.noWork;
+          reportTotalOthers += r.othersDeduct;
+          reportTotalNet += r.netAmount;
+
+          tbody.innerHTML += `<tr>
+            <td>${r.month}</td>
+            <td><strong>${r.id}</strong></td>
+            <td>${r.name}</td>
+            <td>${r.dept}</td>
+            <td>${r.position}</td>
+            <td>${r.basic.toLocaleString()} ฿</td>
+            <td style="color:blue;">${r.ot ? r.ot.toLocaleString() + ' ฿' : '-'}</td>
+            <td style="color:red;">${r.noWork ? r.noWork.toLocaleString() + ' ฿' : '-'}</td>
+            <td style="color:red;">${r.othersDeduct ? r.othersDeduct.toLocaleString() + ' ฿' : '-'}</td>
+            <td><strong>${r.netAmount.toLocaleString()} ฿</strong></td>
+          </tr>`;
         }
       });
+
+      // แทรกบรรทัดสรุปผลรวม (Total Row) ปิดท้ายตารางรายงานรายจ่ายตามเงื่อนไขที่คัดกรอง
+      if (hasRows) {
+          tbody.innerHTML += `
+              <tr class="total-row bg-slate-100 font-bold border-t-2 border-slate-400">
+                  <td colspan="5" class="p-3 text-right text-slate-700 font-bold">รวมทั้งหมดตามเงื่อนไข (Total):</td>
+                  <td class="p-3 text-slate-900">฿${reportTotalBasic.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                  <td class="p-3 text-blue-600">฿${reportTotalOT.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                  <td class="p-3 text-red-500">฿${reportTotalNoWork.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                  <td class="p-3 text-red-500">฿${reportTotalOthers.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                  <td class="p-3 font-extrabold text-blue-900">฿${reportTotalNet.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+          `;
+      } else {
+          tbody.innerHTML = `<tr><td colspan="10" class="text-center text-slate-400 py-4">ไม่พบข้อมูลรายจ่ายตามตัวกรองที่เลือก</td></tr>`;
+      }
     }
   </script>
 </body>
