@@ -128,7 +128,21 @@
         <div class="card-ui p-6 text-center animate-pulse text-blue-500 col-span-5"><i class="fa fa-spinner fa-spin mr-2"></i>Loading live database and calculating analytics...</div>
       </div>
 
-      <!-- ส่วนแผงสถิติด้านบน -->
+      <div class="card-ui mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider !mb-0"><i class="fa fa-chart-line text-blue-800 mr-1"></i> SALES vs PAYROLL COST TREND</h3>
+          <div class="w-32">
+             <select id="trendTimeframeFilter" onchange="renderSalesPayrollTrendChart()" class="border border-gray-300 p-1.5 rounded bg-white text-slate-700 text-xs font-semibold outline-none cursor-pointer shadow-sm">
+                <option value="monthly" selected>Monthly</option>
+                <option value="yearly">Yearly</option>
+             </select>
+          </div>
+        </div>
+        <div class="relative w-full" style="height: 280px;">
+          <canvas id="salesPayrollTrendLineChart"></canvas>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card-ui lg:col-span-2 flex flex-col justify-between">
           <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa fa-chart-bar text-blue-600"></i> MONTHLY TOTAL NET REVENUE vs ALL DEPT PAYROLL</h3>
@@ -148,7 +162,6 @@
         </div>
       </div>
 
-      <!-- แถว Layout ที่ 2: ฝั่งซ้ายกราฟ Break-Even / ฝั่งขวาแถบ EXECUTIVE ALERTS -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card-ui lg:col-span-2">
           <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa fa-chart-line text-emerald-600"></i> SALES CONVERSION & BREAK-EVEN LINE</h3>
@@ -216,7 +229,6 @@
         </div>
     </div>
 
-    <!-- บล็อกมุมมองอื่น ๆ คงที่ตรรกะเดิมไว้ -->
     <div id="view-ceo-setting" class="tab-view">
         <div class="card-ui">
             <h3><i class="fa-solid fa-sliders text-amber-500"></i> Executive Sales Target & Budgeting Input Form</h3>
@@ -396,6 +408,11 @@
     let localEmployeesCache = [];
     let cachedTargetSalesRows = [];
     let bulkProcessedPayloads = []; 
+    
+    // 🟢 เก็บตัวแปรสถิติไทม์ไลน์ดิบสำหรับการคำนวณกราฟแนวโน้มใหม่แบบ Dynamic
+    let globalTimelinePeriods = [];
+    let globalTimelineRevenue = [];
+    let globalTimelinePayroll = [];
 
     window.onload = function() { 
       generateDynamicMonths(); 
@@ -460,6 +477,11 @@
       if(tabId === 'view-turnover') renderTurnoverViewOperations();
     }
 
+    const normalize = (str) => String(str).replace(/\s+/g, ' ').trim().toLowerCase();
+    function formatM(num) { return (num / 1000000).toFixed(2) + 'M'; }
+    function getArrow(val) { return parseFloat(val) >= 0 ? '<i class="fa fa-arrow-up text-green-500"></i>' : '<i class="fa fa-arrow-down text-red-500"></i>'; }
+    function getColor(val) { return parseFloat(val) >= 0 ? 'text-green-500' : 'text-red-500'; }
+
     function generateQuickInsightRowHTML(icon, title, colorClass, currentVal, compareVal, isPercentValue = false) {
         let diffPercent = 0;
         if (compareVal > 0) {
@@ -492,7 +514,6 @@
         `;
     }
 
-    // 🟢 แปลงโครงสร้างข้อความแถวในระบบคัดกรอง Alerts ให้แสดงเป็นภาษาอังกฤษทั้งหมด
     function appendAlertRowHTML(icon, bgClass, title, subtitle) {
         return `
             <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0 hover:bg-slate-50/50 p-1.5 rounded-lg transition cursor-pointer">
@@ -510,11 +531,123 @@
         `;
     }
 
+    // 🟢 ฟังก์ชันแกนหลักอัพเดทใหม่: เรนเดอร์ตัวกราฟคู่สาย Sales vs Payroll Cost Line Trend แบบแยกเดือน/ปีตามภาพ 2ebd94.png
+    function renderSalesPayrollTrendChart() {
+        const timeframe = document.getElementById('trendTimeframeFilter').value || 'monthly';
+        
+        let labels = [];
+        let revenueData = [];
+        let payrollData = [];
+        let ratioData = [];
+
+        if (timeframe === 'yearly') {
+            const yearlyMap = {};
+            globalTimelinePeriods.forEach((p, idx) => {
+                const parts = p.split(' ');
+                const year = parts[1] || parts[0]; 
+                if (!yearlyMap[year]) yearlyMap[year] = { rev: 0, pay: 0 };
+                yearlyMap[year].rev += globalTimelineRevenue[idx] || 0;
+                yearlyMap[year].pay += globalTimelinePayroll[idx] || 0;
+            });
+            labels = Object.keys(yearlyMap).sort();
+            labels.forEach(yr => {
+                revenueData.push(yearlyMap[yr].rev);
+                payrollData.push(yearlyMap[yr].pay);
+                ratioData.push(yearlyMap[yr].rev > 0 ? ((yearlyMap[yr].pay / yearlyMap[yr].rev) * 100) : 0);
+            });
+        } else {
+            labels = globalTimelinePeriods;
+            revenueData = globalTimelineRevenue;
+            payrollData = globalTimelinePayroll;
+            globalTimelinePeriods.forEach((p, idx) => {
+                const r = globalTimelineRevenue[idx] || 0;
+                const pay = globalTimelinePayroll[idx] || 0;
+                ratioData.push(r > 0 ? ((pay / r) * 100) : 0);
+            });
+        }
+
+        if (charts.trendLineChartInstance) charts.trendLineChartInstance.destroy();
+
+        const ctx = document.getElementById('salesPayrollTrendLineChart');
+        if(!ctx) return;
+
+        charts.trendLineChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Sales Revenue',
+                        data: revenueData,
+                        borderColor: '#2563eb', // Blue Line
+                        backgroundColor: '#2563eb',
+                        pointBackgroundColor: '#2563eb',
+                        tension: 0.3,
+                        borderWidth: 3,
+                        yAxisID: 'yLeft'
+                    },
+                    {
+                        label: 'Payroll Cost',
+                        data: payrollData,
+                        borderColor: '#16a34a', // Green Line
+                        backgroundColor: '#16a34a',
+                        pointBackgroundColor: '#16a34a',
+                        tension: 0.3,
+                        borderWidth: 3,
+                        yAxisID: 'yLeft'
+                    },
+                    {
+                        label: 'Payroll % to Sales',
+                        data: ratioData,
+                        borderColor: '#dc2626', // Red Line
+                        backgroundColor: 'transparent',
+                        pointBackgroundColor: '#dc2626',
+                        tension: 0.3,
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        yAxisID: 'yRight'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    yLeft: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: 'Amount (THB)', font: { size: 11, weight: 'bold' } },
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                                return value.toLocaleString();
+                            }
+                        }
+                    },
+                    yRight: {
+                        type: 'linear',
+                        position: 'right',
+                        title: { display: true, text: 'Ratio Percentage (%)', font: { size: 11, weight: 'bold' } },
+                        min: 0,
+                        max: 40,
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            callback: function(value) { return value + '%'; }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+                }
+            }
+        });
+    }
+
     async function loadDashboardData() {
       if(!document.getElementById('error-container')) return;
       document.getElementById('error-container').innerHTML = '';
       document.getElementById('kpi-container').innerHTML = '<div class="card-ui p-6 text-center animate-pulse text-blue-500 col-span-5"><i class="fa fa-spinner fa-spin mr-2"></i>Loading live database and calculating analytics...</div>';
-      Object.keys(charts).forEach(key => { if(charts[key]) charts[key].destroy(); });
+      Object.keys(charts).forEach(key => { if(charts[key] && key !== 'trendLineChartInstance') charts[key].destroy(); });
 
       try {
         const { data: summaryData, error: summaryErr } = await supabaseClient.from('monthly_payroll_summary').select('*');
@@ -612,7 +745,6 @@
         const insightContainer = document.getElementById('quick-insight-list-container');
         if(insightContainer) insightContainer.innerHTML = insightHTML;
 
-        // 🟢 ตรรกะตรวจจับภัยและประมวลผลแปลภาษาอังกฤษ (EXECUTIVE ALERTS ENG VERSION)
         let alertsHTML = '';
         let totalAlertsCount = 0;
 
@@ -648,7 +780,6 @@
         if(document.getElementById('badgeAlertCount')) document.getElementById('badgeAlertCount').textContent = totalAlertsCount;
         if(document.getElementById('executive-alerts-container')) document.getElementById('executive-alerts-container').innerHTML = alertsHTML;
 
-        // ดึงกราฟ Charts มาประกอบร่างตามปกติ
         const branchGroup = {};
         targetRowsSales.forEach(r => {
           const bName = empMetaMap[String(r.employee_id).trim()]?.assigned_branch || 'Unassigned Mall';
@@ -658,11 +789,31 @@
           branchGroup[bName].payrollCost += Number(r.net_amount);
         });
 
+        // 🟢 เตรียมชุดข้อมูลดิบสำหรับวาดกราฟ Sales vs Payroll Cost Line Trend ตัวใหม่
+        const chronologicalPeriods = Array.from(periodsSet).sort((a, b) => new Date(a) - new Date(b));
+        globalTimelinePeriods = chronologicalPeriods;
+        globalTimelineRevenue = [];
+        globalTimelinePayroll = [];
+
+        chronologicalPeriods.forEach(p => {
+            const monthSales = salesRecords.filter(s => s.month_period === p);
+            const monthPayrollRows = summaryData.filter(r => r.payroll_month === p);
+            
+            const salesVal = monthSales.length > 0 ? monthSales.reduce((sum, s) => sum + Number(s.actual_sales), 0) : 0;
+            const payVal = monthPayrollRows.reduce((sum, r) => sum + Number(r.net_amount), 0);
+            
+            globalTimelineRevenue.push(salesVal);
+            globalTimelinePayroll.push(payVal);
+        });
+
+        // เรียกเรนเดอร์กราฟเทรนด์หลักตัวใหม่ทันที
+        renderSalesPayrollTrendChart();
+
+        // สั่งสร้างกราฟเดิมอื่นๆ ตามลำดับ
         charts.payroll = new Chart(document.getElementById('payrollTrendChart'), { type: 'bar', data: { labels: [currentCompareVal, currentTargetVal], datasets: [{ label: 'Total Company Revenue', data: [prevSalesRevenue, actualSalesRevenue], backgroundColor: '#1e3a8a' }, { label: 'All Dept Payroll Cost', data: [cTotalPayrollAllDept, tTotalPayrollAllDept], backgroundColor: '#dc2626' }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.sales = new Chart(document.getElementById('salesPayrollChart'), { type: 'line', data: { labels: [currentCompareVal, currentTargetVal], datasets: [{ label: 'Gross Profit Line (35%)', data: [prevSalesRevenue * 0.35, grossProfit], borderColor: '#16a34a', tension: 0.2 }, { label: 'Total Payroll Expenses', data: [cTotalPayrollAllDept, tTotalPayrollAllDept], borderColor: '#2563eb', tension: 0.2 }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.donut = new Chart(document.getElementById('headcountChart'), { type: 'doughnut', data: { labels: Object.keys(branchGroup).length > 0 ? Object.keys(branchGroup) : ['No Data'], datasets: [{ data: Object.keys(branchGroup).length > 0 ? Object.values(branchGroup).map(b => b.headcount) : [0], backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#06b6d4'], cutout: '70%' }] }, options: { responsive: true, maintainAspectRatio: false } });
 
-        const chronologicalPeriods = Array.from(periodsSet).sort((a, b) => new Date(a) - new Date(b));
         const revenueDataTimeline = [];
         const salaryDataTimeline = [];
         const otDataTimeline = [];
@@ -681,7 +832,7 @@
         });
 
         charts.revenueTrend = new Chart(document.getElementById('executiveRevenueTrendChart'), { type: 'line', data: { labels: chronologicalPeriods, datasets: [{ label: 'Actual Revenue', data: revenueDataTimeline, borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.05)', borderWidth: 3, tension: 0.4, pointBackgroundColor: '#16a34a', fill: true }] }, options: { responsive: true, maintainAspectRatio: false } });
-        charts.compensationTrend = new Chart(document.getElementById('executiveCompTrendChart'), { type: 'bar', data: { labels: chronologicalPeriods, datasets: [{ label: 'Salary (ฐานเงินเดือน)', data: salaryDataTimeline, backgroundColor: '#1e3a8a' }, { label: 'OT (ค่าล่วงเวลา)', data: otDataTimeline, backgroundColor: '#2563eb' }, { label: 'Incentive (เงินพิเศษ)', data: incentiveDataTimeline, backgroundColor: '#f59e0b' }, { label: 'Commission (ค่าคอมมิชชัน)', data: commissionDataTimeline, backgroundColor: '#7c3aed' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
+        charts.compensationTrend = new Chart(document.getElementById('executiveCompTrendChart'), { type: 'bar', data: { labels: chronologicalPeriods, datasets: [{ label: 'Salary', data: salaryDataTimeline, backgroundColor: '#1e3a8a' }, { label: 'OT', data: otDataTimeline, backgroundColor: '#2563eb' }, { label: 'Incentive', data: incentiveDataTimeline, backgroundColor: '#f59e0b' }, { label: 'Commission', data: commissionDataTimeline, backgroundColor: '#7c3aed' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
 
         const branchTbody = document.querySelector('#branchTable tbody');
         branchTbody.innerHTML = '';
