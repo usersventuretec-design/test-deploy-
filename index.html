@@ -467,13 +467,13 @@
         const targetRowsSales = targetRowsAll.filter(r => empMetaMap[String(r.employee_id).trim()]?.is_sales === true);
         const compareRowsSales = compareRowsAll.filter(r => empMetaMap[String(r.employee_id).trim()]?.is_sales === true);
 
-        const tSalesHeadcount = targetRowsSales.length;
-        const tSalesPayroll = targetRowsSales.reduce((sum, r) => sum + (Number(r.net_amount) || 0), 0);
-
-        const tTotalHeadcount = targetRowsAll.length;
-        const tSalesHeadcountActual = rawEmployees.filter(e => e.is_sales && (!e.resigned_date || e.resigned_date.trim() === '')).length;
+        // 🟢 จุดแก้ไข: ปรับปรุงตรรกะนับจำนวน Headcount ให้ดึงจากพนักงานที่ยัง Active อยู่จริง (รวมเป็น 7 คน)
+        const activeEmployeesNow = rawEmployees.filter(e => !e.resigned_date || e.resigned_date.trim() === '');
+        const tTotalHeadcount = activeEmployeesNow.length; 
+        const tSalesHeadcount = activeEmployeesNow.filter(e => e.is_sales === true).length;
         const tOfficeHeadcount = tTotalHeadcount - tSalesHeadcount;
 
+        const tSalesPayroll = targetRowsSales.reduce((sum, r) => sum + (Number(r.net_amount) || 0), 0);
         const cSalesHeadcount = compareRowsSales.length || 1;
         const cSalesPayroll = compareRowsSales.reduce((sum, r) => sum + (Number(r.net_amount) || 0), 0) || 1;
 
@@ -1147,7 +1147,7 @@
                 <td style="border: 1px solid #000; padding: 10px 12px; vertical-align: top; line-height: 2;">
                   <div style="display: flex; justify-content: space-between; align-items: center;"><span>Basic salary</span><input type="number" class="slip-input e-calc_${index}" id="iBasic_${index}" value="${data.emp.salary || 0}" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
                   <div style="display: flex; justify-content: space-between; align-items: center;"><span>Others</span><input type="number" class="slip-input e-calc_${index}" value="0" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
-                  <div style="display: flex; justify-content: space-between; align-items: center;"><span>Bonus</span><input type="number" class="slip-input e-calc_${index}" value="0" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
+                  <div style="display: flex; justify-content: space-between; align-items: center;"><span>Bonus</span><input type="number" class="slip-input e-calc_${index}" value="0" oninput="oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
                   <div style="display: flex; justify-content: space-between; align-items: center;"><span>Overtime</span><input type="number" class="slip-input e-calc_${index}" id="iOvertime_${index}" value="${data.attendance.overtime || 0}" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent; color: blue;"></div>
                   <div style="display: flex; justify-content: space-between; align-items: center;"><span>Incentive (Sales)</span><input type="number" class="slip-input e-calc_${index}" value="0" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
                   <div style="display: flex; justify-content: space-between; align-items: center;"><span>Incentive (V-Chef)</span><input type="number" class="slip-input e-calc_${index}" value="0" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
@@ -1181,7 +1181,6 @@
                   <div style="display: flex; justify-content: space-between; font-weight: 600;"><span>Total deductions</span><span id="txtTotalDeductions_${index}">0.00</span></div>
                 </td>
               </tr>
-              
               
               <tr>
                 <td colspan="3" style="border: 1px solid #000; padding: 10px 12px; background: #fff;">
@@ -1471,6 +1470,6 @@
           tbody.innerHTML = `<tr><td colspan="10" class="text-center text-slate-400 py-4">No matching general ledger records found for specified parameters.</td></tr>`;
       }
     }
-  </script>
+  </style>
 </body>
 </html>
