@@ -32,9 +32,10 @@
     .card-ui { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); padding: 25px; margin-bottom: 25px;}
     .card-ui h3 { font-size: 16px; margin-bottom: 20px; color: #1e3a8a; display: flex; align-items: center; gap: 8px; font-weight: 600;}
     .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .grid-form div { min-width: 0; }
     .input-wrapper { display: flex; flex-direction: column; gap: 6px; }
     .input-wrapper label { font-size: 13px; font-weight: 500; color: var(--text-gray); }
-    input, select, textarea { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px; outline: none; background: rgba(255, 255, 255, 0.9); color: #1e293b;}
+    input, select, textarea { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px; outline: none; background: rgba(255, 255, 255, 0.9); color: #1e293b; width: 100%; box-sizing: border-box;}
     textarea { height: 120px; resize: none; font-family: monospace; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; background: rgba(255, 255, 255, 0.9); color: #1e293b; }
     input:focus, select:focus, textarea:focus { background: #ffffff; border-color: rgba(37, 99, 235, 0.6); box-shadow: 0 0 12px rgba(37, 99, 235, 0.15); }
     .btn-ui { background-color: #1e3a8a; color: white; padding: 10px 24px; border: none; border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;}
@@ -414,12 +415,15 @@
       loadEmployeeList();    
     };
 
+    // 🟢 แก้ไขจุดสำคัญ: บังคับให้ Choice รายชื่อเดือน เข้าไปสถิตอยู่ในดรอบดาวน์ของหน้า CEO Dashboard ด้วยตั้งแต่เปิดเว็บ
     function generateDynamicMonths() {
         const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonthIndex = currentDate.getMonth(); 
         
+        const targetSelect = document.getElementById('targetMonthFilter');
+        const compareSelect = document.getElementById('compareMonthFilter');
         const kpiSelect = document.getElementById('kpiPeriodMonth');
         const slipSelect1 = document.getElementById('selectPayrollMonth1');
         const bulkSlipSelect = document.getElementById('selectBulkPayrollMonth');
@@ -437,6 +441,24 @@
             optionsHTML += `</optgroup>`;
         }
 
+        // แจกจ่าย HTML ตัวเลือกเดือนให้กับทุกดรอปดาวน์ในหน้าเว็บแบบถาวร
+        if(targetSelect && !targetSelect.innerHTML) targetSelect.innerHTML = optionsHTML;
+        if(compareSelect && !compareSelect.innerHTML) {
+            // ปรับตัวเลือกเดือนตั้งต้นของตัวเปรียบเทียบให้ถอยหลังไป 1 เดือนตามธรรมชาติ
+            let compHTML = '';
+            for (let y = endYear; y >= startYear; y--) {
+                compHTML += `<optgroup label="--- Year ${y} ---">`;
+                monthsEn.forEach((month, index) => {
+                    let prevMonthIdx = currentMonthIndex - 1;
+                    let targetYear = currentYear;
+                    if(prevMonthIdx < 0) { prevMonthIdx = 11; targetYear--; }
+                    const isCompSelected = (index === prevMonthIdx && y === targetYear) ? 'selected' : '';
+                    compHTML += `<option value="${month} ${y}" ${isCompSelected}>${month} ${y}</option>`;
+                });
+                compHTML += `</optgroup>`;
+            }
+            compareSelect.innerHTML = compHTML;
+        }
         if(kpiSelect) kpiSelect.innerHTML = optionsHTML;
         if(slipSelect1) slipSelect1.innerHTML = optionsHTML;
         if(bulkSlipSelect) bulkSlipSelect.innerHTML = optionsHTML;
@@ -531,20 +553,18 @@
         salesRecords.forEach(item => { if(item.month_period) periodsSet.add(String(item.month_period).trim()); });
 
         let dropdownPeriods = Array.from(periodsSet);
-        if (dropdownPeriods.length === 0) dropdownPeriods = ["June 2026", "May 2026", "April 2026"];
         dropdownPeriods.sort((a, b) => new Date(b) - new Date(a));
         
         const targetSelect = document.getElementById('targetMonthFilter');
         const compareSelect = document.getElementById('compareMonthFilter');
         
-        const currentTargetVal = targetSelect.value || dropdownPeriods[0];
-        const currentCompareVal = compareSelect.value || (dropdownPeriods[1] || dropdownPeriods[0]);
+        // 🟢 ดักทางรอด: เช็คว่าถ้า Dropdown ไม่มี Choice ให้สั่งรันผลิตเดือนสแตนด์บายฉุกเฉินขึ้นมาทันทีเพื่อป้องกันค่าว่างพ่นระบบพัง
+        if (!targetSelect.value || !compareSelect.value) {
+            generateDynamicMonths();
+        }
 
-        targetSelect.innerHTML = ''; compareSelect.innerHTML = '';
-        dropdownPeriods.forEach(m => {
-          targetSelect.add(new Option(m, m, false, m === currentTargetVal));
-          compareSelect.add(new Option(m, m, false, m === currentCompareVal));
-        });
+        const currentTargetVal = targetSelect.value;
+        const currentCompareVal = compareSelect.value;
 
         const targetRowsAll = summaryData.filter(r => r.payroll_month === currentTargetVal);
         const compareRowsAll = summaryData.filter(r => r.payroll_month === currentCompareVal);
@@ -598,8 +618,6 @@
         const cOTSumCost = compareRowsAll.reduce((sum, r) => sum + (Number(r.ot_earnings) || 0), 0);
         
         const tRevPerHead = tTotalHeadcount > 0 ? (actualSalesRevenue / tTotalHeadcount) : 0;
-        
-        // 🟢 ป้องกันตัวหารเป็นศูนย์ (Bug Fix): ดักกรณีเดือนเปรียบเทียบยังไม่มีข้อมูลเงินเดือนในตาราง summaryData
         const cHeadcountDivider = compareRowsAll.length > 0 ? compareRowsAll.length : tTotalHeadcount;
         const cRevPerHead = cHeadcountDivider > 0 ? (prevSalesRevenue / cHeadcountDivider) : 0;
 
@@ -614,7 +632,7 @@
         const insightContainer = document.getElementById('quick-insight-list-container');
         if(insightContainer) insightContainer.innerHTML = insightHTML;
 
-        // ตรรกะตรวจจับพฤติกรรมอัตโนมัติ (EXECUTIVE ALERTS)
+        // ตรรกะประมวลผลคำนวณหน้า EXECUTIVE ALERTS
         let alertsHTML = '';
         let totalAlertsCount = 0;
 
@@ -622,8 +640,6 @@
             totalAlertsCount++;
             alertsHTML += appendAlertRowHTML('fa-triangle-exclamation', 'bg-red-500', 'Payroll % to Sales สูงกว่าเป้าหมาย', `ปัจจุบันอยู่ที่ ${payRatioVal}% สูงกว่าเกณฑ์ความเสถียร 10%`);
         }
-        
-        let otDiffPct = cOTSumCost > 0 ? (((tOTSumCost - cOTSumCost) / cOTSumCost) * 100) : 0;
         if (cOTSumCost > 0 && otDiffPct > 5) {
             totalAlertsCount++;
             alertsHTML += appendAlertRowHTML('fa-clock', 'bg-orange-500', `OT Cost เพิ่มขึ้น ${otDiffPct.toFixed(1)}%`, 'ตรวจพบการเบิกจ่ายล่วงเวลาสูงขึ้น ควรตรวจสอบตารางงานคนสแกนนิ้ว');
@@ -650,7 +666,7 @@
         if(document.getElementById('badgeAlertCount')) document.getElementById('badgeAlertCount').textContent = totalAlertsCount;
         if(document.getElementById('executive-alerts-container')) document.getElementById('executive-alerts-container').innerHTML = alertsHTML;
 
-        // ส่วนสร้างโครงสร้างกราฟและตาราง Performance
+        // เริ่มต้นเรนเดอร์ส่วนกราฟ Charts
         const branchGroup = {};
         targetRowsSales.forEach(r => {
           const bName = empMetaMap[String(r.employee_id).trim()]?.assigned_branch || 'Unassigned Mall';
@@ -835,7 +851,7 @@
             if (error) throw error;
             alert(`🎉 Synced closing target sales metrics for ${branch_name} onto database server successfully.`);
             loadCompanyKPIHistoryList(); loadDashboardData();
-        } catch (err) { alert('Failure execution: ' + err.message); } fillAll { document.getElementById('kpiLoader').style.display = 'none'; }
+        } catch (err) { alert('Failure execution: ' + err.message); } finally { document.getElementById('kpiLoader').style.display = 'none'; }
     }
 
     async function loadCompanyKPIHistoryList() {
