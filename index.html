@@ -127,7 +127,6 @@
         <div class="card-ui p-6 text-center animate-pulse text-blue-500 col-span-5"><i class="fa fa-spinner fa-spin mr-2"></i>Loading live database and calculating analytics...</div>
       </div>
 
-      <!-- ส่วนแผงสถิติด้านบน: กราฟแท่งหลักฝั่งซ้าย และ แถบ Quick Insight ฝั่งขวา -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card-ui lg:col-span-2 flex flex-col justify-between">
           <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa fa-chart-bar text-blue-600"></i> MONTHLY TOTAL NET REVENUE vs ALL DEPT PAYROLL</h3>
@@ -147,14 +146,12 @@
         </div>
       </div>
 
-      <!-- 🟢 เพิ่ม Layout แถวที่ 2: ฝั่งซ้ายกราฟ Break-Even / ฝั่งขวาแถบ EXECUTIVE ALERTS อัจฉริยะ (ตามภาพ image_393885.png) -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card-ui lg:col-span-2">
           <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa fa-chart-line text-emerald-600"></i> SALES CONVERSION & BREAK-EVEN LINE</h3>
           <div class="relative w-full" style="height: 290px;"><canvas id="salesPayrollChart"></canvas></div>
         </div>
 
-        <!-- 🟢 บล็อก EXECUTIVE ALERTS แบบตอบสนองอัตโนมัติตามภาพลิขสิทธิ์ image_393885.png -->
         <div class="card-ui bg-white shadow-md rounded-xl border p-5 flex flex-col justify-between relative">
           <div>
             <h3 class="text-sm font-bold text-rose-600 uppercase tracking-wider mb-4 flex items-center justify-between">
@@ -213,7 +210,7 @@
               </thead>
               <tbody></tbody>
           </table>
-      </div>
+        </div>
     </div>
 
     <div id="view-ceo-setting" class="tab-view">
@@ -493,7 +490,6 @@
         `;
     }
 
-    // 🟢 ฟังก์ชันหลักในการจัดโครงสร้างและพ่นการแจ้งเตือนโมเดลเลียนแบบภาพ image_393885.png
     function appendAlertRowHTML(icon, bgClass, title, subtitle) {
         return `
             <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0 hover:bg-slate-50/50 p-1.5 rounded-lg transition cursor-pointer">
@@ -602,35 +598,37 @@
         const cOTSumCost = compareRowsAll.reduce((sum, r) => sum + (Number(r.ot_earnings) || 0), 0);
         
         const tRevPerHead = tTotalHeadcount > 0 ? (actualSalesRevenue / tTotalHeadcount) : 0;
-        const cRevPerHead = compareRowsAll.length > 0 ? (prevSalesRevenue / compareRowsAll.length) : 0;
+        
+        // 🟢 ป้องกันตัวหารเป็นศูนย์ (Bug Fix): ดักกรณีเดือนเปรียบเทียบยังไม่มีข้อมูลเงินเดือนในตาราง summaryData
+        const cHeadcountDivider = compareRowsAll.length > 0 ? compareRowsAll.length : tTotalHeadcount;
+        const cRevPerHead = cHeadcountDivider > 0 ? (prevSalesRevenue / cHeadcountDivider) : 0;
 
         let insightHTML = '';
         insightHTML += generateQuickInsightRowHTML('fa-chart-line', 'Sales Revenue', 'text-blue-600', actualSalesRevenue, prevSalesRevenue);
         insightHTML += generateQuickInsightRowHTML('fa-wallet', 'Payroll Cost', 'text-emerald-600', tTotalPayrollAllDept, cTotalPayrollAllDept);
         insightHTML += generateQuickInsightRowHTML('fa-chart-pie', 'Payroll % to Sales', 'text-indigo-600', parseFloat(payRatioVal), parseFloat(payRatioPrev), true);
-        insightHTML += generateQuickInsightRowHTML('fa-users', 'Headcount', 'text-blue-500', tTotalHeadcount, compareRowsAll.length);
+        insightHTML += generateQuickInsightRowHTML('fa-users', 'Headcount', 'text-blue-500', tTotalHeadcount, compareRowsAll.length > 0 ? compareRowsAll.length : tTotalHeadcount);
         insightHTML += generateQuickInsightRowHTML('fa-user-tie', 'Revenue per Head', 'text-teal-600', tRevPerHead, cRevPerHead);
         insightHTML += generateQuickInsightRowHTML('fa-clock', 'OT Cost', 'text-orange-500', tOTSumCost, cOTSumCost);
 
         const insightContainer = document.getElementById('quick-insight-list-container');
         if(insightContainer) insightContainer.innerHTML = insightHTML;
 
-        // 🟢 ตรรกะตรวจจับพฤติกรรมอัตโนมัติ (Rule-Based Heuristic AI Engine) เพื่อเสิร์ฟแผง EXECUTIVE ALERTS
+        // ตรรกะตรวจจับพฤติกรรมอัตโนมัติ (EXECUTIVE ALERTS)
         let alertsHTML = '';
         let totalAlertsCount = 0;
 
-        // ดักเรื่องสัดส่วนเงินเดือนต่อเป้าหมายขาย
         if (parseFloat(payRatioVal) > 10) {
             totalAlertsCount++;
             alertsHTML += appendAlertRowHTML('fa-triangle-exclamation', 'bg-red-500', 'Payroll % to Sales สูงกว่าเป้าหมาย', `ปัจจุบันอยู่ที่ ${payRatioVal}% สูงกว่าเกณฑ์ความเสถียร 10%`);
         }
-        // ดักเรื่องค่าล่วงเวลาสะสมโตรวดเร็ว MoM
+        
         let otDiffPct = cOTSumCost > 0 ? (((tOTSumCost - cOTSumCost) / cOTSumCost) * 100) : 0;
-        if (otDiffPct > 5) {
+        if (cOTSumCost > 0 && otDiffPct > 5) {
             totalAlertsCount++;
             alertsHTML += appendAlertRowHTML('fa-clock', 'bg-orange-500', `OT Cost เพิ่มขึ้น ${otDiffPct.toFixed(1)}%`, 'ตรวจพบการเบิกจ่ายล่วงเวลาสูงขึ้น ควรตรวจสอบตารางงานคนสแกนนิ้ว');
         }
-        // ตรวจสอบพนักงานลาออกเฉลี่ยสะสม
+        
         const totalAllProfiles = rawEmployees.length;
         const totalResignedProfiles = rawEmployees.filter(e => e.resigned_date && String(e.resigned_date).trim() !== '').length;
         let compTurnoverPct = totalAllProfiles > 0 ? ((totalResignedProfiles / totalAllProfiles) * 100).toFixed(1) : 0;
@@ -638,14 +636,13 @@
             totalAlertsCount++;
             alertsHTML += appendAlertRowHTML('fa-users-slash', 'bg-rose-500', 'Turnover Rate สะสมสูงกว่าปกติ', `อัตราเปลี่ยนผ่าน lifecycle บ่งชี้ ${compTurnoverPct}% เกินเกณฑ์มาตรฐาน`);
         }
-        // ดักจับคนที่มีค่าหักมาสายสูงผิดปกติ (Late / No work No pay)
+        
         const highPenaltyStaffs = targetRowsAll.filter(r => (Number(r.no_work_no_pay) || 0) > 500).length;
         if (highPenaltyStaffs > 0) {
             totalAlertsCount++;
             alertsHTML += appendAlertRowHTML('fa-circle-user', 'bg-slate-600', `พบพนักงานมาสายสะสมสูงผิดปกติ ${highPenaltyStaffs} คน`, 'มีพนักงานโดนหักรายการ No Work No Pay เกิน ฿500 กดดูรายชื่อ');
         }
 
-        // กรณีสแกนแล้วบริษัทสมบูรณ์แบบไม่พบจุดบกพร่อง
         if (totalAlertsCount === 0) {
             alertsHTML = `<div class="text-center py-10 text-emerald-600 text-xs font-medium"><i class="fa-solid fa-circle-check text-lg mb-2 block"></i>ไม่พบพฤติกรรมผิดปกติในงวดบัญชีนี้</div>`;
         }
@@ -653,7 +650,7 @@
         if(document.getElementById('badgeAlertCount')) document.getElementById('badgeAlertCount').textContent = totalAlertsCount;
         if(document.getElementById('executive-alerts-container')) document.getElementById('executive-alerts-container').innerHTML = alertsHTML;
 
-        // วาดส่วนโครงสร้างกราฟสรุปทั้งหมด
+        // ส่วนสร้างโครงสร้างกราฟและตาราง Performance
         const branchGroup = {};
         targetRowsSales.forEach(r => {
           const bName = empMetaMap[String(r.employee_id).trim()]?.assigned_branch || 'Unassigned Mall';
@@ -838,7 +835,7 @@
             if (error) throw error;
             alert(`🎉 Synced closing target sales metrics for ${branch_name} onto database server successfully.`);
             loadCompanyKPIHistoryList(); loadDashboardData();
-        } catch (err) { alert('Failure execution: ' + err.message); } finally { document.getElementById('kpiLoader').style.display = 'none'; }
+        } catch (err) { alert('Failure execution: ' + err.message); } fillAll { document.getElementById('kpiLoader').style.display = 'none'; }
     }
 
     async function loadCompanyKPIHistoryList() {
@@ -968,7 +965,7 @@
         } catch (err) {
             alert('เกิดข้อผิดพลาดไม่สามารถลบข้อมูลได้: ' + err.message);
             console.error(err);
-        } fillAll {
+        } finally {
             if (document.getElementById('empLoader')) {
                 document.getElementById('empLoader').style.display = 'none';
             }
