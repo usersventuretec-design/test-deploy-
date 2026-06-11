@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2=family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
         --primary: #0f172a;
@@ -107,7 +107,7 @@
           <label class="text-[11px] font-bold text-slate-500 uppercase">Target Period</label>
           <select id="targetMonthFilter" onchange="loadDashboardData()" class="border border-gray-300 p-2 rounded bg-white text-slate-700 outline-none w-36 text-sm font-semibold cursor-pointer shadow-sm"></select>
         </div>
-        <div class="flex flex-col items-center justify-end h-full pt-4">
+        <div class="flex items-center justify-end h-full pt-4">
           <span class="text-slate-400 font-bold text-sm">VS</span>
         </div>
         <div class="flex flex-col items-start">
@@ -435,7 +435,7 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
-        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch, dept, joined_date, resigned_date');
+        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch, dept, joined_date, resigned_date, bank_acc');
         if (empErr) throw empErr;
 
         const empMetaMap = {};
@@ -1057,11 +1057,9 @@
       document.getElementById('dualSlipsWrapper').style.display = 'block';
     }
 
-   // ⭐️ ตารางทำสลิป: อัปเกรดระบบจัดระเบียบ Regex ชื่อ-นามสกุล และดึงวันเริ่มงาน Joined Date ผูกสำเร็จแล้วครับ
-   function createSlipHTMLTemplate(index, data) {
+    function createSlipHTMLTemplate(index, data) {
       const fullName = data && data.emp && data.emp.name ? String(data.emp.name).trim().replace(/\s+/g, ' ') : 'Unassigned';
       
-      // แยกส่วนคำด้วย Regex ป้องกันบั๊กนามสกุลหายเพราะช่องว่างเว้นวรรคยาวเกิน
       const nameParts = fullName.split(' ');
       const fName = nameParts[0] || fullName; 
       const lName = nameParts.slice(1).join(' ') || '-'; 
