@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght=300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
         --primary: #0f172a;
@@ -51,7 +51,7 @@
     table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     table.data-table th { background-color: #f8fafc; padding: 12px; color: #1e3a8a; border-bottom: 2px solid var(--border-color); border-top: 1px solid var(--border-color); text-align: left; font-weight: bold;}
     table.data-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
-    table.data-table tr.total-row td { background-color: #e2e8f0; font-weight: 600; color: #0f172a; border-top: 2px solid #94a3b8; border-bottom: 2px double #94a3b8; }
+    table.data-table tr.total-row bg-slate-100 td { background-color: #e2e8f0; font-weight: 600; color: #0f172a; border-top: 2px solid #94a3b8; border-bottom: 2px double #94a3b8; }
     .loading { display: none; color: #2563eb; font-size: 14px; align-items: center; gap: 8px; margin-top: 10px; }
     .loading i { animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -97,7 +97,7 @@
   </div>
 
   <div class="main-content">
-    
+
     <div class="header-app flex justify-between items-center mb-6 card-ui py-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">EXECUTIVE PORTAL & PAYROLL STUDIO</h1>
@@ -123,11 +123,12 @@
 
     <div id="view-summary" class="tab-view active">
       <div id="error-container"></div>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6" id="kpi-container">
         <div class="card-ui p-6 text-center animate-pulse text-blue-500 col-span-5"><i class="fa fa-spinner fa-spin mr-2"></i>Loading live database and calculating analytics...</div>
       </div>
 
+      <!-- ส่วนแผงสถิติด้านบน -->
       <div class="card-ui mb-6">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider !mb-0"><i class="fa fa-chart-line text-blue-800 mr-1"></i> SALES vs PAYROLL COST TREND</h3>
@@ -148,7 +149,7 @@
           <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa fa-chart-bar text-blue-600"></i> MONTHLY TOTAL NET REVENUE vs ALL DEPT PAYROLL</h3>
           <div class="relative w-full flex-1" style="height: 280px;"><canvas id="payrollTrendChart"></canvas></div>
         </div>
-        
+
         <div class="card-ui bg-white shadow-sm rounded-xl border p-5 flex flex-col justify-between">
           <div>
             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center justify-between">
@@ -162,24 +163,7 @@
         </div>
       </div>
 
-      <div class="card-ui mb-6 overflow-x-auto">
-          <h3 class="text-sm font-bold text-slate-700 mb-4"><i class="fa-solid fa-layer-group text-blue-800 mr-1"></i> TOP 5 DEPARTMENTS BY PAYROLL COST</h3>
-          <table class="data-table w-full">
-              <thead>
-                  <tr class="bg-slate-100 text-slate-700 text-xs uppercase border-b">
-                      <th>Department</th>
-                      <th>Headcount</th>
-                      <th>Payroll Cost</th>
-                      <th>% to Total Payroll</th>
-                      <th>vs Compare Period</th>
-                  </tr>
-              </thead>
-              <tbody id="topDepartmentsTableBody" class="text-sm">
-                  <tr><td colspan="5" class="text-center text-slate-400 py-4">Analyzing departmental payroll breakdown...</td></tr>
-              </tbody>
-          </table>
-      </div>
-
+      <!-- แถว Layout ที่ 2: ฝั่งซ้ายกราฟ Break-Even / ฝั่งขวาแถบ EXECUTIVE ALERTS -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card-ui lg:col-span-2">
           <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa fa-chart-line text-emerald-600"></i> SALES CONVERSION & BREAK-EVEN LINE</h3>
@@ -193,13 +177,13 @@
               <span class="bg-rose-500 text-white w-5 h-5 rounded-full text-[11px] flex items-center justify-center font-bold" id="badgeAlertCount">0</span>
             </h3>
             <div class="flex flex-col gap-3" id="executive-alerts-container">
-              <div class="text-center py-8 text-slate-400 text-xs"><i class="fa fa-fingerprint fa-spin mr-2"></i>AI workforce scanning anomalies...</div>
+              <div class="text-center py-8 text-slate-400 text-xs"><i class="fa fa-fingerprint fa-spin mr-2"></i>AI scanning workforce anomalies...</div>
             </div>
           </div>
           <button class="mt-4 w-full bg-slate-50 border hover:bg-slate-100 font-medium text-slate-700 text-xs py-2 rounded-lg transition text-center">View All Alerts</button>
         </div>
       </div>
-      
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card-ui flex flex-col items-center"><h3 class="card-header text-sm font-bold text-slate-600 mb-4">SALES DEPT HEADCOUNT</h3><div class="relative w-full flex justify-center mt-4" style="height: 200px;"><canvas id="headcountChart"></canvas></div></div>
         <div class="card-ui lg:col-span-2 overflow-auto">
@@ -247,6 +231,7 @@
         </div>
     </div>
 
+    <!-- บล็อกมุมมองอื่น ๆ คงที่ตรรกะเดิมไว้ -->
     <div id="view-ceo-setting" class="tab-view">
         <div class="card-ui">
             <h3><i class="fa-solid fa-sliders text-amber-500"></i> Executive Sales Target & Budgeting Input Form</h3>
@@ -349,8 +334,8 @@
               <button class="btn-ui" onclick="importLogs()"><i class="fa-solid fa-database"></i> Parse & Upload Logs to Database</button>
               <div class="loading" id="scanLoader"><i class="fa-solid fa-circle-notch"></i> Character sorting and automated Overtime (OT) calculating...</div>
           </div>
+      </div>
     </div>
-  </div>
 
     <div id="view-slip" class="tab-view">
       <div class="card-ui">
@@ -427,6 +412,7 @@
     let cachedTargetSalesRows = [];
     let bulkProcessedPayloads = []; 
     
+    // 🟢 เก็บตัวแปรสถิติไทม์ไลน์ดิบสำหรับการคำนวณกราฟแนวโน้มใหม่แบบ Dynamic
     let globalTimelinePeriods = [];
     let globalTimelineRevenue = [];
     let globalTimelinePayroll = [];
@@ -442,13 +428,13 @@
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonthIndex = currentDate.getMonth(); 
-        
+
         const targetSelect = document.getElementById('targetMonthFilter');
         const compareSelect = document.getElementById('compareMonthFilter');
         const kpiSelect = document.getElementById('kpiPeriodMonth');
         const slipSelect1 = document.getElementById('selectPayrollMonth1');
         const bulkSlipSelect = document.getElementById('selectBulkPayrollMonth');
-        
+
         let optionsHTML = '';
         const startYear = 2025; 
         const endYear = currentYear + 1;
@@ -488,7 +474,7 @@
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       element.classList.add('active');
-      
+
       if(tabId === 'view-report') loadPayrollReport();
       if(tabId === 'view-ceo-setting') loadCompanyKPIHistoryList();
       if(tabId === 'view-turnover') renderTurnoverViewOperations();
@@ -531,6 +517,7 @@
         `;
     }
 
+    // 🟢 แปลงโครงสร้างข้อความแถวในระบบคัดกรอง Alerts ให้แสดงเป็นภาษาอังกฤษทั้งหมด
     function appendAlertRowHTML(icon, bgClass, title, subtitle) {
         return `
             <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0 hover:bg-slate-50/50 p-1.5 rounded-lg transition cursor-pointer">
@@ -548,6 +535,7 @@
         `;
     }
 
+    // 🟢 ฟังก์ชันแกนหลักอัพเดทใหม่: เรนเดอร์ตัวกราฟคู่สาย Sales vs Payroll Cost Line Trend แบบแยกเดือน/ปีตามภาพ 2ebd94.png
     function renderSalesPayrollTrendChart() {
         const timeframe = document.getElementById('trendTimeframeFilter').value || 'monthly';
         
@@ -595,7 +583,7 @@
                     {
                         label: 'Sales Revenue',
                         data: revenueData,
-                        borderColor: '#2563eb', 
+                        borderColor: '#2563eb', // Blue Line
                         backgroundColor: '#2563eb',
                         pointBackgroundColor: '#2563eb',
                         tension: 0.3,
@@ -605,7 +593,7 @@
                     {
                         label: 'Payroll Cost',
                         data: payrollData,
-                        borderColor: '#16a34a', 
+                        borderColor: '#16a34a', // Green Line
                         backgroundColor: '#16a34a',
                         pointBackgroundColor: '#16a34a',
                         tension: 0.3,
@@ -615,7 +603,7 @@
                     {
                         label: 'Payroll % to Sales',
                         data: ratioData,
-                        borderColor: '#dc2626', 
+                        borderColor: '#dc2626', // Red Line
                         backgroundColor: 'transparent',
                         pointBackgroundColor: '#dc2626',
                         tension: 0.3,
@@ -663,6 +651,7 @@
       if(!document.getElementById('error-container')) return;
       document.getElementById('error-container').innerHTML = '';
       document.getElementById('kpi-container').innerHTML = '<div class="card-ui p-6 text-center animate-pulse text-blue-500 col-span-5"><i class="fa fa-spinner fa-spin mr-2"></i>Loading live database and calculating analytics...</div>';
+      Object.keys(charts).forEach(key => { if(charts[key]) charts[key].destroy(); });
       Object.keys(charts).forEach(key => { if(charts[key] && key !== 'trendLineChartInstance') charts[key].destroy(); });
 
       try {
@@ -684,10 +673,10 @@
 
         let dropdownPeriods = Array.from(periodsSet);
         dropdownPeriods.sort((a, b) => new Date(b) - new Date(a));
-        
+
         const targetSelect = document.getElementById('targetMonthFilter');
         const compareSelect = document.getElementById('compareMonthFilter');
-        
+
         if (!targetSelect.value || !compareSelect.value) {
             generateDynamicMonths();
         }
@@ -736,16 +725,16 @@
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-green-500"><p class="text-xs text-slate-500 font-bold mb-1">Total All Payroll Cost</p><h2 class="text-2xl font-black text-slate-800">${formatM(tTotalPayrollAllDept)}</h2><p class="text-sm ${getColor(payrollGrowth)} mt-1">${payrollGrowth}% ${getArrow(payrollGrowth)} ${vsText}</p></div>
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-purple-500"><p class="text-xs text-slate-500 font-bold mb-1">All Payroll % to Sales</p><h2 class="text-2xl font-black text-slate-800">${payRatioVal}%</h2><p class="text-sm ${getColor(payRatioDiff)} mt-1">${Math.abs(payRatioDiff)}% ${getArrow(payRatioDiff)} ${vsText}</p></div>
           <div class="card-ui p-4 flex flex-col items-center border-t-4 border-orange-500"><p class="text-xs text-slate-500 font-bold mb-1">Total Mall Revenue</p><h2 class="text-2xl font-black text-slate-800">${formatM(actualSalesRevenue)}</h2><p class="text-sm ${getColor(salesGrowth)} mt-1">${salesGrowth}% ${getArrow(salesGrowth)} ${vsText}</p></div>
-          <div class="card-ui p-4 flex flex-col items-center border-t-4 border-emerald-500"><p class="text-xs text-slate-500 font-bold mb-1">Net Operation Profit</p><h2 class="text-2xl font-black text-emerald-600">${formatM(grossProfit - tTotalPayrollAllDept)}</h2><p class="text-xs text-slate-400 mt-1">GP 35%: ${formatM(grossProfit)}</p></div>
+          <div class="card-ui p-4 flex flex-col items-center border-t-4 border-emerald-500"><p class="text-xs text-slate-500 font-bold mb-1">Net Operation Profit</p><h2 class="text-2xl font-black text-slate-800">${formatM(grossProfit - tTotalPayrollAllDept)}</h2><p class="text-xs text-slate-400 mt-1">GP 35%: ${formatM(grossProfit)}</p></div>
         `;
 
         if(document.getElementById('lblQuickInsightVsPeriod')) {
             document.getElementById('lblQuickInsightVsPeriod').textContent = `(vs ${currentCompareVal})`;
         }
-        
+
         const tOTSumCost = targetRowsAll.reduce((sum, r) => sum + (Number(r.ot_earnings) || 0), 0);
         const cOTSumCost = compareRowsAll.reduce((sum, r) => sum + (Number(r.ot_earnings) || 0), 0);
-        
+
         const tRevPerHead = tTotalHeadcount > 0 ? (actualSalesRevenue / tTotalHeadcount) : 0;
         const cHeadcountDivider = compareRowsAll.length > 0 ? compareRowsAll.length : tTotalHeadcount;
         const cRevPerHead = cHeadcountDivider > 0 ? (prevSalesRevenue / cHeadcountDivider) : 0;
@@ -761,6 +750,7 @@
         const insightContainer = document.getElementById('quick-insight-list-container');
         if(insightContainer) insightContainer.innerHTML = insightHTML;
 
+        // 🟢 ตรรกะตรวจจับภัยและประมวลผลแปลภาษาอังกฤษ (EXECUTIVE ALERTS ENG VERSION)
         let alertsHTML = '';
         let totalAlertsCount = 0;
 
@@ -768,13 +758,13 @@
             totalAlertsCount++;
             alertsHTML += appendAlertRowHTML('fa-triangle-exclamation', 'bg-red-500', 'Payroll % to Sales Exceeds Target', `Currently at ${payRatioVal}% which is higher than the 10% threshold.`);
         }
-        
+
         let otDiffPct = cOTSumCost > 0 ? (((tOTSumCost - cOTSumCost) / cOTSumCost) * 100) : 0;
         if (cOTSumCost > 0 && otDiffPct > 5) {
             totalAlertsCount++;
             alertsHTML += appendAlertRowHTML('fa-clock', 'bg-orange-500', `OT Cost Increased by ${otDiffPct.toFixed(1)}%`, 'Spike in overtime detected. Please audit fingerprint logs and scheduling.');
         }
-        
+
         const totalAllProfiles = rawEmployees.length;
         const totalResignedProfiles = rawEmployees.filter(e => e.resigned_date && String(e.resigned_date).trim() !== '').length;
         let compTurnoverPct = totalAllProfiles > 0 ? ((totalResignedProfiles / totalAllProfiles) * 100).toFixed(1) : 0;
@@ -782,7 +772,7 @@
             totalAlertsCount++;
             alertsHTML += appendAlertRowHTML('fa-users-slash', 'bg-rose-500', 'Abnormal Workforce Turnover Rate', `Lifecycle analytics indicates a accumulated ${compTurnoverPct}% churn rate.`);
         }
-        
+
         const highPenaltyStaffs = targetRowsAll.filter(r => (Number(r.no_work_no_pay) || 0) > 500).length;
         if (highPenaltyStaffs > 0) {
             totalAlertsCount++;
@@ -796,6 +786,7 @@
         if(document.getElementById('badgeAlertCount')) document.getElementById('badgeAlertCount').textContent = totalAlertsCount;
         if(document.getElementById('executive-alerts-container')) document.getElementById('executive-alerts-container').innerHTML = alertsHTML;
 
+        // ดึงกราฟ Charts มาประกอบร่างตามปกติ
         const branchGroup = {};
         targetRowsSales.forEach(r => {
           const bName = empMetaMap[String(r.employee_id).trim()]?.assigned_branch || 'Unassigned Mall';
@@ -805,6 +796,7 @@
           branchGroup[bName].payrollCost += Number(r.net_amount);
         });
 
+        // 🟢 เตรียมชุดข้อมูลดิบสำหรับวาดกราฟ Sales vs Payroll Cost Line Trend ตัวใหม่
         const chronologicalPeriods = Array.from(periodsSet).sort((a, b) => new Date(a) - new Date(b));
         globalTimelinePeriods = chronologicalPeriods;
         globalTimelineRevenue = [];
@@ -821,98 +813,15 @@
             globalTimelinePayroll.push(payVal);
         });
 
+        // เรียกเรนเดอร์กราฟเทรนด์หลักตัวใหม่ทันที
         renderSalesPayrollTrendChart();
 
-        // =========================================================================
-        // 🟢 [ADD NEW LOGIC] ตรรกะคำนวณและประมวลผลตาราง TOP 5 DEPARTMENTS BY PAYROLL COST
-        // =========================================================================
-        const topDeptTbody = document.getElementById('topDepartmentsTableBody');
-        if (topDeptTbody) {
-            topDeptTbody.innerHTML = '';
-            
-            const deptTargetGroup = {};
-            const deptCompareGroup = {};
-            
-            targetRowsAll.forEach(r => {
-                const dCode = String(r.dept || 'UNKNOWN').trim().toUpperCase();
-                if (!deptTargetGroup[dCode]) {
-                    deptTargetGroup[dCode] = { headcountSet: new Set(), payroll: 0 };
-                }
-                deptTargetGroup[dCode].headcountSet.add(r.employee_id);
-                deptTargetGroup[dCode].payroll += Number(r.net_amount || 0);
-            });
-            
-            compareRowsAll.forEach(r => {
-                const dCode = String(r.dept || 'UNKNOWN').trim().toUpperCase();
-                if (!deptCompareGroup[dCode]) {
-                    deptCompareGroup[dCode] = { payroll: 0 };
-                }
-                deptCompareGroup[dCode].payroll += Number(r.net_amount || 0);
-            });
-            
-            let deptList = Object.keys(deptTargetGroup).map(dCode => {
-                const currentPayroll = deptTargetGroup[dCode].payroll;
-                const prevPayroll = deptCompareGroup[dCode] ? deptCompareGroup[dCode].payroll : 0;
-                
-                let momChangePct = 0;
-                if (prevPayroll > 0) {
-                    momChangePct = ((currentPayroll - prevPayroll) / prevPayroll) * 100;
-                } else if (currentPayroll > 0) {
-                    momChangePct = 100;
-                }
-                
-                return {
-                    department: dCode,
-                    headcount: deptTargetGroup[dCode].headcountSet.size,
-                    payroll: currentPayroll,
-                    changePct: momChangePct
-                };
-            });
-            
-            deptList.sort((a, b) => b.payroll - a.payroll);
-            const top5Depts = deptList.slice(0, 5);
-            
-            if (top5Depts.length === 0) {
-                topDeptTbody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-4">No payroll dataset generated in this timeline.</td></tr>`;
-            } else {
-                top5Depts.forEach(d => {
-                    const ratioToTotal = tTotalPayrollAllDept > 0 ? ((d.payroll / tTotalPayrollAllDept) * 100).toFixed(1) : '0.0';
-                    const sign = d.changePct >= 0 ? '+' : '';
-                    const arrow = d.changePct >= 0 ? '<i class="fa fa-arrow-up text-red-500 ml-1"></i>' : '<i class="fa fa-arrow-down text-green-500 ml-1"></i>';
-                    const color = d.changePct >= 0 ? 'text-red-500 font-bold' : 'text-green-600 font-bold';
-                    
-                    topDeptTbody.innerHTML += `
-                        <tr class="hover:bg-slate-50/50 transition">
-                            <td class="p-3 font-bold text-slate-700">${d.department}</td>
-                            <td class="p-3 text-slate-600">${d.headcount.toLocaleString()}</td>
-                            <td class="p-3 font-semibold text-slate-900">฿${d.payroll.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                            <td class="p-3 font-medium text-blue-800">${ratioToTotal}%</td>
-                            <td class="p-3 ${color}">${sign}${d.changePct.toFixed(1)}%${arrow}</td>
-                        </tr>
-                    `;
-                });
-                
-                const totalCalculatedPercent = top5Depts.reduce((sum, d) => sum + (tTotalPayrollAllDept > 0 ? (d.payroll / tTotalPayrollAllDept) * 100 : 0), 0);
-                const grandHeadcount = top5Depts.reduce((sum, d) => sum + d.headcount, 0);
-                const grandPayroll = top5Depts.reduce((sum, d) => sum + d.payroll, 0);
-                
-                topDeptTbody.innerHTML += `
-                    <tr class="total-row bg-slate-100 font-bold border-t-2 border-slate-400">
-                        <td class="p-3 font-bold text-slate-800">Total (Top 5)</td>
-                        <td class="p-3 text-slate-700">${grandHeadcount.toLocaleString()} Staffs</td>
-                        <td class="p-3 text-slate-900">฿${grandPayroll.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td class="p-3 text-blue-900">${totalCalculatedPercent.toFixed(1)}%</td>
-                        <td class="p-3 text-slate-500">-</td>
-                    </tr>
-                `;
-            }
-        }
-        // =========================================================================
-
+        // สั่งสร้างกราฟเดิมอื่นๆ ตามลำดับ
         charts.payroll = new Chart(document.getElementById('payrollTrendChart'), { type: 'bar', data: { labels: [currentCompareVal, currentTargetVal], datasets: [{ label: 'Total Company Revenue', data: [prevSalesRevenue, actualSalesRevenue], backgroundColor: '#1e3a8a' }, { label: 'All Dept Payroll Cost', data: [cTotalPayrollAllDept, tTotalPayrollAllDept], backgroundColor: '#dc2626' }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.sales = new Chart(document.getElementById('salesPayrollChart'), { type: 'line', data: { labels: [currentCompareVal, currentTargetVal], datasets: [{ label: 'Gross Profit Line (35%)', data: [prevSalesRevenue * 0.35, grossProfit], borderColor: '#16a34a', tension: 0.2 }, { label: 'Total Payroll Expenses', data: [cTotalPayrollAllDept, tTotalPayrollAllDept], borderColor: '#2563eb', tension: 0.2 }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.donut = new Chart(document.getElementById('headcountChart'), { type: 'doughnut', data: { labels: Object.keys(branchGroup).length > 0 ? Object.keys(branchGroup) : ['No Data'], datasets: [{ data: Object.keys(branchGroup).length > 0 ? Object.values(branchGroup).map(b => b.headcount) : [0], backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#06b6d4'], cutout: '70%' }] }, options: { responsive: true, maintainAspectRatio: false } });
 
+        const chronologicalPeriods = Array.from(periodsSet).sort((a, b) => new Date(a) - new Date(b));
         const revenueDataTimeline = [];
         const salaryDataTimeline = [];
         const otDataTimeline = [];
@@ -931,6 +840,7 @@
         });
 
         charts.revenueTrend = new Chart(document.getElementById('executiveRevenueTrendChart'), { type: 'line', data: { labels: chronologicalPeriods, datasets: [{ label: 'Actual Revenue', data: revenueDataTimeline, borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.05)', borderWidth: 3, tension: 0.4, pointBackgroundColor: '#16a34a', fill: true }] }, options: { responsive: true, maintainAspectRatio: false } });
+        charts.compensationTrend = new Chart(document.getElementById('executiveCompTrendChart'), { type: 'bar', data: { labels: chronologicalPeriods, datasets: [{ label: 'Salary (ฐานเงินเดือน)', data: salaryDataTimeline, backgroundColor: '#1e3a8a' }, { label: 'OT (ค่าล่วงเวลา)', data: otDataTimeline, backgroundColor: '#2563eb' }, { label: 'Incentive (เงินพิเศษ)', data: incentiveDataTimeline, backgroundColor: '#f59e0b' }, { label: 'Commission (ค่าคอมมิชชัน)', data: commissionDataTimeline, backgroundColor: '#7c3aed' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
         charts.compensationTrend = new Chart(document.getElementById('executiveCompTrendChart'), { type: 'bar', data: { labels: chronologicalPeriods, datasets: [{ label: 'Salary', data: salaryDataTimeline, backgroundColor: '#1e3a8a' }, { label: 'OT', data: otDataTimeline, backgroundColor: '#2563eb' }, { label: 'Incentive', data: incentiveDataTimeline, backgroundColor: '#f59e0b' }, { label: 'Commission', data: commissionDataTimeline, backgroundColor: '#7c3aed' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
 
         const branchTbody = document.querySelector('#branchTable tbody');
@@ -966,7 +876,7 @@
             const pSalesRows = salesRecords.filter(s => s.month_period === p);
             const pPayrollSum = pRows.reduce((sum, r) => sum + Number(r.net_amount), 0);
             const pSalesSum = pSalesRows.length > 0 ? pSalesRows.reduce((sum, s) => sum + Number(s.actual_sales), 0) : (pPayrollSum * 5.5);
-            
+
             const pGP35 = pSalesSum * 0.35;
             const pOTSum = pRows.reduce((sum, r) => sum + (Number(r.ot_earnings) || 0), 0);
             const pNetProfit = pGP35 - pPayrollSum;
@@ -1049,7 +959,7 @@
         const { data: row } = await supabaseClient.from('monthly_payroll_summary').select('*').eq('employee_id', empId).eq('payroll_month', targetM).maybeSingle();
         const { data: targetRecord } = await supabaseClient.from('sales_records').select('*').eq('salesperson_id', empId).eq('month_period', targetM).maybeSingle();
         const { data: compareRecord } = await supabaseClient.from('sales_records').select('*').eq('salesperson_id', empId).eq('month_period', compareM).maybeSingle();
-        
+
         const actualSales = targetRecord ? Number(targetRecord.actual_sales) : (row ? Number(row.net_amount) * 7.2 : 0);
         const targetSales = targetRecord ? Number(targetRecord.target_sales) : (row ? Number(row.basic_salary) * 7.5 : 0);
         const prevSales = compareRecord ? Number(compareRecord.actual_sales) : 0;
@@ -1093,13 +1003,13 @@
             const { data: salesRecords, error = null } = await supabaseClient.from('sales_records').select('*').order('month_period', { ascending: false });
             if (error) throw error;
             tbody.innerHTML = '';
-            
+
             let totalTarget = 0;
             let totalActual = 0;
 
             salesRecords.forEach(item => {
                 const achievementPercent = item.target_sales > 0 ? ((item.actual_sales / item.target_sales) * 100).toFixed(1) : 0;
-                
+
                 totalTarget += Number(item.target_sales || 0);
                 totalActual += Number(item.actual_sales || 0);
 
@@ -1149,7 +1059,7 @@
         const { data: employees, error } = await supabaseClient.from('employees').select('*').order('id', { ascending: true });
         if (error) throw error;
         localEmployeesCache = employees || [];
-        
+
         const d1 = document.getElementById('selectEmployeeSlip1'); 
         const d2 = document.getElementById('selectEmployeeSlip2');
         const dReport = document.getElementById('filterReportEmployee');
@@ -1193,15 +1103,23 @@
         if (!confirm(`⚠️ คุณแน่ใจใช่ไหมว่าต้องการลบข้อมูลพนักงาน ID: ${empId} ออกจากระบบอย่างถาวร? \n(ประวัติและข้อมูลทั้งหมดของพนักงานท่านนี้ในฐานข้อมูลจะหายไป)`)) {
             return;
         }
+
         if (document.getElementById('empLoader')) {
             document.getElementById('empLoader').style.display = 'flex';
         }
+
         try {
-            const { error } = await supabaseClient.from('employees').delete().eq('id', empId);
+            const { error } = await supabaseClient
+                .from('employees')
+                .delete()
+                .eq('id', empId);
+
             if (error) throw error;
+
             alert(`🎉 ลบข้อมูลพนักงาน ID: ${empId} สำเร็จเรียบร้อยแล้วครับ`);
             await loadEmployeeList();
             if (typeof loadDashboardData === 'function') loadDashboardData();
+
         } catch (err) {
             alert('เกิดข้อผิดพลาดไม่สามารถลบข้อมูลได้: ' + err.message);
             console.error(err);
@@ -1243,7 +1161,7 @@
         if(!kpiContainer || !ledgerBody) return;
 
         kpiContainer.innerHTML = '<div class="card-ui p-4 text-center animate-pulse text-blue-500 col-span-4"><i class="fa fa-spinner fa-spin mr-1"></i>Syncing workforce logs...</div>';
-        
+
         try {
             const { data: staffs, error } = await supabaseClient.from('employees').select('*').order('id', {ascending: true});
             if (error) throw error;
@@ -1340,7 +1258,7 @@
     async function processStaffResignationPrompt(empId, empName) {
         const selectedDate = prompt(`กรุณาระบุ "วันที่ลาออก" ของคุณ ${empName} (รูปแบบ: YYYY-MM-DD เช่น 2026-06-15):`);
         if (!selectedDate) return; 
-        
+
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
         if (!dateRegex.test(selectedDate)) {
             alert("รูปแบบวันที่ไม่ถูกต้อง! กรุณากรอกในรูปแบบ YYYY-MM-DD เท่านั้นครับ");
@@ -1485,7 +1403,7 @@
       const nameParts = fullName.split(' ');
       const fName = nameParts[0] || fullName; 
       const lName = nameParts.slice(1).join(' ') || '-'; 
-      
+
       return `
         <div class="slip-box" id="slipBox_${index}" data-empid="${data.emp.id || ''}" data-empname="${fullName}" style="background-color: white; border: 1px solid #000; padding: 25px 30px; color: #000; font-family: 'Prompt', sans-serif; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); max-width: 1000px; margin: 0 auto 25px auto;">
           <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; align-items: center;">
@@ -1719,7 +1637,7 @@
             document.getElementById('bulkPreviewSection').style.display = 'block';
         } catch (err) {
             alert('Bulk process failed execution: ' + err.message);
-        } disable {
+        } finally {
             document.getElementById('calcLoader').style.display = 'none';
         }
     }
@@ -1768,7 +1686,7 @@
           populateReportDropdowns(cachedReportData); filterPayrollReportData();
         } catch (err) { console.error(err); }
     }
-    
+
     function populateReportDropdowns(data) {
         const months = [...new Set(data.map(item => String(item.month).trim()))];
         const dropdownOverview = document.getElementById('filterReportMonth');
@@ -1776,14 +1694,14 @@
         dropdownOverview.innerHTML = '<option value="ALL">-- Show All Periods --</option>';
         months.forEach(m => { dropdownOverview.innerHTML += `<option value="${m}">${m}</option>`; });
     }
-    
+
     function toggleReportFilterMode() {
       const mode = document.querySelector('input[name="reportMode"]:checked').value;
       document.getElementById('filterAreaOverview').style.display = mode === 'OVERVIEW' ? 'grid' : 'none';
       document.getElementById('filterAreaIndividual').style.display = mode === 'INDIVIDUAL' ? 'grid' : 'none';
       filterPayrollReportData(); 
     }
-    
+
     function filterPayrollReportData() {
       const mode = document.querySelector('input[name="reportMode"]:checked').value;
       const tbody = document.getElementById('reportTableBody'); if(!tbody) return;
@@ -1805,7 +1723,7 @@
           const eFilter = document.getElementById('filterReportEmployee').value;
           if(String(r.id) === String(eFilter)) match = true;
         }
-        
+
         if(match) {
           hasRows = true;
           reportTotalBasic += r.basic;
