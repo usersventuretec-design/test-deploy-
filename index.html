@@ -42,7 +42,7 @@
     table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     table.data-table th { background-color: #f8fafc; padding: 12px; color: #1e3a8a; border-bottom: 2px solid var(--border-color); border-top: 1px solid var(--border-color); text-align: left; font-weight: bold;}
     table.data-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
-    table.data-table tr.total-row td { background-color: #e2e8f0; font-weight: 600; color: #0f172a; border-top: 2px solid #94a3b8; border-bottom: 2px double #94a3b8; }
+    table.data-table tr.total-row bg-slate-100 td { background-color: #e2e8f0; font-weight: 600; color: #0f172a; border-top: 2px solid #94a3b8; border-bottom: 2px double #94a3b8; }
     .loading { display: none; color: #2563eb; font-size: 14px; align-items: center; gap: 8px; margin-top: 10px; }
     .loading i { animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -435,7 +435,6 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
-        // 🟢 เปลี่ยนกลับมาดึงข้อมูลทั้งหมด (*) เพื่อให้ค่า salary และ deduct ต่างๆ ไม่หายไปจนระบบพัง
         const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('*');
         if (empErr) throw empErr;
 
@@ -472,6 +471,7 @@
         const tSalesPayroll = targetRowsSales.reduce((sum, r) => sum + (Number(r.net_amount) || 0), 0);
 
         const tTotalHeadcount = targetRowsAll.length;
+        const tSalesHeadcountActual = rawEmployees.filter(e => e.is_sales && (!e.resigned_date || e.resigned_date.trim() === '')).length;
         const tOfficeHeadcount = tTotalHeadcount - tSalesHeadcount;
 
         const cSalesHeadcount = compareRowsSales.length || 1;
@@ -775,6 +775,11 @@
           if(dReport) dReport.innerHTML += `<option value="${e.id}">${text}</option>`;
           if(e.is_sales && dKpiSalesSelect) dKpiSalesSelect.innerHTML += `<option value="${e.id}">${e.name}</option>`;
 
+          // 🟢 จุดแก้ไขที่ 1: กรองพนักงานที่ลาออกแล้ว ไม่ให้ไปแสดงใน Active Employees Roster
+          if (e.resigned_date && e.resigned_date.trim() !== '') {
+             return;
+          }
+
           if(tbody) {
             tbody.innerHTML += `<tr>
               <td><strong>${e.id}</strong></td>
@@ -788,6 +793,38 @@
           }
         });
       } catch (err) { console.error(err); }
+    }
+
+    // 🟢 จุดแก้ไขที่ 2: เพิ่มฟังก์ชันลบข้อมูลพนักงานจาก Supabase ผูกเข้ากับปุ่มถังขยะ
+    async function triggerDeleteEmp(empId) {
+        if (!confirm(`⚠️ คุณแน่ใจใช่ไหมว่าต้องการลบข้อมูลพนักงาน ID: ${empId} ออกจากระบบอย่างถาวร? \n(ประวัติและข้อมูลทั้งหมดของพนักงานท่านนี้ในฐานข้อมูลจะหายไป)`)) {
+            return;
+        }
+
+        if (document.getElementById('empLoader')) {
+            document.getElementById('empLoader').style.display = 'flex';
+        }
+
+        try {
+            const { error } = await supabaseClient
+                .from('employees')
+                .delete()
+                .eq('id', empId);
+
+            if (error) throw error;
+
+            alert(`🎉 ลบข้อมูลพนักงาน ID: ${empId} สำเร็จเรียบร้อยแล้วครับ`);
+            await loadEmployeeList();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+
+        } catch (err) {
+            alert('เกิดข้อผิดพลาดไม่สามารถลบข้อมูลได้: ' + err.message);
+            console.error(err);
+        } finally {
+            if (document.getElementById('empLoader')) {
+                document.getElementById('empLoader').style.display = 'none';
+            }
+        }
     }
 
     async function addNewEmployee() {
@@ -1144,6 +1181,7 @@
                   <div style="display: flex; justify-content: space-between; font-weight: 600;"><span>Total deductions</span><span id="txtTotalDeductions_${index}">0.00</span></div>
                 </td>
               </tr>
+              
               
               <tr>
                 <td colspan="3" style="border: 1px solid #000; padding: 10px 12px; background: #fff;">
