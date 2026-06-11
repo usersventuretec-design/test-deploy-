@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2=family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
         --primary: #0f172a;
@@ -435,7 +435,8 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
-        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('id, name, is_sales, assigned_branch, dept, joined_date, resigned_date, bank_acc');
+        // 🟢 เปลี่ยนกลับมาดึงข้อมูลทั้งหมด (*) เพื่อให้ค่า salary และ deduct ต่างๆ ไม่หายไปจนระบบพัง
+        const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('*');
         if (empErr) throw empErr;
 
         const empMetaMap = {};
@@ -1037,7 +1038,7 @@
         });
       }
 
-      const salary = Number(employee.salary);
+      const salary = Number(employee.salary || 0);
       const minuteRate = ((salary / 30) / 8) / 60;
       const noWorkNoPay = Math.round((totalLateMinutes * minuteRate) * 100) / 100;
       const overtimeEarnings = Math.round((totalOtMinutes * minuteRate * 1.5) * 100) / 100;
