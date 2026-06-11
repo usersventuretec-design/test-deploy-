@@ -42,6 +42,7 @@
     table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     table.data-table th { background-color: #f8fafc; padding: 12px; color: #1e3a8a; border-bottom: 2px solid var(--border-color); border-top: 1px solid var(--border-color); text-align: left; font-weight: bold;}
     table.data-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    table.data-table tr.total-row td { background-color: #e2e8f0; font-weight: 600; color: #0f172a; border-top: 2px solid #94a3b8; border-bottom: 2px double #94a3b8; }
     table.data-table tr.total-row bg-slate-100 td { background-color: #e2e8f0; font-weight: 600; color: #0f172a; border-top: 2px solid #94a3b8; border-bottom: 2px double #94a3b8; }
     .loading { display: none; color: #2563eb; font-size: 14px; align-items: center; gap: 8px; margin-top: 10px; }
     .loading i { animation: spin 1s linear infinite; }
@@ -96,7 +97,7 @@
   </div>
 
   <div class="main-content">
-    
+
     <div class="header-app flex justify-between items-center mb-6 card-ui py-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">EXECUTIVE PORTAL & PAYROLL STUDIO</h1>
@@ -122,11 +123,11 @@
 
     <div id="view-summary" class="tab-view active">
       <div id="error-container"></div>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6" id="kpi-container">
         <div class="card-ui p-6 text-center animate-pulse text-blue-500 col-span-5"><i class="fa fa-spinner fa-spin mr-2"></i>Loading live database and calculating analytics...</div>
       </div>
-      
+
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="card-ui"><h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa fa-chart-bar text-blue-600"></i> MONTHLY TOTAL NET REVENUE vs ALL DEPT PAYROLL</h3><div class="relative w-full" style="height: 250px;"><canvas id="payrollTrendChart"></canvas></div></div>
         <div class="card-ui"><h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa fa-chart-line text-emerald-600"></i> SALES CONVERSION & BREAK-EVEN LINE</h3><div class="relative w-full" style="height: 250px;"><canvas id="salesPayrollChart"></canvas></div></div>
@@ -304,7 +305,7 @@
               </div>
               <button class="btn-ui bg-indigo-600 hover:bg-indigo-700" onclick="processAllEmployeesBulk()"><i class="fa-solid fa-wand-magic-sparkles"></i> Process & Generate Bulk Payroll</button>
           </div>
-          
+
           <div id="bulkPreviewSection" style="display:none;" class="mt-4">
               <h4 class="text-sm font-bold text-slate-700 mb-2"><i class="fa-solid fa-table text-indigo-600"></i> Preliminary Calculated Statement Preview for <span id="lblBulkMonthText"></span></h4>
               <div class="overflow-x-auto max-h-60 mb-4 border rounded">
@@ -383,11 +384,11 @@
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonthIndex = currentDate.getMonth(); 
-        
+
         const kpiSelect = document.getElementById('kpiPeriodMonth');
         const slipSelect1 = document.getElementById('selectPayrollMonth1');
         const bulkSlipSelect = document.getElementById('selectBulkPayrollMonth');
-        
+
         let optionsHTML = '';
         const startYear = 2025; 
         const endYear = currentYear + 1;
@@ -411,7 +412,7 @@
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       element.classList.add('active');
-      
+
       if(tabId === 'view-report') loadPayrollReport();
       if(tabId === 'view-ceo-setting') loadCompanyKPIHistoryList();
       if(tabId === 'view-turnover') renderTurnoverViewOperations();
@@ -435,6 +436,7 @@
         const { data: salesRecords, error: salesErr } = await supabaseClient.from('sales_records').select('*');
         if (salesErr) throw salesErr;
 
+        // 🟢 เปลี่ยนกลับมาดึงข้อมูลทั้งหมด (*) เพื่อให้ค่า salary และ deduct ต่างๆ ไม่หายไปจนระบบพัง
         const { data: rawEmployees, error: empErr } = await supabaseClient.from('employees').select('*');
         if (empErr) throw empErr;
 
@@ -448,10 +450,10 @@
         let dropdownPeriods = Array.from(periodsSet);
         if (dropdownPeriods.length === 0) dropdownPeriods = ["June 2026", "May 2026", "April 2026"];
         dropdownPeriods.sort((a, b) => new Date(b) - new Date(a));
-        
+
         const targetSelect = document.getElementById('targetMonthFilter');
         const compareSelect = document.getElementById('compareMonthFilter');
-        
+
         const currentTargetVal = targetSelect.value || dropdownPeriods[0];
         const currentCompareVal = compareSelect.value || (dropdownPeriods[1] || dropdownPeriods[0]);
 
@@ -467,13 +469,13 @@
         const targetRowsSales = targetRowsAll.filter(r => empMetaMap[String(r.employee_id).trim()]?.is_sales === true);
         const compareRowsSales = compareRowsAll.filter(r => empMetaMap[String(r.employee_id).trim()]?.is_sales === true);
 
-        // 🟢 จุดแก้ไข: ปรับปรุงตรรกะนับจำนวน Headcount ให้ดึงจากพนักงานที่ยัง Active อยู่จริง (รวมเป็น 7 คน)
-        const activeEmployeesNow = rawEmployees.filter(e => !e.resigned_date || e.resigned_date.trim() === '');
-        const tTotalHeadcount = activeEmployeesNow.length; 
-        const tSalesHeadcount = activeEmployeesNow.filter(e => e.is_sales === true).length;
+        const tSalesHeadcount = targetRowsSales.length;
+        const tSalesPayroll = targetRowsSales.reduce((sum, r) => sum + (Number(r.net_amount) || 0), 0);
+
+        const tTotalHeadcount = targetRowsAll.length;
+        const tSalesHeadcountActual = rawEmployees.filter(e => e.is_sales && (!e.resigned_date || e.resigned_date.trim() === '')).length;
         const tOfficeHeadcount = tTotalHeadcount - tSalesHeadcount;
 
-        const tSalesPayroll = targetRowsSales.reduce((sum, r) => sum + (Number(r.net_amount) || 0), 0);
         const cSalesHeadcount = compareRowsSales.length || 1;
         const cSalesPayroll = compareRowsSales.reduce((sum, r) => sum + (Number(r.net_amount) || 0), 0) || 1;
 
@@ -571,7 +573,7 @@
             const pSalesRows = salesRecords.filter(s => s.month_period === p);
             const pPayrollSum = pRows.reduce((sum, r) => sum + Number(r.net_amount), 0);
             const pSalesSum = pSalesRows.length > 0 ? pSalesRows.reduce((sum, s) => sum + Number(s.actual_sales), 0) : (pPayrollSum * 5.5);
-            
+
             const pGP35 = pSalesSum * 0.35;
             const pOTSum = pRows.reduce((sum, r) => sum + (Number(r.ot_earnings) || 0), 0);
             const pNetProfit = pGP35 - pPayrollSum;
@@ -654,7 +656,7 @@
         const { data: row } = await supabaseClient.from('monthly_payroll_summary').select('*').eq('employee_id', empId).eq('payroll_month', targetM).maybeSingle();
         const { data: targetRecord } = await supabaseClient.from('sales_records').select('*').eq('salesperson_id', empId).eq('month_period', targetM).maybeSingle();
         const { data: compareRecord } = await supabaseClient.from('sales_records').select('*').eq('salesperson_id', empId).eq('month_period', compareM).maybeSingle();
-        
+
         const actualSales = targetRecord ? Number(targetRecord.actual_sales) : (row ? Number(row.net_amount) * 7.2 : 0);
         const targetSales = targetRecord ? Number(targetRecord.target_sales) : (row ? Number(row.basic_salary) * 7.5 : 0);
         const prevSales = compareRecord ? Number(compareRecord.actual_sales) : 0;
@@ -698,13 +700,13 @@
             const { data: salesRecords, error = null } = await supabaseClient.from('sales_records').select('*').order('month_period', { ascending: false });
             if (error) throw error;
             tbody.innerHTML = '';
-            
+
             let totalTarget = 0;
             let totalActual = 0;
 
             salesRecords.forEach(item => {
                 const achievementPercent = item.target_sales > 0 ? ((item.actual_sales / item.target_sales) * 100).toFixed(1) : 0;
-                
+
                 totalTarget += Number(item.target_sales || 0);
                 totalActual += Number(item.actual_sales || 0);
 
@@ -754,7 +756,7 @@
         const { data: employees, error } = await supabaseClient.from('employees').select('*').order('id', { ascending: true });
         if (error) throw error;
         localEmployeesCache = employees || [];
-        
+
         const d1 = document.getElementById('selectEmployeeSlip1'); 
         const d2 = document.getElementById('selectEmployeeSlip2');
         const dReport = document.getElementById('filterReportEmployee');
@@ -858,7 +860,7 @@
         if(!kpiContainer || !ledgerBody) return;
 
         kpiContainer.innerHTML = '<div class="card-ui p-4 text-center animate-pulse text-blue-500 col-span-4"><i class="fa fa-spinner fa-spin mr-1"></i>Syncing workforce logs...</div>';
-        
+
         try {
             const { data: staffs, error } = await supabaseClient.from('employees').select('*').order('id', {ascending: true});
             if (error) throw error;
@@ -955,7 +957,7 @@
     async function processStaffResignationPrompt(empId, empName) {
         const selectedDate = prompt(`กรุณาระบุ "วันที่ลาออก" ของคุณ ${empName} (รูปแบบ: YYYY-MM-DD เช่น 2026-06-15):`);
         if (!selectedDate) return; 
-        
+
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
         if (!dateRegex.test(selectedDate)) {
             alert("รูปแบบวันที่ไม่ถูกต้อง! กรุณากรอกในรูปแบบ YYYY-MM-DD เท่านั้นครับ");
@@ -1097,11 +1099,11 @@
 
     function createSlipHTMLTemplate(index, data) {
       const fullName = data && data.emp && data.emp.name ? String(data.emp.name).trim().replace(/\s+/g, ' ') : 'Unassigned';
-      
+
       const nameParts = fullName.split(' ');
       const fName = nameParts[0] || fullName; 
       const lName = nameParts.slice(1).join(' ') || '-'; 
-      
+
       return `
         <div class="slip-box" id="slipBox_${index}" data-empid="${data.emp.id || ''}" data-empname="${fullName}" style="background-color: white; border: 1px solid #000; padding: 25px 30px; color: #000; font-family: 'Prompt', sans-serif; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); max-width: 1000px; margin: 0 auto 25px auto;">
           
@@ -1147,7 +1149,7 @@
                 <td style="border: 1px solid #000; padding: 10px 12px; vertical-align: top; line-height: 2;">
                   <div style="display: flex; justify-content: space-between; align-items: center;"><span>Basic salary</span><input type="number" class="slip-input e-calc_${index}" id="iBasic_${index}" value="${data.emp.salary || 0}" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
                   <div style="display: flex; justify-content: space-between; align-items: center;"><span>Others</span><input type="number" class="slip-input e-calc_${index}" value="0" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
-                  <div style="display: flex; justify-content: space-between; align-items: center;"><span>Bonus</span><input type="number" class="slip-input e-calc_${index}" value="0" oninput="oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
+                  <div style="display: flex; justify-content: space-between; align-items: center;"><span>Bonus</span><input type="number" class="slip-input e-calc_${index}" value="0" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
                   <div style="display: flex; justify-content: space-between; align-items: center;"><span>Overtime</span><input type="number" class="slip-input e-calc_${index}" id="iOvertime_${index}" value="${data.attendance.overtime || 0}" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent; color: blue;"></div>
                   <div style="display: flex; justify-content: space-between; align-items: center;"><span>Incentive (Sales)</span><input type="number" class="slip-input e-calc_${index}" value="0" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
                   <div style="display: flex; justify-content: space-between; align-items: center;"><span>Incentive (V-Chef)</span><input type="number" class="slip-input e-calc_${index}" value="0" oninput="recalculateIndividualTotals(${index})" style="width: 80px; border: none; text-align: right; font-family: inherit; outline: none; background: transparent;"></div>
@@ -1181,6 +1183,7 @@
                   <div style="display: flex; justify-content: space-between; font-weight: 600;"><span>Total deductions</span><span id="txtTotalDeductions_${index}">0.00</span></div>
                 </td>
               </tr>
+              
               
               <tr>
                 <td colspan="3" style="border: 1px solid #000; padding: 10px 12px; background: #fff;">
@@ -1394,7 +1397,7 @@
           populateReportDropdowns(cachedReportData); filterPayrollReportData();
         } catch (err) { console.error(err); }
     }
-    
+
     function populateReportDropdowns(data) {
         const months = [...new Set(data.map(item => String(item.month).trim()))];
         const dropdownOverview = document.getElementById('filterReportMonth');
@@ -1402,14 +1405,14 @@
         dropdownOverview.innerHTML = '<option value="ALL">-- Show All Periods --</option>';
         months.forEach(m => { dropdownOverview.innerHTML += `<option value="${m}">${m}</option>`; });
     }
-    
+
     function toggleReportFilterMode() {
       const mode = document.querySelector('input[name="reportMode"]:checked').value;
       document.getElementById('filterAreaOverview').style.display = mode === 'OVERVIEW' ? 'grid' : 'none';
       document.getElementById('filterAreaIndividual').style.display = mode === 'INDIVIDUAL' ? 'grid' : 'none';
       filterPayrollReportData(); 
     }
-    
+
     function filterPayrollReportData() {
       const mode = document.querySelector('input[name="reportMode"]:checked').value;
       const tbody = document.getElementById('reportTableBody'); if(!tbody) return;
@@ -1431,7 +1434,7 @@
           const eFilter = document.getElementById('filterReportEmployee').value;
           if(String(r.id) === String(eFilter)) match = true;
         }
-        
+
         if(match) {
           hasRows = true;
           reportTotalBasic += r.basic;
@@ -1470,6 +1473,6 @@
           tbody.innerHTML = `<tr><td colspan="10" class="text-center text-slate-400 py-4">No matching general ledger records found for specified parameters.</td></tr>`;
       }
     }
-  </style>
+  </script>
 </body>
 </html>
