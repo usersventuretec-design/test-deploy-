@@ -345,9 +345,13 @@
           <button class="btn-ui" onclick="loadDualEmployeesSlips()"><i class="fa-solid fa-file-shield"></i> Compile Preview Slips</button>
       </div>
 
+      <!-- เพิ่ม Container สำหรับแสดงผล Slip ที่หายไปตรงนี้ (รวมปุ่ม Print) -->
       <div id="dualSlipsWrapper" style="display:none;" class="mb-6">
-          <div id="slipsContainer"></div>
+          <div id="slipsContainer" class="slip-outer-container"></div>
           <div class="flex justify-end gap-3 mt-4">
+              <button class="btn-ui bg-indigo-500 hover:bg-indigo-600 text-xs py-2 px-4" onclick="window.print()">
+                  <i class="fa-solid fa-print"></i> Print Slips
+              </button>
               <button class="btn-ui bg-slate-500 hover:bg-slate-600 text-xs py-2 px-4" onclick="document.getElementById('dualSlipsWrapper').style.display='none'">Cancel</button>
               <button class="btn-ui bg-emerald-600 hover:bg-emerald-700 text-xs py-2 px-4" onclick="saveDualSlipsFinal()"><i class="fa-solid fa-cloud-arrow-up"></i> Save & Commit Individual Slips</button>
           </div>
