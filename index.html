@@ -190,17 +190,32 @@
         </div>
       </div>
 
+      <!-- 🟢 แถบที่อัปเดตใหม่เป็นตารางตามไฟล์ภาพ image_936b69.png -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="card-ui bg-white shadow-sm rounded-xl border p-5 flex flex-col justify-between">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider !mb-0">
-              <i class="fa-solid fa-pie-chart text-blue-800 mr-1"></i> TOP 5 DEPARTMENTS BY PAYROLL COST
+              <i class="fa-solid fa-list-ol text-blue-800 mr-1"></i> TOP 5 DEPARTMENTS BY PAYROLL COST
             </h3>
           </div>
-          <div class="relative w-full flex-1" style="height: 280px;">
-            <canvas id="topDeptPayrollChart"></canvas>
+          <div class="overflow-x-auto w-full flex-1">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="text-xs font-bold text-slate-400 border-b border-slate-100">
+                  <th class="pb-3 pt-1 text-slate-500">Department</th>
+                  <th class="pb-3 pt-1 text-center text-slate-500">Headcount</th>
+                  <th class="pb-3 pt-1 text-right text-slate-500">Payroll Cost</th>
+                  <th class="pb-3 pt-1 text-right text-slate-500">% to Total Payroll</th>
+                  <th class="pb-3 pt-1 text-right text-slate-500" id="lblTableComparePeriod">vs Period</th>
+                </tr>
+              </thead>
+              <tbody class="text-sm text-slate-700" id="topDeptPayrollTableBody">
+                <tr><td colspan="5" class="text-center py-8 text-slate-400"><i class="fa fa-spinner fa-spin mr-2"></i>Loading dynamic department logs...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
+        
         <div class="card-ui bg-white shadow-sm rounded-xl border p-5 flex flex-col justify-between">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider !mb-0">
@@ -445,7 +460,6 @@
     let cachedTargetSalesRows = [];
     let bulkProcessedPayloads = []; 
     
-    // 🟢 เก็บตัวแปรสถิติไทม์ไลน์ดิบสำหรับการคำนวณกราฟแนวโน้มใหม่แบบ Dynamic
     let globalTimelinePeriods = [];
     let globalTimelineRevenue = [];
     let globalTimelinePayroll = [];
@@ -614,7 +628,7 @@
                     {
                         label: 'Sales Revenue',
                         data: revenueData,
-                        borderColor: '#2563eb', // Blue Line
+                        borderColor: '#2563eb', 
                         backgroundColor: '#2563eb',
                         pointBackgroundColor: '#2563eb',
                         tension: 0.3,
@@ -624,7 +638,7 @@
                     {
                         label: 'Payroll Cost',
                         data: payrollData,
-                        borderColor: '#16a34a', // Green Line
+                        borderColor: '#16a34a', 
                         backgroundColor: '#16a34a',
                         pointBackgroundColor: '#16a34a',
                         tension: 0.3,
@@ -634,7 +648,7 @@
                     {
                         label: 'Payroll % to Sales',
                         data: ratioData,
-                        borderColor: '#dc2626', // Red Line
+                        borderColor: '#dc2626', 
                         backgroundColor: 'transparent',
                         pointBackgroundColor: '#dc2626',
                         tension: 0.3,
@@ -683,9 +697,7 @@
       document.getElementById('error-container').innerHTML = '';
       document.getElementById('kpi-container').innerHTML = '<div class="card-ui p-6 text-center animate-pulse text-blue-500 col-span-5"><i class="fa fa-spinner fa-spin mr-2"></i>Loading live database and calculating analytics...</div>';
       
-      // Destroy old charts including the new ones
       Object.keys(charts).forEach(key => { if(charts[key] && key !== 'trendLineChartInstance') charts[key].destroy(); });
-      if (charts.topDeptPayroll) charts.topDeptPayroll.destroy();
       if (charts.laborProductivity) charts.laborProductivity.destroy();
 
       try {
@@ -717,6 +729,10 @@
 
         const currentTargetVal = targetSelect.value;
         const currentCompareVal = compareSelect.value;
+
+        // อัปเดตหัวข้อคอลัมน์ตารางเปรียบเทียบใน HTML ด้านบน
+        const tblCompPeriodLabel = document.getElementById('lblTableComparePeriod');
+        if (tblCompPeriodLabel) tblCompPeriodLabel.textContent = `vs ${currentCompareVal}`;
 
         const targetRowsAll = summaryData.filter(r => r.payroll_month === currentTargetVal);
         const compareRowsAll = summaryData.filter(r => r.payroll_month === currentCompareVal);
@@ -870,95 +886,124 @@
         charts.revenueTrend = new Chart(document.getElementById('executiveRevenueTrendChart'), { type: 'line', data: { labels: chronologicalPeriods, datasets: [{ label: 'Actual Revenue', data: revenueDataTimeline, borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.05)', borderWidth: 3, tension: 0.4, pointBackgroundColor: '#16a34a', fill: true }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.compensationTrend = new Chart(document.getElementById('executiveCompTrendChart'), { type: 'bar', data: { labels: chronologicalPeriods, datasets: [{ label: 'Salary', data: salaryDataTimeline, backgroundColor: '#1e3a8a' }, { label: 'OT', data: otDataTimeline, backgroundColor: '#2563eb' }, { label: 'Incentive', data: incentiveDataTimeline, backgroundColor: '#f59e0b' }, { label: 'Commission', data: commissionDataTimeline, backgroundColor: '#7c3aed' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
 
-        // 🟢 1. คำนวณและจัดกลุ่มข้อมูลจริงจาก Database สำหรับ 2 กราฟใหม่
+        // 🟢 [อัปเดตแกนหลัก] คำนวณข้อมูลจริงจาก Database เพื่อแปลงเป็นตารางตามภาพสรุปแนวตาราง image_936b69.png
         const deptStats = {};
         
-        // นับ Headcount ตามแผนกจากพนักงานที่ยัง Active
+        // นับจำนวนพนักงานที่ยังแอคทีฟแยกเป็นรายแผนก
         activeEmployeesNow.forEach(emp => {
             const dName = emp.dept && emp.dept.trim() !== '' ? emp.dept.trim() : 'Unassigned';
-            if(!deptStats[dName]) deptStats[dName] = { headcount: 0, payroll: 0 };
+            if(!deptStats[dName]) deptStats[dName] = { headcount: 0, payroll: 0, comparePayroll: 0 };
             deptStats[dName].headcount++;
         });
 
-        // รวมยอด Payroll Cost ตามแผนกจากงวดเดือนที่เลือก (Target Period)
+        // ยอดรวมต้นทุนรวม (Target Period) รายแผนก
         targetRowsAll.forEach(r => {
             const emp = empMetaMap[String(r.employee_id).trim()];
             const dName = emp && emp.dept && emp.dept.trim() !== '' ? emp.dept.trim() : 'Unassigned';
-            if(!deptStats[dName]) deptStats[dName] = { headcount: 0, payroll: 0 };
+            if(!deptStats[dName]) deptStats[dName] = { headcount: 0, payroll: 0, comparePayroll: 0 };
             deptStats[dName].payroll += Number(r.net_amount) || 0;
         });
 
-        // แปลงเป็น Array และเรียงลำดับต้นทุนจากมากไปน้อย (Sort Descending)
+        // ยอดรวมต้นทุนรวม (Compare Period) รายแผนก เพื่อนำไปเปรียบเทียบหาค่า MoM Growth Rate (+/- %)
+        compareRowsAll.forEach(r => {
+            const emp = empMetaMap[String(r.employee_id).trim()];
+            const dName = emp && emp.dept && emp.dept.trim() !== '' ? emp.dept.trim() : 'Unassigned';
+            if(!deptStats[dName]) deptStats[dName] = { headcount: 0, payroll: 0, comparePayroll: 0 };
+            deptStats[dName].comparePayroll += Number(r.net_amount) || 0;
+        });
+
+        // จัดรูปโครงสร้างแถวเพื่อเรียงลำดับ Sort ลำดับแผนกที่ใช้ต้นทุนเงินเดือนจากมากไปน้อย
         let deptArray = Object.keys(deptStats).map(key => ({
             name: key,
             headcount: deptStats[key].headcount,
-            payroll: deptStats[key].payroll
+            payroll: deptStats[key].payroll,
+            comparePayroll: deptStats[key].comparePayroll
         })).sort((a, b) => b.payroll - a.payroll);
 
-        // ดึงแค่ 5 อันดับแรก (Top 5)
         const top5Depts = deptArray.slice(0, 5);
+        const tblBody = document.getElementById('topDeptPayrollTableBody');
         
-        // เตรียมแกนข้อมูลสำหรับกราฟ (แปลงสกุลเงินเป็นหลักล้าน)
-        const top5Labels = top5Depts.map(d => d.name);
-        const top5PayrollData = top5Depts.map(d => d.payroll / 1000000); 
-        
-        // คำนวณ Revenue per Head เฉลี่ยของทั้งบริษัท (Company Avg)
+        if (tblBody) {
+            tblBody.innerHTML = '';
+            let sumHeadcount = 0;
+            let sumPayroll = 0;
+            let sumComparePayroll = 0;
+
+            top5Depts.forEach(d => {
+                sumHeadcount += d.headcount;
+                sumPayroll += d.payroll;
+                sumComparePayroll += d.comparePayroll;
+
+                const pctOfTotal = tTotalPayrollAllDept > 0 ? ((d.payroll / tTotalPayrollAllDept) * 100).toFixed(1) : '0.0';
+                
+                // คำนวณ อัตราการเปลี่ยนแปลงเปรียบเทียบกับงวด Compare Period
+                let growthTxt = '-';
+                let growthColor = 'text-slate-500';
+                let growthIcon = '';
+                
+                if (d.comparePayroll > 0) {
+                    const diffPct = (((d.payroll - d.comparePayroll) / d.comparePayroll) * 100);
+                    const isPos = diffPct >= 0;
+                    growthTxt = (isPos ? '+' : '') + diffPct.toFixed(1) + '%';
+                    growthColor = isPos ? 'text-rose-600 font-semibold' : 'text-green-600 font-semibold';
+                    growthIcon = isPos ? '<i class="fa fa-arrow-up text-xs ml-1"></i>' : '<i class="fa fa-arrow-down text-xs ml-1"></i>';
+                }
+
+                tblBody.innerHTML += `
+                    <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition">
+                        <td class="py-3 font-semibold text-slate-800">${d.name}</td>
+                        <td class="py-3 text-center text-slate-600">${d.headcount}</td>
+                        <td class="py-3 text-right font-medium text-slate-900">${formatM(d.payroll)}</td>
+                        <td class="py-3 text-right text-slate-500">${pctOfTotal}%</td>
+                        <td class="py-3 text-right ${growthColor}">${growthTxt}${growthIcon}</td>
+                    </tr>
+                `;
+            });
+
+            // แถวสรุปผลรวมท้ายตาราง (Total Row)
+            if (top5Depts.length > 0) {
+                let totalGrowthTxt = '-';
+                let totalGrowthColor = 'text-slate-800';
+                let totalGrowthIcon = '';
+
+                if (sumComparePayroll > 0) {
+                    const totalDiffPct = (((sumPayroll - sumComparePayroll) / sumComparePayroll) * 100);
+                    const isTotalPos = totalDiffPct >= 0;
+                    totalGrowthTxt = (isTotalPos ? '+' : '') + totalDiffPct.toFixed(1) + '%';
+                    totalGrowthColor = isTotalPos ? 'text-rose-600' : 'text-green-600';
+                    totalGrowthIcon = isTotalPos ? '<i class="fa fa-arrow-up text-xs ml-1"></i>' : '<i class="fa fa-arrow-down text-xs ml-1"></i>';
+                }
+
+                tblBody.innerHTML += `
+                    <tr class="font-bold border-t-2 border-slate-900 bg-slate-50/40 text-slate-900">
+                        <td class="py-3 text-slate-900 font-bold">Total</td>
+                        <td class="py-3 text-center">${sumHeadcount}</td>
+                        <td class="py-3 text-right">${formatM(sumPayroll)}</td>
+                        <td class="py-3 text-right">100%</td>
+                        <td class="py-3 text-right ${totalGrowthColor} font-bold">${totalGrowthTxt}${totalGrowthIcon}</td>
+                    </tr>
+                `;
+            } else {
+                tblBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No organizational ledger records found for parameters.</td></tr>`;
+            }
+        }
+
+        // รีเฟรชและส่งค่าคำนวณเข้าพล็อตลงกราฟชุดที่สอง (Labor Productivity) ด้านขวาให้สอดคล้องกันอย่างถูกต้อง
         const compAvgRevPerHead = tTotalHeadcount > 0 ? (actualSalesRevenue / tTotalHeadcount) / 1000000 : 0;
-        
-        // คำนวณ Labor Productivity รายแผนก (สูตร Proxy Allocation)
+        const productivityLabels = top5Depts.map(d => d.name);
         const productivityData = top5Depts.map(d => {
             if (d.headcount === 0) return 0;
             const deptRevAllocated = actualSalesRevenue * (d.payroll / (tTotalPayrollAllDept || 1));
             return (deptRevAllocated / d.headcount) / 1000000;
         });
 
-        // ==========================================
-        // 📈 NEW CHART 1: TOP 5 DEPARTMENTS BY PAYROLL COST (REAL DATA)
-        // ==========================================
-        const ctxTopDept = document.getElementById('topDeptPayrollChart');
-        if(ctxTopDept) {
-            charts.topDeptPayroll = new Chart(ctxTopDept, {
-                type: 'bar',
-                data: {
-                    labels: top5Labels.length > 0 ? top5Labels : ['No Data'],
-                    datasets: [{
-                        label: 'Payroll Cost (Millions THB)',
-                        data: top5PayrollData.length > 0 ? top5PayrollData : [0],
-                        backgroundColor: ['#1e3a8a', '#3b82f6', '#f59e0b', '#10b981', '#64748b'],
-                        borderRadius: 6,
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    indexAxis: 'y', 
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: function(ctx) { return '฿' + ctx.raw.toFixed(2) + 'M'; } } }
-                    },
-                    scales: {
-                        x: {
-                            title: { display: true, text: 'Payroll (M)' },
-                            ticks: { callback: function(value) { return value + 'M'; } }
-                        }
-                    }
-                }
-            });
-        }
-
-        // ==========================================
-        // 📊 NEW CHART 2: LABOR PRODUCTIVITY (REAL DATA)
-        // ==========================================
         const ctxProductivity = document.getElementById('laborProductivityChart');
         if(ctxProductivity) {
-            // สร้าง Array ให้เส้น Company Avg ลากยาวเท่าจำนวนแผนก
             const compAvgArr = productivityData.map(() => compAvgRevPerHead);
-            
             charts.laborProductivity = new Chart(ctxProductivity, {
                 type: 'bar',
                 data: {
-                    labels: top5Labels.length > 0 ? top5Labels : ['No Data'],
+                    labels: productivityLabels.length > 0 ? productivityLabels : ['No Data'],
                     datasets: [
                         {
                             type: 'line', 
