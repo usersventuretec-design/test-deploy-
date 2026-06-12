@@ -234,7 +234,7 @@
         <div class="card-ui bg-white shadow-sm rounded-xl border p-5 flex flex-col justify-between">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider !mb-0">
-              <i class="fa-solid fa-trophy text-amber-500 mr-1"></i> TOP SALES PERFORMANCE TABLE
+              <i class="fa-solid fa-trophy text-amber-500 mr-1"></i> TOP 5 SALES PERFORMANCE TABLE
             </h3>
           </div>
           <div class="overflow-x-auto w-full flex-1">
@@ -259,7 +259,7 @@
         <div class="card-ui bg-white shadow-sm rounded-xl border p-5 flex flex-col justify-between">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider !mb-0">
-              <i class="fa-solid fa-chart-column text-emerald-600 mr-1"></i> TOP SALES ACHIEVEMENT CHART
+              <i class="fa-solid fa-chart-column text-emerald-600 mr-1"></i> TOP 5 SALES ACHIEVEMENT CHART
             </h3>
           </div>
           <div class="relative w-full flex-1" style="height: 280px;">
@@ -1068,7 +1068,7 @@
             });
         }
 
-        // 🟢 [อัปเดตระบบคำนวณย่อยชุดใหม่] สกัดข้อมูลจริงมาพล็อทตารางคู่กราฟ Top Sales Performance
+        // 🟢 [อัปเดต] ดึงเฉพาะ 5 อันดับแรก (Top 5) มาแสดงผลบนตาราง Top Sales Performance 
         const targetPeriodSalesRows = salesRecords.filter(s => s.month_period === currentTargetVal);
         const processedSalesList = targetPeriodSalesRows.map(s => {
             const empObj = localEmployeesCache.find(e => String(e.id) === String(s.salesperson_id));
@@ -1083,12 +1083,14 @@
                 actual: actualVal,
                 percent: achievementPct
             };
-        }).sort((a, b) => b.actual - a.actual); // เรียงจากคนที่ทำยอดขายจริงได้สูงสุดลงมา
+        }).sort((a, b) => b.actual - a.actual); 
+
+        const top5SalesList = processedSalesList.slice(0, 5); // ⬅️ สั่งตัดให้เหลือแค่ 5 อันดับแรก
 
         const salesTbody = document.getElementById('topSalesListTableBody');
         if (salesTbody) {
             salesTbody.innerHTML = '';
-            processedSalesList.forEach(s => {
+            top5SalesList.forEach(s => {
                 salesTbody.innerHTML += `
                     <tr class="border-b border-slate-50 hover:bg-slate-50/60 transition">
                         <td class="py-3 font-semibold text-slate-800"><i class="fa fa-user text-blue-500 mr-1.5 text-xs"></i>${s.name}</td>
@@ -1099,17 +1101,17 @@
                     </tr>
                 `;
             });
-            if (processedSalesList.length === 0) {
+            if (top5SalesList.length === 0) {
                 salesTbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No active sales achievements committed in this target period.</td></tr>`;
             }
         }
 
-        // พล็อตกราฟแท่งคู่เปรียบเทียบยอดขาย Top Sales Achievement Visual Chart
+        // พล็อตกราฟแท่งคู่เปรียบเทียบยอดขาย Top Sales Achievement Visual Chart (5 คนเท่านั้น)
         const ctxSalesVisual = document.getElementById('topSalesVisualChart');
         if (ctxSalesVisual) {
-            const chartLabels = processedSalesList.slice(0, 5).map(s => s.name); // ดึงข้อมูล Top 5 มาพล็อต
-            const chartTargetData = processedSalesList.slice(0, 5).map(s => s.target);
-            const chartActualData = processedSalesList.slice(0, 5).map(s => s.actual);
+            const chartLabels = top5SalesList.map(s => s.name); 
+            const chartTargetData = top5SalesList.map(s => s.target);
+            const chartActualData = top5SalesList.map(s => s.actual);
 
             charts.topSalesVisual = new Chart(ctxSalesVisual, {
                 type: 'bar',
@@ -1372,7 +1374,7 @@
         const dReport = document.getElementById('filterReportEmployee');
         const dKpiSalesSelect = document.getElementById('kpiSalespersonSelect');
 
-        if(d1) d1.innerHTML = '<option value="">-- Choose Employee --</option>'; d1.innerHTML = '<option value="">-- Choose Employee --</option>'; 
+        if(d1) d1.innerHTML = '<option value="">-- Choose Employee --</option>'; 
         if(d2) d2.innerHTML = '<option value="">-- Optional None --</option>';
         if(dReport) dReport.innerHTML = '<option value="">-- Select Target Employee --</option>';
         if(dKpiSalesSelect) dKpiSalesSelect.innerHTML = '<option value="">-- Choose Salesperson Name --</option>';
