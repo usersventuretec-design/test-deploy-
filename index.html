@@ -97,7 +97,7 @@
   </div>
 
   <div class="main-content">
-    
+   
     <div class="header-app flex justify-between items-center mb-6 card-ui py-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">EXECUTIVE PORTAL & PAYROLL STUDIO</h1>
@@ -123,7 +123,7 @@
 
     <div id="view-summary" class="tab-view active">
       <div id="error-container"></div>
-      
+     
       <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6" id="kpi-container">
         <div class="card-ui p-6 text-center animate-pulse text-blue-500 col-span-5"><i class="fa fa-spinner fa-spin mr-2"></i>Loading live database and calculating analytics...</div>
       </div>
@@ -148,7 +148,7 @@
           <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa fa-chart-bar text-blue-600"></i> MONTHLY TOTAL NET REVENUE vs ALL DEPT PAYROLL</h3>
           <div class="relative w-full flex-1" style="height: 280px;"><canvas id="payrollTrendChart"></canvas></div>
         </div>
-        
+       
         <div class="card-ui bg-white shadow-sm rounded-xl border p-5 flex flex-col justify-between">
           <div>
             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center justify-between">
@@ -181,7 +181,7 @@
           <button class="mt-4 w-full bg-slate-50 border hover:bg-slate-100 font-medium text-slate-700 text-xs py-2 rounded-lg transition text-center">View All Alerts</button>
         </div>
       </div>
-      
+     
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card-ui flex flex-col items-center"><h3 class="card-header text-sm font-bold text-slate-600 mb-4">SALES DEPT HEADCOUNT</h3><div class="relative w-full flex justify-center mt-4" style="height: 200px;"><canvas id="headcountChart"></canvas></div></div>
         <div class="card-ui lg:col-span-2 overflow-auto">
@@ -344,6 +344,15 @@
           </div>
           <button class="btn-ui" onclick="loadDualEmployeesSlips()"><i class="fa-solid fa-file-shield"></i> Compile Preview Slips</button>
       </div>
+
+      <div id="dualSlipsWrapper" style="display:none;" class="mb-6">
+          <div id="slipsContainer"></div>
+          <div class="flex justify-end gap-3 mt-4">
+              <button class="btn-ui bg-slate-500 hover:bg-slate-600 text-xs py-2 px-4" onclick="document.getElementById('dualSlipsWrapper').style.display='none'">Cancel</button>
+              <button class="btn-ui bg-emerald-600 hover:bg-emerald-700 text-xs py-2 px-4" onclick="saveDualSlipsFinal()"><i class="fa-solid fa-cloud-arrow-up"></i> Save & Commit Individual Slips</button>
+          </div>
+      </div>
+
       <div class="card-ui border-2 border-dashed border-blue-300 bg-blue-50/20">
           <h3><i class="fa-solid fa-users-viewfinder text-blue-600"></i> Option 2: Organizational Monthly Bulk Accounting Closing Process</h3>
           <p class="text-xs text-slate-500 mb-4">The core system will evaluate fingerprint logs and parse basic salary, overtime metrics, and deductions for all active staffs in database automatically.</p>
