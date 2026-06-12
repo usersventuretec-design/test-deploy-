@@ -870,25 +870,61 @@
         charts.revenueTrend = new Chart(document.getElementById('executiveRevenueTrendChart'), { type: 'line', data: { labels: chronologicalPeriods, datasets: [{ label: 'Actual Revenue', data: revenueDataTimeline, borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.05)', borderWidth: 3, tension: 0.4, pointBackgroundColor: '#16a34a', fill: true }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.compensationTrend = new Chart(document.getElementById('executiveCompTrendChart'), { type: 'bar', data: { labels: chronologicalPeriods, datasets: [{ label: 'Salary', data: salaryDataTimeline, backgroundColor: '#1e3a8a' }, { label: 'OT', data: otDataTimeline, backgroundColor: '#2563eb' }, { label: 'Incentive', data: incentiveDataTimeline, backgroundColor: '#f59e0b' }, { label: 'Commission', data: commissionDataTimeline, backgroundColor: '#7c3aed' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
 
+        // 🟢 1. คำนวณและจัดกลุ่มข้อมูลจริงจาก Database สำหรับ 2 กราฟใหม่
+        const deptStats = {};
+        
+        // นับ Headcount ตามแผนกจากพนักงานที่ยัง Active
+        activeEmployeesNow.forEach(emp => {
+            const dName = emp.dept && emp.dept.trim() !== '' ? emp.dept.trim() : 'Unassigned';
+            if(!deptStats[dName]) deptStats[dName] = { headcount: 0, payroll: 0 };
+            deptStats[dName].headcount++;
+        });
+
+        // รวมยอด Payroll Cost ตามแผนกจากงวดเดือนที่เลือก (Target Period)
+        targetRowsAll.forEach(r => {
+            const emp = empMetaMap[String(r.employee_id).trim()];
+            const dName = emp && emp.dept && emp.dept.trim() !== '' ? emp.dept.trim() : 'Unassigned';
+            if(!deptStats[dName]) deptStats[dName] = { headcount: 0, payroll: 0 };
+            deptStats[dName].payroll += Number(r.net_amount) || 0;
+        });
+
+        // แปลงเป็น Array และเรียงลำดับต้นทุนจากมากไปน้อย (Sort Descending)
+        let deptArray = Object.keys(deptStats).map(key => ({
+            name: key,
+            headcount: deptStats[key].headcount,
+            payroll: deptStats[key].payroll
+        })).sort((a, b) => b.payroll - a.payroll);
+
+        // ดึงแค่ 5 อันดับแรก (Top 5)
+        const top5Depts = deptArray.slice(0, 5);
+        
+        // เตรียมแกนข้อมูลสำหรับกราฟ (แปลงสกุลเงินเป็นหลักล้าน)
+        const top5Labels = top5Depts.map(d => d.name);
+        const top5PayrollData = top5Depts.map(d => d.payroll / 1000000); 
+        
+        // คำนวณ Revenue per Head เฉลี่ยของทั้งบริษัท (Company Avg)
+        const compAvgRevPerHead = tTotalHeadcount > 0 ? (actualSalesRevenue / tTotalHeadcount) / 1000000 : 0;
+        
+        // คำนวณ Labor Productivity รายแผนก (สูตร Proxy Allocation)
+        const productivityData = top5Depts.map(d => {
+            if (d.headcount === 0) return 0;
+            const deptRevAllocated = actualSalesRevenue * (d.payroll / (tTotalPayrollAllDept || 1));
+            return (deptRevAllocated / d.headcount) / 1000000;
+        });
+
         // ==========================================
-        // 📈 NEW CHART 1: TOP 5 DEPARTMENTS BY PAYROLL COST
+        // 📈 NEW CHART 1: TOP 5 DEPARTMENTS BY PAYROLL COST (REAL DATA)
         // ==========================================
         const ctxTopDept = document.getElementById('topDeptPayrollChart');
         if(ctxTopDept) {
             charts.topDeptPayroll = new Chart(ctxTopDept, {
                 type: 'bar',
                 data: {
-                    labels: ['Sales', 'Operations', 'Warehouse', 'Marketing', 'Finance & Admin'],
+                    labels: top5Labels.length > 0 ? top5Labels : ['No Data'],
                     datasets: [{
                         label: 'Payroll Cost (Millions THB)',
-                        data: [11.25, 6.48, 3.85, 2.65, 2.35], 
-                        backgroundColor: [
-                            '#1e3a8a', 
-                            '#3b82f6', 
-                            '#f59e0b', 
-                            '#10b981', 
-                            '#64748b'  
-                        ],
+                        data: top5PayrollData.length > 0 ? top5PayrollData : [0],
+                        backgroundColor: ['#1e3a8a', '#3b82f6', '#f59e0b', '#10b981', '#64748b'],
                         borderRadius: 6,
                         borderWidth: 0
                     }]
@@ -898,7 +934,8 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function(ctx) { return '฿' + ctx.raw.toFixed(2) + 'M'; } } }
                     },
                     scales: {
                         x: {
@@ -911,19 +948,22 @@
         }
 
         // ==========================================
-        // 📊 NEW CHART 2: LABOR PRODUCTIVITY (REVENUE PER HEAD)
+        // 📊 NEW CHART 2: LABOR PRODUCTIVITY (REAL DATA)
         // ==========================================
         const ctxProductivity = document.getElementById('laborProductivityChart');
         if(ctxProductivity) {
+            // สร้าง Array ให้เส้น Company Avg ลากยาวเท่าจำนวนแผนก
+            const compAvgArr = productivityData.map(() => compAvgRevPerHead);
+            
             charts.laborProductivity = new Chart(ctxProductivity, {
                 type: 'bar',
                 data: {
-                    labels: ['Sales', 'Marketing', 'Operations', 'Warehouse', 'Finance & Admin'],
+                    labels: top5Labels.length > 0 ? top5Labels : ['No Data'],
                     datasets: [
                         {
                             type: 'line', 
-                            label: 'Company Avg (0.58M)',
-                            data: [0.58, 0.58, 0.58, 0.58, 0.58],
+                            label: `Company Avg (${compAvgRevPerHead.toFixed(2)}M)`,
+                            data: compAvgArr.length > 0 ? compAvgArr : [0],
                             borderColor: '#dc2626',
                             borderWidth: 2,
                             borderDash: [6, 4],
@@ -932,14 +972,8 @@
                         },
                         {
                             label: 'Revenue per Head (Millions THB)',
-                            data: [1.02, 0.78, 0.68, 0.56, 0.45],
-                            backgroundColor: [
-                                '#0284c7', 
-                                '#16a34a', 
-                                '#ea580c', 
-                                '#8b5cf6', 
-                                '#0d9488'  
-                            ],
+                            data: productivityData.length > 0 ? productivityData : [0],
+                            backgroundColor: ['#0284c7', '#16a34a', '#ea580c', '#8b5cf6', '#0d9488'],
                             borderRadius: 6
                         }
                     ]
@@ -948,7 +982,8 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'top', labels: { boxWidth: 15 } }
+                        legend: { position: 'top', labels: { boxWidth: 15 } },
+                        tooltip: { callbacks: { label: function(ctx) { return '฿' + ctx.raw.toFixed(2) + 'M / Head'; } } }
                     },
                     scales: {
                         y: {
@@ -1037,7 +1072,6 @@
       }
     }
 
-    // -- ชุดฟังก์ชันอื่นๆ ยังคงเดิม ไม่มีการตัดออก --
     function populateBranchFilterDropdown(currentMonthSalesRows) {
         const branchSelect = document.getElementById('branchFilterSelect');
         if(!branchSelect) return;
