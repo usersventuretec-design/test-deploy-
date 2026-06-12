@@ -97,7 +97,7 @@
   </div>
 
   <div class="main-content">
-   
+    
     <div class="header-app flex justify-between items-center mb-6 card-ui py-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">EXECUTIVE PORTAL & PAYROLL STUDIO</h1>
@@ -123,7 +123,7 @@
 
     <div id="view-summary" class="tab-view active">
       <div id="error-container"></div>
-     
+      
       <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6" id="kpi-container">
         <div class="card-ui p-6 text-center animate-pulse text-blue-500 col-span-5"><i class="fa fa-spinner fa-spin mr-2"></i>Loading live database and calculating analytics...</div>
       </div>
@@ -148,7 +148,7 @@
           <h3 class="card-header text-sm font-bold text-slate-600 mb-4"><i class="fa fa-chart-bar text-blue-600"></i> MONTHLY TOTAL NET REVENUE vs ALL DEPT PAYROLL</h3>
           <div class="relative w-full flex-1" style="height: 280px;"><canvas id="payrollTrendChart"></canvas></div>
         </div>
-       
+        
         <div class="card-ui bg-white shadow-sm rounded-xl border p-5 flex flex-col justify-between">
           <div>
             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center justify-between">
@@ -181,12 +181,36 @@
           <button class="mt-4 w-full bg-slate-50 border hover:bg-slate-100 font-medium text-slate-700 text-xs py-2 rounded-lg transition text-center">View All Alerts</button>
         </div>
       </div>
-     
+      
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="card-ui flex flex-col items-center"><h3 class="card-header text-sm font-bold text-slate-600 mb-4">SALES DEPT HEADCOUNT</h3><div class="relative w-full flex justify-center mt-4" style="height: 200px;"><canvas id="headcountChart"></canvas></div></div>
         <div class="card-ui lg:col-span-2 overflow-auto">
           <h3 class="card-header text-sm font-bold text-slate-600 mb-4">REVENUE TREND (Actual Sales)</h3>
           <div class="relative w-full" style="height: 200px;"><canvas id="executiveRevenueTrendChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="card-ui bg-white shadow-sm rounded-xl border p-5 flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider !mb-0">
+              <i class="fa-solid fa-pie-chart text-blue-800 mr-1"></i> TOP 5 DEPARTMENTS BY PAYROLL COST
+            </h3>
+          </div>
+          <div class="relative w-full flex-1" style="height: 280px;">
+            <canvas id="topDeptPayrollChart"></canvas>
+          </div>
+        </div>
+        <div class="card-ui bg-white shadow-sm rounded-xl border p-5 flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider !mb-0">
+              <i class="fa-solid fa-users text-indigo-800 mr-1"></i> LABOR PRODUCTIVITY (REVENUE PER HEAD)
+            </h3>
+            <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-1 rounded">By Department</span>
+          </div>
+          <div class="relative w-full flex-1" style="height: 280px;">
+            <canvas id="laborProductivityChart"></canvas>
+          </div>
         </div>
       </div>
 
@@ -345,7 +369,6 @@
           <button class="btn-ui" onclick="loadDualEmployeesSlips()"><i class="fa-solid fa-file-shield"></i> Compile Preview Slips</button>
       </div>
 
-      <!-- เพิ่ม Container สำหรับแสดงผล Slip ที่หายไปตรงนี้ (รวมปุ่ม Print) -->
       <div id="dualSlipsWrapper" style="display:none;" class="mb-6">
           <div id="slipsContainer" class="slip-outer-container"></div>
           <div class="flex justify-end gap-3 mt-4">
@@ -544,7 +567,6 @@
         `;
     }
 
-    // 🟢 ฟังก์ชันแกนหลักอัพเดทใหม่: เรนเดอร์ตัวกราฟคู่สาย Sales vs Payroll Cost Line Trend แบบแยกเดือน/ปีตามภาพ 2ebd94.png
     function renderSalesPayrollTrendChart() {
         const timeframe = document.getElementById('trendTimeframeFilter').value || 'monthly';
         
@@ -660,7 +682,11 @@
       if(!document.getElementById('error-container')) return;
       document.getElementById('error-container').innerHTML = '';
       document.getElementById('kpi-container').innerHTML = '<div class="card-ui p-6 text-center animate-pulse text-blue-500 col-span-5"><i class="fa fa-spinner fa-spin mr-2"></i>Loading live database and calculating analytics...</div>';
+      
+      // Destroy old charts including the new ones
       Object.keys(charts).forEach(key => { if(charts[key] && key !== 'trendLineChartInstance') charts[key].destroy(); });
+      if (charts.topDeptPayroll) charts.topDeptPayroll.destroy();
+      if (charts.laborProductivity) charts.laborProductivity.destroy();
 
       try {
         const { data: summaryData, error: summaryErr } = await supabaseClient.from('monthly_payroll_summary').select('*');
@@ -802,7 +828,6 @@
           branchGroup[bName].payrollCost += Number(r.net_amount);
         });
 
-        // 🟢 เตรียมชุดข้อมูลดิบสำหรับวาดกราฟ Sales vs Payroll Cost Line Trend ตัวใหม่
         const chronologicalPeriods = Array.from(periodsSet).sort((a, b) => new Date(a) - new Date(b));
         globalTimelinePeriods = chronologicalPeriods;
         globalTimelineRevenue = [];
@@ -819,10 +844,8 @@
             globalTimelinePayroll.push(payVal);
         });
 
-        // เรียกเรนเดอร์กราฟเทรนด์หลักตัวใหม่ทันที
         renderSalesPayrollTrendChart();
 
-        // สั่งสร้างกราฟเดิมอื่นๆ ตามลำดับ
         charts.payroll = new Chart(document.getElementById('payrollTrendChart'), { type: 'bar', data: { labels: [currentCompareVal, currentTargetVal], datasets: [{ label: 'Total Company Revenue', data: [prevSalesRevenue, actualSalesRevenue], backgroundColor: '#1e3a8a' }, { label: 'All Dept Payroll Cost', data: [cTotalPayrollAllDept, tTotalPayrollAllDept], backgroundColor: '#dc2626' }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.sales = new Chart(document.getElementById('salesPayrollChart'), { type: 'line', data: { labels: [currentCompareVal, currentTargetVal], datasets: [{ label: 'Gross Profit Line (35%)', data: [prevSalesRevenue * 0.35, grossProfit], borderColor: '#16a34a', tension: 0.2 }, { label: 'Total Payroll Expenses', data: [cTotalPayrollAllDept, tTotalPayrollAllDept], borderColor: '#2563eb', tension: 0.2 }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.donut = new Chart(document.getElementById('headcountChart'), { type: 'doughnut', data: { labels: Object.keys(branchGroup).length > 0 ? Object.keys(branchGroup) : ['No Data'], datasets: [{ data: Object.keys(branchGroup).length > 0 ? Object.values(branchGroup).map(b => b.headcount) : [0], backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#06b6d4'], cutout: '70%' }] }, options: { responsive: true, maintainAspectRatio: false } });
@@ -846,6 +869,96 @@
 
         charts.revenueTrend = new Chart(document.getElementById('executiveRevenueTrendChart'), { type: 'line', data: { labels: chronologicalPeriods, datasets: [{ label: 'Actual Revenue', data: revenueDataTimeline, borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.05)', borderWidth: 3, tension: 0.4, pointBackgroundColor: '#16a34a', fill: true }] }, options: { responsive: true, maintainAspectRatio: false } });
         charts.compensationTrend = new Chart(document.getElementById('executiveCompTrendChart'), { type: 'bar', data: { labels: chronologicalPeriods, datasets: [{ label: 'Salary', data: salaryDataTimeline, backgroundColor: '#1e3a8a' }, { label: 'OT', data: otDataTimeline, backgroundColor: '#2563eb' }, { label: 'Incentive', data: incentiveDataTimeline, backgroundColor: '#f59e0b' }, { label: 'Commission', data: commissionDataTimeline, backgroundColor: '#7c3aed' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
+
+        // ==========================================
+        // 📈 NEW CHART 1: TOP 5 DEPARTMENTS BY PAYROLL COST
+        // ==========================================
+        const ctxTopDept = document.getElementById('topDeptPayrollChart');
+        if(ctxTopDept) {
+            charts.topDeptPayroll = new Chart(ctxTopDept, {
+                type: 'bar',
+                data: {
+                    labels: ['Sales', 'Operations', 'Warehouse', 'Marketing', 'Finance & Admin'],
+                    datasets: [{
+                        label: 'Payroll Cost (Millions THB)',
+                        data: [11.25, 6.48, 3.85, 2.65, 2.35], 
+                        backgroundColor: [
+                            '#1e3a8a', 
+                            '#3b82f6', 
+                            '#f59e0b', 
+                            '#10b981', 
+                            '#64748b'  
+                        ],
+                        borderRadius: 6,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', 
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Payroll (M)' },
+                            ticks: { callback: function(value) { return value + 'M'; } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // 📊 NEW CHART 2: LABOR PRODUCTIVITY (REVENUE PER HEAD)
+        // ==========================================
+        const ctxProductivity = document.getElementById('laborProductivityChart');
+        if(ctxProductivity) {
+            charts.laborProductivity = new Chart(ctxProductivity, {
+                type: 'bar',
+                data: {
+                    labels: ['Sales', 'Marketing', 'Operations', 'Warehouse', 'Finance & Admin'],
+                    datasets: [
+                        {
+                            type: 'line', 
+                            label: 'Company Avg (0.58M)',
+                            data: [0.58, 0.58, 0.58, 0.58, 0.58],
+                            borderColor: '#dc2626',
+                            borderWidth: 2,
+                            borderDash: [6, 4],
+                            pointRadius: 0,
+                            fill: false
+                        },
+                        {
+                            label: 'Revenue per Head (Millions THB)',
+                            data: [1.02, 0.78, 0.68, 0.56, 0.45],
+                            backgroundColor: [
+                                '#0284c7', 
+                                '#16a34a', 
+                                '#ea580c', 
+                                '#8b5cf6', 
+                                '#0d9488'  
+                            ],
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 15 } }
+                    },
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'Revenue per Head (THB)' },
+                            ticks: { callback: function(value) { return value + 'M'; } }
+                        }
+                    }
+                }
+            });
+        }
 
         const branchTbody = document.querySelector('#branchTable tbody');
         branchTbody.innerHTML = '';
@@ -924,6 +1037,7 @@
       }
     }
 
+    // -- ชุดฟังก์ชันอื่นๆ ยังคงเดิม ไม่มีการตัดออก --
     function populateBranchFilterDropdown(currentMonthSalesRows) {
         const branchSelect = document.getElementById('branchFilterSelect');
         if(!branchSelect) return;
@@ -1107,30 +1221,18 @@
         if (!confirm(`⚠️ คุณแน่ใจใช่ไหมว่าต้องการลบข้อมูลพนักงาน ID: ${empId} ออกจากระบบอย่างถาวร? \n(ประวัติและข้อมูลทั้งหมดของพนักงานท่านนี้ในฐานข้อมูลจะหายไป)`)) {
             return;
         }
-
-        if (document.getElementById('empLoader')) {
-            document.getElementById('empLoader').style.display = 'flex';
-        }
-
+        if (document.getElementById('empLoader')) { document.getElementById('empLoader').style.display = 'flex'; }
         try {
-            const { error } = await supabaseClient
-                .from('employees')
-                .delete()
-                .eq('id', empId);
-
+            const { error } = await supabaseClient.from('employees').delete().eq('id', empId);
             if (error) throw error;
-
             alert(`🎉 ลบข้อมูลพนักงาน ID: ${empId} สำเร็จเรียบร้อยแล้วครับ`);
             await loadEmployeeList();
             if (typeof loadDashboardData === 'function') loadDashboardData();
-
         } catch (err) {
             alert('เกิดข้อผิดพลาดไม่สามารถลบข้อมูลได้: ' + err.message);
             console.error(err);
         } finally {
-            if (document.getElementById('empLoader')) {
-                document.getElementById('empLoader').style.display = 'none';
-            }
+            if (document.getElementById('empLoader')) { document.getElementById('empLoader').style.display = 'none'; }
         }
     }
 
@@ -1268,7 +1370,6 @@
             alert("รูปแบบวันที่ไม่ถูกต้อง! กรุณากรอกในรูปแบบ YYYY-MM-DD เท่านั้นครับ");
             return;
         }
-
         if(!confirm(`คุณยืนยันที่จะบันทึกให้ คุณ ${empName} พ้นสภาพการเป็นพนักงานในวันที่ ${selectedDate} ใช่หรือไม่?`)) return;
 
         try {
