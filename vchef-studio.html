@@ -112,20 +112,38 @@
         document.getElementById('kpiMonth').innerHTML = html;
     }
 
-    async function loadEmployees() {
-        // ใช้ supabaseClient แทน supabase
+   async function loadEmployees() {
+        // ใช้ supabaseClient ดึงข้อมูลพนักงานทั้งหมด
         const { data } = await supabaseClient.from('employees').select('*').order('name');
         employeesCache = data || [];
-        const vcSel = document.getElementById('vcEmp'); const kpiSel = document.getElementById('kpiEmp');
         
-        vcSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
-        kpiSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
+        const vcSel = document.getElementById('vcEmp'); 
+        const kpiSel = document.getElementById('kpiEmp');
+        
+        // รีเซ็ตตัวเลือกดรอปดาวน์
+        vcSel.innerHTML = '<option value="">-- เลือกพนักงาน VChef --</option>';
+        kpiSel.innerHTML = '<option value="">-- เลือกพนักงานสาขาปกติ --</option>';
 
         employeesCache.forEach(e => {
-            // ดึงเฉพาะพนักงาน PC ที่ยังไม่ลาออก
+            // เช็คว่าเป็นพนักงานขายที่ยังไม่ลาออก
             if(e.is_sales && (!e.resigned_date || e.resigned_date === '')) {
                 const opt = `<option value="${e.id}">${e.name} (${e.assigned_branch || 'Roving'})</option>`;
-                vcSel.innerHTML += opt; kpiSel.innerHTML += opt;
+                
+                // แปลงข้อความสาขา/ตำแหน่ง/แผนก ให้เป็นพิมพ์เล็กเพื่อใช้เช็คคำ
+                const branchStr = String(e.assigned_branch || '').toLowerCase();
+                const posStr = String(e.position || '').toLowerCase();
+                const deptStr = String(e.dept || '').toLowerCase();
+
+                // ตรรกะแยกคน: ถ้ามีคำว่า "vchef" หรือ "roving" ถือว่าเป็นทีมจัดชิม
+                const isVChefTeam = branchStr.includes('vchef') || branchStr.includes('roving') || posStr.includes('vchef') || deptStr.includes('vchef');
+
+                if (isVChefTeam) {
+                    // ถ้าเป็นทีม VChef -> ให้ไปโผล่ดรอปดาวน์ฝั่งซ้าย (ฟอร์มที่ 1)
+                    vcSel.innerHTML += opt;
+                } else {
+                    // ถ้าเป็น PC ประจำห้างปกติ (เช่น Makro, LOTUS, Big C) -> ให้ไปโผล่ดรอปดาวน์ฝั่งขวา (ฟอร์มที่ 2)
+                    kpiSel.innerHTML += opt;
+                }
             }
         });
     }
