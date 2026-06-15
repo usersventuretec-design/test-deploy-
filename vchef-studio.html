@@ -17,8 +17,10 @@
     input:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
     .btn-ui { padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; color: white; }
     table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    table.data-table th { background-color: #f8fafc; padding: 12px; border-bottom: 2px solid #cbd5e1; text-align: left; }
-    table.data-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    table.data-table th { background-color: #f8fafc; padding: 12px; border-bottom: 2px solid #cbd5e1; text-align: center; }
+    table.data-table td { padding: 8px 4px; border-bottom: 1px solid #e2e8f0; }
+    .matrix-input { width: 100%; text-align: center; border: 1px solid transparent; background: transparent; padding: 6px; border-radius: 4px;}
+    .matrix-input:hover, .matrix-input:focus { border: 1px solid #cbd5e1; background: #fff; }
   </style>
 </head>
 <body class="p-6 md:p-10">
@@ -53,35 +55,47 @@
       <button class="btn-ui bg-amber-600 hover:bg-amber-700 w-full justify-center" onclick="saveVChef()"><i class="fa-solid fa-save"></i> บันทึกข้อมูล VChef สาขานี้</button>
     </div>
 
-    <div class="card-ui border-t-4 border-blue-500">
-      <h3 class="text-lg font-bold text-blue-700 mb-4"><i class="fa-solid fa-bullseye mr-2"></i>2. บันทึกเป้ายอดขายสาขาปกติ (Sales Target)</h3>
-      <div class="grid grid-cols-2 gap-4 mb-4">
-        <div class="input-wrapper"><label>งวดเดือน (Month):</label><select id="kpiMonth"></select></div>
-        <div class="input-wrapper"><label>พนักงาน (PC):</label><select id="kpiEmp" onchange="fillBranch()"><option value="">-- เลือกพนักงาน --</option></select></div>
-        <div class="input-wrapper col-span-2"><label>สาขาที่รับผิดชอบ (Branch):</label><input type="text" id="kpiBranch" readonly class="bg-gray-100"></div>
-      </div>
-      <div class="grid grid-cols-2 gap-4 mb-6">
-        <div class="input-wrapper"><label>เป้ายอดขาย (Target / THB):</label><input type="number" id="kpiTarget" placeholder="0"></div>
-        <div class="input-wrapper"><label class="text-emerald-600">ยอดขายทำได้จริง (Actual / THB):</label><input type="number" id="kpiActual" placeholder="0" class="border-emerald-300 bg-emerald-50"></div>
-      </div>
-      <button class="btn-ui bg-blue-600 hover:bg-blue-700 w-full justify-center" onclick="saveKPI()"><i class="fa-solid fa-save"></i> บันทึกข้อมูลยอดขาย</button>
-    </div>
-
     <div class="card-ui overflow-x-auto">
       <h3 class="text-md font-bold text-slate-700 mb-4"><i class="fa-solid fa-history mr-2"></i>ประวัติ VChef (ล่าสุด)</h3>
       <table class="data-table">
-        <thead><tr><th>งวดเดือน</th><th>ชื่อพนักงาน</th><th>สาขาที่ลง</th><th>วันจัดชิม</th><th>ค่าทริป</th><th>ยอดรวมแบรนด์</th><th>ลบ</th></tr></thead>
+        <thead><tr><th class="text-left">งวดเดือน</th><th class="text-left">ชื่อพนักงาน</th><th class="text-left">สาขาที่ลง</th><th>วันจัดชิม</th><th>ค่าทริป</th><th>ยอดรวมแบรนด์</th><th>ลบ</th></tr></thead>
         <tbody id="vchefTableBody"><tr><td colspan="7" class="text-center text-slate-400">Loading...</td></tr></tbody>
       </table>
     </div>
 
-    <div class="card-ui overflow-x-auto">
-      <h3 class="text-md font-bold text-slate-700 mb-4"><i class="fa-solid fa-history mr-2"></i>ประวัติยอดขายสาขาปกติ (ล่าสุด)</h3>
-      <table class="data-table">
-        <thead><tr><th>งวดเดือน</th><th>ชื่อพนักงาน</th><th>สาขา</th><th>เป้าหมาย</th><th>ยอดจริงทำได้</th><th>ลบ</th></tr></thead>
-        <tbody id="kpiTableBody"><tr><td colspan="6" class="text-center text-slate-400">Loading...</td></tr></tbody>
-      </table>
+    <div class="card-ui border-t-4 border-blue-500 xl:col-span-2">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h3 class="text-lg font-bold text-blue-700"><i class="fa-solid fa-table-cells mr-2"></i>2. สรุป KPI และค่าใช้จ่ายรายปี (Matrix)</h3>
+          <p class="text-xs text-slate-500 mt-1">เลือกพนักงานเพื่อดูและแก้ไขข้อมูลเป้าหมาย/ผลงาน/ค่าใช้จ่ายตลอดทั้งปี</p>
+        </div>
+        <div class="input-wrapper min-w-[250px]">
+          <select id="kpiEmp" onchange="loadMatrix()" class="border-blue-300 shadow-sm">
+            <option value="">-- เลือกพนักงานสาขาปกติ --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto pb-4">
+        <table class="data-table" id="kpiTable" style="min-width: 900px;">
+          <thead>
+            <tr class="bg-slate-100">
+              <th class="text-left w-32 border-r">รายการ</th>
+              <th>ม.ค.</th><th>ก.พ.</th><th>มี.ค.</th><th>เม.ย.</th><th>พ.ค.</th><th>มิ.ย.</th>
+              <th>ก.ค.</th><th>ส.ค.</th><th>ก.ย.</th><th>ต.ค.</th><th>พ.ย.</th><th>ธ.ค.</th>
+            </tr>
+          </thead>
+          <tbody id="matrixBody">
+            <tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <button class="btn-ui bg-blue-600 hover:bg-blue-700 mt-4 w-full justify-center" onclick="saveMatrix()">
+        <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลตาราง KPI ทั้งปี
+      </button>
     </div>
+
   </div>
 
   <script>
@@ -91,11 +105,20 @@
 
     let employeesCache = [];
 
+    // โครงสร้างแถวสำหรับตาราง Matrix
+    const kpiFields = [
+      { id: 'target', label: 'Target (เป้า)', color: 'text-slate-700' },
+      { id: 'actual', label: 'Actual (ทำได้)', color: 'text-emerald-600' },
+      { id: 'expense', label: 'Expense (ใช้จ่าย)', color: 'text-rose-500' },
+      { id: 'salary', label: 'Salary (เงินเดือน)', color: 'text-slate-600' },
+      { id: 'trip', label: 'Trip (ค่าเดินทาง)', color: 'text-blue-600' },
+      { id: 'comm', label: 'Commission', color: 'text-amber-600' }
+    ];
+
     window.onload = async () => {
       initMonths();
       await loadEmployees();
       loadVChefHistory();
-      loadKPIHistory();
     };
 
     function initMonths() {
@@ -108,7 +131,6 @@
             html += `</optgroup>`;
         }
         document.getElementById('vcMonth').innerHTML = html;
-        document.getElementById('kpiMonth').innerHTML = html;
     }
 
     async function loadEmployees() {
@@ -139,18 +161,12 @@
         });
     }
 
-    function fillBranch() {
-        const id = document.getElementById('kpiEmp').value;
-        const emp = employeesCache.find(e => String(e.id) === String(id));
-        document.getElementById('kpiBranch').value = emp ? (emp.assigned_branch || 'Unassigned') : '';
-    }
-
-    // --- VCHEF LOGIC ---
+    // --- VCHEF LOGIC (ของเดิม) ---
     async function saveVChef() {
         const p = {
             payroll_month: document.getElementById('vcMonth').value, 
             salesperson_id: document.getElementById('vcEmp').value,
-            branch_name: document.getElementById('vcBranch').value.trim(), // เพิ่มตัวแปรสาขา
+            branch_name: document.getElementById('vcBranch').value.trim(),
             actual_demo_days: Number(document.getElementById('vcDays').value)||0, 
             expense_trip: Number(document.getElementById('vcExpense').value)||0,
             sales_wasabi: Number(document.getElementById('vcWasabi').value)||0, 
@@ -162,7 +178,7 @@
         
         await supabaseClient.from('vchef_performance').insert([p]);
         alert('บันทึก VChef สาขานี้สำเร็จ!'); 
-        document.getElementById('vcBranch').value = ''; // เคลียร์สาขาให้พร้อมกรอกห้างต่อไป
+        document.getElementById('vcBranch').value = ''; 
         document.getElementById('vcDays').value = '';
         loadVChefHistory();
     }
@@ -175,34 +191,82 @@
         data.forEach(v => {
             const eName = employeesCache.find(e => String(e.id) === String(v.salesperson_id))?.name || v.salesperson_id;
             const total = Number(v.sales_wasabi) + Number(v.sales_hippo) + Number(v.sales_cke) + Number(v.sales_umesshu);
-            tbody.innerHTML += `<tr><td>${v.payroll_month}</td><td>${eName}</td><td class="font-bold text-slate-700">${v.branch_name || '-'}</td><td>${v.actual_demo_days} วัน</td><td class="text-blue-600">฿${v.expense_trip.toLocaleString()}</td><td class="font-bold text-emerald-600">฿${total.toLocaleString()}</td><td><button onclick="delVChef('${v.id}')" class="text-red-500"><i class="fa fa-trash"></i></button></td></tr>`;
+            tbody.innerHTML += `<tr><td class="text-left">${v.payroll_month}</td><td class="text-left">${eName}</td><td class="text-left font-bold text-slate-700">${v.branch_name || '-'}</td><td class="text-center">${v.actual_demo_days} วัน</td><td class="text-center text-blue-600">฿${v.expense_trip.toLocaleString()}</td><td class="text-center font-bold text-emerald-600">฿${total.toLocaleString()}</td><td class="text-center"><button onclick="delVChef('${v.id}')" class="text-red-500"><i class="fa fa-trash"></i></button></td></tr>`;
         });
     }
     async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); } }
 
-    // --- KPI LOGIC ---
-    async function saveKPI() {
-        const p = {
-            month_period: document.getElementById('kpiMonth').value, salesperson_id: document.getElementById('kpiEmp').value,
-            branch_name: document.getElementById('kpiBranch').value, target_sales: Number(document.getElementById('kpiTarget').value)||0,
-            actual_sales: Number(document.getElementById('kpiActual').value)||0
-        };
-        if(!p.salesperson_id || p.target_sales <= 0) return alert('กรุณากรอกเป้าหมายยอดขาย');
-        await supabaseClient.from('sales_records').upsert([p], { onConflict: 'month_period,salesperson_id' });
-        alert('บันทึกยอดขายสาขาสำเร็จ!'); loadKPIHistory();
-    }
 
-    async function loadKPIHistory() {
-        const { data } = await supabaseClient.from('sales_records').select('*').order('month_period', {ascending: false}).limit(10);
-        const tbody = document.getElementById('kpiTableBody'); tbody.innerHTML = '';
-        if(!data || data.length===0) return tbody.innerHTML = `<tr><td colspan="6" class="text-center text-slate-400">ยังไม่มีข้อมูล</td></tr>`;
+    // --- MATRIX KPI LOGIC (ใหม่) ---
+    async function loadMatrix() {
+        const empId = document.getElementById('kpiEmp').value;
+        const tbody = document.getElementById('matrixBody');
+        tbody.innerHTML = '';
         
-        data.forEach(v => {
-            const eName = employeesCache.find(e => String(e.id) === String(v.salesperson_id))?.name || v.salesperson_id;
-            tbody.innerHTML += `<tr><td>${v.month_period}</td><td>${eName}</td><td>${v.branch_name}</td><td>฿${Number(v.target_sales).toLocaleString()}</td><td class="font-bold text-emerald-600">฿${Number(v.actual_sales).toLocaleString()}</td><td><button onclick="delKPI('${v.id}')" class="text-red-500"><i class="fa fa-trash"></i></button></td></tr>`;
+        if (!empId) {
+            tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล...</td></tr>`;
+
+        const currentYear = new Date().getFullYear(); // หรือจะทำ Dropdown เลือกปีเพิ่มก็ได้
+
+        // สมมติฐานโครงสร้าง DB แบบใหม่ (1 record ต่อ 1 ค่า)
+        const { data: savedData } = await supabaseClient
+            .from('sales_records_matrix') // *หมายเหตุ: คุณอาจต้องสร้างตารางชื่อนี้ หรือแก้ไขชื่อตารางให้ตรงกับ DB ของคุณ
+            .select('*')
+            .eq('employee_id', empId)
+            .eq('year', currentYear);
+
+        tbody.innerHTML = ''; // Clear loading
+
+        kpiFields.forEach(f => {
+            let row = `<tr><td class="font-bold ${f.color} text-left border-r text-xs whitespace-nowrap">${f.label}</td>`;
+            for(let m=0; m<12; m++) {
+                // หาค่าที่บันทึกไว้ ถ้าไม่มีให้เป็น 0 (หรือปล่อยว่างก็ได้)
+                const val = savedData?.find(d => d.month_index === m && d.field_type === f.id)?.value || '';
+                row += `<td><input type="number" class="matrix-input" data-m="${m}" data-f="${f.id}" value="${val}" placeholder="-"></td>`;
+            }
+            row += '</tr>';
+            tbody.innerHTML += row;
         });
     }
-    async function delKPI(id) { if(confirm('ลบเป้านี้?')){ await supabaseClient.from('sales_records').delete().eq('id',id); loadKPIHistory(); } }
+
+    async function saveMatrix() {
+        const empId = document.getElementById('kpiEmp').value;
+        if (!empId) return alert('โปรดเลือกพนักงานก่อนบันทึก');
+
+        const inputs = document.querySelectorAll('#matrixBody input.matrix-input');
+        let updates = [];
+        const currentYear = new Date().getFullYear();
+
+        inputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (!isNaN(val)) { // บันทึกเฉพาะช่องที่มีการกรอกตัวเลข
+                updates.push({
+                    employee_id: empId,
+                    year: currentYear,
+                    month_index: parseInt(input.dataset.m),
+                    field_type: input.dataset.f,
+                    value: val
+                });
+            }
+        });
+
+        if (updates.length === 0) return alert('ไม่มีข้อมูลตัวเลขให้บันทึก');
+
+        // ต้องมีตาราง sales_records_matrix ที่รองรับโครงสร้างนี้ใน Supabase
+        const { error } = await supabaseClient.from('sales_records_matrix').upsert(updates, { 
+            onConflict: 'employee_id, year, month_index, field_type' 
+        });
+
+        if(error) {
+            alert('เกิดข้อผิดพลาด: ' + error.message);
+        } else {
+            alert('บันทึกข้อมูลตาราง Matrix สำเร็จ!');
+        }
+    }
   </script>
 </body>
 </html>
