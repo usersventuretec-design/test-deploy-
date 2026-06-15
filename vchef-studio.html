@@ -21,6 +21,12 @@
     table.data-table td { padding: 8px 4px; border-bottom: 1px solid #e2e8f0; }
     .matrix-input { width: 100%; text-align: center; border: 1px solid transparent; background: transparent; padding: 6px; border-radius: 4px;}
     .matrix-input:hover, .matrix-input:focus { border: 1px solid #cbd5e1; background: #fff; }
+    
+    /* สไตล์เพิ่มเติมสำหรับปฏิทิน */
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+    .calendar-day-head { text-align: center; font-weight: 600; font-size: 12px; padding: 8px; background-color: #f8fafc; border-radius: 6px; color: #64748b; }
+    .calendar-cell { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; min-height: 85px; display: flex; flex-direction: column; justify-content: space-between; }
+    .calendar-cell-empty { background: #f8fafc; border: 1px solid transparent; min-height: 85px; }
   </style>
 </head>
 <body class="p-6 md:p-10">
@@ -40,7 +46,7 @@
     <div class="card-ui border-t-4 border-amber-500">
       <h3 class="text-lg font-bold text-amber-700 mb-4"><i class="fa-solid fa-boxes-stacked mr-2"></i>1. บันทึกผลงาน VChef จัดชิม (แยกตามสาขาที่ลง)</h3>
       <div class="grid grid-cols-2 gap-4 mb-4">
-        <div class="input-wrapper"><label>งวดเดือน (Month):</label><select id="vcMonth"></select></div>
+        <div class="input-wrapper"><label>งวดเดือน (Month):</label><select id="vcMonth" onchange="syncMonths(this.value)"></select></div>
         <div class="input-wrapper"><label>พนักงาน (PC):</label><select id="vcEmp"><option value="">-- เลือกพนักงาน --</option></select></div>
         <div class="input-wrapper col-span-2"><label>สาขาที่ไปจัดชิม (Branch/Mall):</label><input type="text" id="vcBranch" placeholder="เช่น Siam Paragon หรือ Big C พระราม 4"></div>
         <div class="input-wrapper"><label>จำนวนวันจัดชิมที่สาขานี้ (Demo Days):</label><input type="number" id="vcDays" placeholder="0"></div>
@@ -96,6 +102,43 @@
       </button>
     </div>
 
+    <div class="card-ui border-t-4 border-purple-500 xl:col-span-2">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h3 class="text-lg font-bold text-purple-700"><i class="fa-solid fa-calendar-days mr-2"></i>3. ตารางปฏิทินปฏิบัติงานรายวัน (Roster / Timeline)</h3>
+          <p class="text-xs text-slate-500 mt-1">บันทึกข้อมูลว่าแต่ละวันพนักงานเข้าปฏิบัติงานที่สาขาหรือห้างสรรพสินค้าใด</p>
+        </div>
+        <div class="flex flex-wrap gap-4">
+          <div class="input-wrapper min-w-[180px]">
+            <select id="schedMonth" onchange="loadCalendar()"></select>
+          </div>
+          <div class="input-wrapper min-w-[220px]">
+            <select id="schedEmp" onchange="loadCalendar()">
+              <option value="">-- เลือกพนักงาน --</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="calendar-grid mb-2">
+        <div class="calendar-day-head text-red-500">อา.</div>
+        <div class="calendar-day-head">จ.</div>
+        <div class="calendar-day-head">อ.</div>
+        <div class="calendar-day-head">พ.</div>
+        <div class="calendar-day-head">พฤ.</div>
+        <div class="calendar-day-head">ศ.</div>
+        <div class="calendar-day-head text-blue-500">ส.</div>
+      </div>
+
+      <div class="calendar-grid" id="calendarBody">
+        <div class="col-span-7 text-center text-slate-400 py-10 bg-slate-50 rounded-lg border">กรุณาเลือกเดือนและพนักงานเพื่อแสดงปฏิทิน</div>
+      </div>
+
+      <button class="btn-ui bg-purple-600 hover:bg-purple-700 mt-6 w-full justify-center" onclick="saveCalendar()">
+        <i class="fa-solid fa-calendar-check"></i> บันทึกตารางปฏิทินประจำเดือน
+      </button>
+    </div>
+
   </div>
 
   <script>
@@ -104,8 +147,8 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let employeesCache = [];
+    const monthNamesEng = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-    // โครงสร้างแถวสำหรับตาราง Matrix
     const kpiFields = [
       { id: 'target', label: 'Target (เป้า)', color: 'text-slate-700' },
       { id: 'actual', label: 'Actual (ทำได้)', color: 'text-emerald-600' },
@@ -122,15 +165,20 @@
     };
 
     function initMonths() {
-        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const curDate = new Date(); const curY = curDate.getFullYear(); const curM = curDate.getMonth();
         let html = '';
         for (let y = curY + 1; y >= 2025; y--) {
             html += `<optgroup label="--- Year ${y} ---">`;
-            months.forEach((m, i) => { html += `<option value="${m} ${y}" ${(i===curM && y===curY)?'selected':''}>${m} ${y}</option>`; });
+            monthNamesEng.forEach((m, i) => { html += `<option value="${m} ${y}" ${(i===curM && y===curY)?'selected':''}>${m} ${y}</option>`; });
             html += `</optgroup>`;
         }
         document.getElementById('vcMonth').innerHTML = html;
+        document.getElementById('schedMonth').innerHTML = html;
+    }
+
+    function syncMonths(val) {
+        document.getElementById('schedMonth').value = val;
+        loadCalendar();
     }
 
     async function loadEmployees() {
@@ -139,9 +187,11 @@
         
         const vcSel = document.getElementById('vcEmp'); 
         const kpiSel = document.getElementById('kpiEmp');
+        const schedSel = document.getElementById('schedEmp');
         
         vcSel.innerHTML = '<option value="">-- เลือกพนักงาน VChef --</option>';
         kpiSel.innerHTML = '<option value="">-- เลือกพนักงานสาขาปกติ --</option>';
+        schedSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
 
         employeesCache.forEach(e => {
             if(e.is_sales === true && (!e.resigned_date || e.resigned_date === '')) {
@@ -150,18 +200,21 @@
                 const deptStr = String(e.dept || '').toLowerCase();
                 const isVChefTeam = branchStr.includes('vchef') || branchStr.includes('roving') || posStr.includes('vchef') || deptStr.includes('vchef');
 
+                const optionHtml = `<option value="${e.id}">${e.name} (${e.assigned_branch || 'Roving'})</option>`;
+                schedSel.innerHTML += optionHtml;
+
                 if (isVChefTeam) {
-                    vcSel.innerHTML += `<option value="${e.id}">${e.name} (${e.assigned_branch || 'Roving'})</option>`;
+                    vcSel.innerHTML += optionHtml;
                 } else {
                     if (e.assigned_branch && e.assigned_branch.trim() !== '') {
-                        kpiSel.innerHTML += `<option value="${e.id}">${e.name} (${e.assigned_branch})</option>`;
+                        kpiSel.innerHTML += optionHtml;
                     }
                 }
             }
         });
     }
 
-    // --- VCHEF LOGIC (ของเดิม) ---
+    // --- 1. VCHEF LOGIC ---
     async function saveVChef() {
         const p = {
             payroll_month: document.getElementById('vcMonth').value, 
@@ -197,34 +250,24 @@
     async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); } }
 
 
-    // --- MATRIX KPI LOGIC (ใหม่) ---
+    // --- 2. MATRIX KPI LOGIC ---
     async function loadMatrix() {
         const empId = document.getElementById('kpiEmp').value;
         const tbody = document.getElementById('matrixBody');
         tbody.innerHTML = '';
-        
         if (!empId) {
             tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>`;
             return;
         }
-
         tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล...</td></tr>`;
+        const currentYear = new Date().getFullYear();
 
-        const currentYear = new Date().getFullYear(); // หรือจะทำ Dropdown เลือกปีเพิ่มก็ได้
-
-        // สมมติฐานโครงสร้าง DB แบบใหม่ (1 record ต่อ 1 ค่า)
-        const { data: savedData } = await supabaseClient
-            .from('sales_records_matrix') // *หมายเหตุ: คุณอาจต้องสร้างตารางชื่อนี้ หรือแก้ไขชื่อตารางให้ตรงกับ DB ของคุณ
-            .select('*')
-            .eq('employee_id', empId)
-            .eq('year', currentYear);
-
-        tbody.innerHTML = ''; // Clear loading
+        const { data: savedData } = await supabaseClient.from('sales_records_matrix').select('*').eq('employee_id', empId).eq('year', currentYear);
+        tbody.innerHTML = '';
 
         kpiFields.forEach(f => {
             let row = `<tr><td class="font-bold ${f.color} text-left border-r text-xs whitespace-nowrap">${f.label}</td>`;
             for(let m=0; m<12; m++) {
-                // หาค่าที่บันทึกไว้ ถ้าไม่มีให้เป็น 0 (หรือปล่อยว่างก็ได้)
                 const val = savedData?.find(d => d.month_index === m && d.field_type === f.id)?.value || '';
                 row += `<td><input type="number" class="matrix-input" data-m="${m}" data-f="${f.id}" value="${val}" placeholder="-"></td>`;
             }
@@ -236,35 +279,112 @@
     async function saveMatrix() {
         const empId = document.getElementById('kpiEmp').value;
         if (!empId) return alert('โปรดเลือกพนักงานก่อนบันทึก');
-
         const inputs = document.querySelectorAll('#matrixBody input.matrix-input');
         let updates = [];
         const currentYear = new Date().getFullYear();
 
         inputs.forEach(input => {
             const val = parseFloat(input.value);
-            if (!isNaN(val)) { // บันทึกเฉพาะช่องที่มีการกรอกตัวเลข
-                updates.push({
-                    employee_id: empId,
-                    year: currentYear,
-                    month_index: parseInt(input.dataset.m),
-                    field_type: input.dataset.f,
-                    value: val
-                });
+            if (!isNaN(val)) {
+                updates.push({ employee_id: empId, year: currentYear, month_index: parseInt(input.dataset.m), field_type: input.dataset.f, value: val });
             }
         });
-
         if (updates.length === 0) return alert('ไม่มีข้อมูลตัวเลขให้บันทึก');
+        const { error } = await supabaseClient.from('sales_records_matrix').upsert(updates, { onConflict: 'employee_id,year,month_index,field_type' });
+        if(error) alert('เกิดข้อผิดพลาด: ' + error.message);
+        else alert('บันทึกข้อมูลตาราง Matrix สำเร็จ!');
+    }
 
-        // ต้องมีตาราง sales_records_matrix ที่รองรับโครงสร้างนี้ใน Supabase
-        const { error } = await supabaseClient.from('sales_records_matrix').upsert(updates, { 
-            onConflict: 'employee_id, year, month_index, field_type' 
+
+    // --- 3. CALENDAR DAILY SCHEDULE LOGIC ---
+    async function loadCalendar() {
+        const empId = document.getElementById('schedEmp').value;
+        const monthYearVal = document.getElementById('schedMonth').value; // เช่น "January 2026"
+        const container = document.getElementById('calendarBody');
+        
+        if (!empId || !monthYearVal) {
+            container.innerHTML = `<div class="col-span-7 text-center text-slate-400 py-10 bg-slate-50 rounded-lg border">กรุณาเลือกเดือนและพนักงานเพื่อแสดงปฏิทิน</div>`;
+            return;
+        }
+
+        container.innerHTML = `<div class="col-span-7 text-center text-slate-400 py-10 bg-slate-50 rounded-lg border"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังดึงข้อมูลปฏิทิน...</div>`;
+
+        // แยกเดือนและปี
+        const parts = monthYearVal.split(' ');
+        const monthStr = parts[0];
+        const yearInt = parseInt(parts[1]);
+        const monthIndex = monthNamesEng.indexOf(monthStr);
+
+        // คำนวณวันในเดือนนั้นๆ
+        const firstDayDate = new Date(yearInt, monthIndex, 1);
+        const startDayOfWeek = firstDayDate.getDay(); // 0 = อาทิตย์, 1 = จันทร์...
+        const totalDays = new Date(yearInt, monthIndex + 1, 0).getDate();
+
+        // ดึงข้อมูลจัดตารางที่มีอยู่แล้วจาก Supabase
+        const startDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+        const endDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-${String(totalDays).padStart(2, '0')}`;
+
+        const { data: activeSchedules } = await supabaseClient
+            .from('daily_schedules')
+            .select('*')
+            .eq('employee_id', empId)
+            .gte('schedule_date', startDateStr)
+            .lte('schedule_date', endDateStr);
+
+        container.innerHTML = ''; // เคลียร์ loading
+
+        // 1. สร้างช่องว่างก่อนเริ่มวันที่ 1
+        for (let i = 0; i < startDayOfWeek; i++) {
+            container.innerHTML += `<div class="calendar-cell-empty"></div>`;
+        }
+
+        // 2. เจนกล่องวันที่ 1 ถึง วันสิ้นเดือน
+        for (let day = 1; day <= totalDays; day++) {
+            const currentLoopDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const existingMatch = activeSchedules?.find(s => s.schedule_date === currentLoopDateStr);
+            const inputVal = existingMatch ? existingMatch.branch_name : '';
+
+            container.innerHTML += `
+                <div class="calendar-cell">
+                    <span class="text-xs font-bold text-slate-400">${day}</span>
+                    <input type="text" 
+                           class="w-full text-xs p-1 mt-1 border border-slate-200 rounded focus:border-purple-500 bg-slate-50 focus:bg-white text-center" 
+                           placeholder="ระบุสาขา/ห้าง" 
+                           data-date="${currentLoopDateStr}" 
+                           value="${inputVal}">
+                </div>
+            `;
+        }
+    }
+
+    async function saveCalendar() {
+        const empId = document.getElementById('schedEmp').value;
+        if(!empId) return alert('โปรดเลือกพนักงานก่อนกดบันทึก');
+
+        const inputs = document.querySelectorAll('#calendarBody input');
+        let scheduleRows = [];
+
+        inputs.forEach(input => {
+            const branchName = input.value.trim();
+            // ยอมรับให้บันทึกแม้ค่าเป็นค่าว่าง (เพื่อลบหรือเคลียร์ข้อมูล)
+            scheduleRows.push({
+                employee_id: empId,
+                schedule_date: input.dataset.date,
+                branch_name: branchName
+            });
         });
 
+        if(scheduleRows.length === 0) return alert('ไม่มีตารางให้บันทึก');
+
+        const { error } = await supabaseClient
+            .from('daily_schedules')
+            .upsert(scheduleRows, { onConflict: 'employee_id,schedule_date' });
+
         if(error) {
-            alert('เกิดข้อผิดพลาด: ' + error.message);
+            alert('เกิดข้อผิดพลาดในการบันทึกปฏิทิน: ' + error.message);
         } else {
-            alert('บันทึกข้อมูลตาราง Matrix สำเร็จ!');
+            alert('บันทึกแผนงานรายวันเข้าปฏิทินเรียบร้อยแล้ว!');
+            loadCalendar();
         }
     }
   </script>
