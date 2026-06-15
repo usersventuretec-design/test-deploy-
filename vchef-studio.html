@@ -22,6 +22,7 @@
     .matrix-input { width: 100%; text-align: center; border: 1px solid transparent; background: transparent; padding: 6px; border-radius: 4px;}
     .matrix-input:hover, .matrix-input:focus { border: 1px solid #cbd5e1; background: #fff; }
     
+    /* สไตล์เพิ่มเติมสำหรับปฏิทิน */
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
     .calendar-day-head { text-align: center; font-weight: 600; font-size: 12px; padding: 8px; background-color: #f8fafc; border-radius: 6px; color: #64748b; }
     .calendar-cell { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; min-height: 85px; display: flex; flex-direction: column; justify-content: space-between; }
@@ -134,7 +135,7 @@
       <div class="flex justify-between items-center mb-4">
         <div>
           <h3 class="text-lg font-bold text-emerald-700"><i class="fa-solid fa-chart-line mr-2"></i>4. สรุปผลงานรวมทีม VChef + PC (Performance Summary)</h3>
-          <p class="text-xs text-slate-500 mt-1">ดึงข้อมูลยอดขายสุทธิและเป้าหมายจากระบบอัตโนมัติ (สามารถกรอกยอดปีเก่าเพื่อดู Growth ได้)</p>
+          <p class="text-xs text-slate-500 mt-1">ดึงข้อมูลยอดขายสุทธิและเป้าหมายจากระบบอัตโนมัติ (สามารถกรอกและบันทึกยอดปีเก่าเพื่อเปรียบเทียบ Growth ได้)</p>
         </div>
         <button onclick="loadTeamSummary()" class="btn-ui bg-slate-100 text-slate-700 hover:bg-slate-200 border"><i class="fa-solid fa-rotate"></i> รีเฟรชข้อมูล</button>
       </div>
@@ -168,6 +169,10 @@
             </tfoot>
         </table>
       </div>
+      
+      <button class="btn-ui bg-emerald-600 hover:bg-emerald-700 mt-4 w-full justify-center" onclick="saveTeamHistory()">
+        <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลเปรียบเทียบปี 2025
+      </button>
     </div>
 
   </div>
@@ -197,7 +202,7 @@
       initBranchList();
       await loadEmployees();
       loadVChefHistory();
-      loadTeamSummary(); // โหลดตารางที่ 4
+      loadTeamSummary(); 
     };
 
     function initBranchList() {
@@ -252,7 +257,7 @@
         await supabaseClient.from('vchef_performance').insert([p]);
         alert('บันทึก VChef สาขานี้สำเร็จ!'); 
         document.getElementById('vcBranch').value = ''; document.getElementById('vcDays').value = '';
-        loadVChefHistory(); loadTeamSummary(); // อัปเดตตาราง 4 ทันที
+        loadVChefHistory(); loadTeamSummary(); 
     }
 
     async function loadVChefHistory() {
@@ -301,7 +306,6 @@
 
     // --- 3. CALENDAR DAILY SCHEDULE LOGIC ---
     async function loadCalendar() {
-        // (ส่วนเดิมของปฏิทิน ไม่ได้เปลี่ยนแปลง)
         const empId = document.getElementById('schedEmp').value;
         const monthYearVal = document.getElementById('schedMonth').value; 
         const container = document.getElementById('calendarBody');
@@ -322,67 +326,70 @@
 
     async function saveCalendar() {
         const empId = document.getElementById('schedEmp').value; if(!empId) return alert('โปรดเลือกพนักงานก่อนกดบันทึก');
-        const inputs = document.querySelectorAll('#calendarBody input'); let scheduleRows = [];
+        const inputs = document.querySelectorAll('#calendarBody input[data-date]'); let scheduleRows = [];
         inputs.forEach(input => { scheduleRows.push({ employee_id: empId, schedule_date: input.dataset.date, branch_name: input.value.trim() }); });
         const { error } = await supabaseClient.from('daily_schedules').upsert(scheduleRows, { onConflict: 'employee_id,schedule_date' });
         if(error) alert('เกิดข้อผิดพลาดในการบันทึกปฏิทิน: ' + error.message);
         else { alert('บันทึกแผนงานรายวันเข้าปฏิทินเรียบร้อยแล้ว!'); loadCalendar(); }
     }
 
-    // --- 4. TEAM PERFORMANCE SUMMARY LOGIC (NEW) ---
+    // --- 4. TEAM PERFORMANCE SUMMARY LOGIC ---
     function formatNum(num) { return num ? Math.round(num).toLocaleString() : '0'; }
     function formatPct(num) { return isFinite(num) && num !== 0 ? Math.round(num * 100) + '%' : '0%'; }
 
     async function loadTeamSummary() {
-        const currentYear = new Date().getFullYear(); // ดึงปี 2026
+        const currentYear = new Date().getFullYear(); // 2026
+        const lastYear = currentYear - 1; // 2025
         
-        // 1. ดึงข้อมูลยอดขายทั้งหมดของปีนี้ จาก VChef
+        // ดึงข้อมูล VChef (ปี 2026)
         const { data: vchefData } = await supabaseClient.from('vchef_performance').select('*');
-        
-        // 2. ดึงเป้าหมาย Budget จาก Matrix
+        // ดึงข้อมูลเป้าหมาย (ปี 2026)
         const { data: matrixData } = await supabaseClient.from('sales_records_matrix').select('*').eq('year', currentYear).eq('field_type', 'target');
+        // ดึงข้อมูลปีที่แล้ว (ปี 2025) ที่เคยบันทึกไว้
+        const { data: historyData } = await supabaseClient.from('team_historical_data').select('*').eq('year', lastYear);
 
         const tbody = document.getElementById('teamSummaryBody');
         tbody.innerHTML = '';
 
-        // ตัวแปรเก็บผลรวมทั้งปี
         let tDemo=0, tBudget=0, tSale26=0, tWasa=0, tHippo=0, tCke=0, tUme=0;
 
         for (let m = 0; m < 12; m++) {
             const monthTextToMatch = `${monthNamesEng[m]} ${currentYear}`;
             
-            // กรอง VChef เฉพาะเดือนนี้
             const monthVChef = vchefData ? vchefData.filter(d => d.payroll_month === monthTextToMatch) : [];
-            
             let mDemo = 0, mWasa = 0, mHippo = 0, mCke = 0, mUme = 0;
             monthVChef.forEach(r => {
                 mDemo += Number(r.actual_demo_days || 0);
-                mWasa += Number(r.sales_wasabi || 0);
-                mHippo += Number(r.sales_hippo || 0);
-                mCke += Number(r.sales_cke || 0);
-                mUme += Number(r.sales_umesshu || 0);
+                mWasa += Number(r.sales_wasabi || 0); mHippo += Number(r.sales_hippo || 0);
+                mCke += Number(r.sales_cke || 0); mUme += Number(r.sales_umesshu || 0);
             });
 
             const mSale26 = mWasa + mHippo + mCke + mUme;
-            
-            // กรอง Matrix หา Budget (Sum ของ target ทุกคนในเดือนนี้)
             const monthTargets = matrixData ? matrixData.filter(d => d.month_index === m) : [];
             const mBudget = monthTargets.reduce((sum, d) => sum + Number(d.value || 0), 0);
 
-            // คำนวณเปอร์เซ็นต์
             const mAch = mBudget > 0 ? (mSale26 / mBudget) : 0;
-            const mSalePerDay = mDemo > 0 ? (mSale26 / mDemo) : 0;
+            const mSalePerDay26 = mDemo > 0 ? (mSale26 / mDemo) : 0;
             
             const pctWasa = mSale26 > 0 ? (mWasa / mSale26) : 0;
             const pctHippo = mSale26 > 0 ? (mHippo / mSale26) : 0;
             const pctCke = mSale26 > 0 ? (mCke / mSale26) : 0;
             const pctUme = mSale26 > 0 ? (mUme / mSale26) : 0;
 
-            // บวกรวม Total
+            // --- คำนวณข้อมูลปี 2025 ที่ดึงมา ---
+            const histMonth = historyData?.find(d => d.month_index === m);
+            const spd25 = histMonth ? Number(histMonth.sale_per_day) : 0;
+            const sale25 = histMonth ? Number(histMonth.total_sale) : 0;
+
+            const grwSpd = spd25 > 0 ? ((mSalePerDay26 - spd25) / spd25) : 0;
+            const grwSale = sale25 > 0 ? ((mSale26 - sale25) / sale25) : 0;
+
+            const colorSpd = grwSpd > 0 ? 'text-emerald-500' : (grwSpd < 0 ? 'text-red-500' : 'text-slate-500');
+            const colorSale = grwSale > 0 ? 'text-emerald-500' : (grwSale < 0 ? 'text-red-500' : 'text-slate-500');
+
             tDemo += mDemo; tBudget += mBudget; tSale26 += mSale26; 
             tWasa += mWasa; tHippo += mHippo; tCke += mCke; tUme += mUme;
 
-            // แถวตาราง (รวมถึงช่อง Input กรอกของปี 2025 สำหรับคำนวณ Growth)
             const rowHtml = `
                 <tr>
                     <td>${monthNamesShort[m]}</td>
@@ -390,12 +397,12 @@
                     <td>${formatNum(mBudget)}</td>
                     <td class="font-bold text-emerald-600 bg-emerald-50">${formatNum(mSale26)}</td>
                     <td>${formatPct(mAch)}</td>
-                    <td class="text-blue-600">${formatNum(mSalePerDay)}</td>
+                    <td class="text-blue-600">${formatNum(mSalePerDay26)}</td>
                     
-                    <td class="bg-orange-50"><input type="number" id="spd25_${m}" class="input-calc" value="0" oninput="calcGrowth(${m}, ${mSalePerDay}, ${mSale26})"></td>
-                    <td id="grw_spd_${m}" class="font-bold text-slate-500">0%</td>
-                    <td class="bg-orange-50"><input type="number" id="sale25_${m}" class="input-calc" value="0" oninput="calcGrowth(${m}, ${mSalePerDay}, ${mSale26})"></td>
-                    <td id="grw_sale_${m}" class="font-bold text-slate-500">0%</td>
+                    <td class="bg-orange-50"><input type="number" id="spd25_${m}" class="input-calc" value="${spd25}" oninput="calcGrowth(${m}, ${mSalePerDay26}, ${mSale26})"></td>
+                    <td id="grw_spd_${m}" class="font-bold ${colorSpd}">${formatPct(grwSpd)}</td>
+                    <td class="bg-orange-50"><input type="number" id="sale25_${m}" class="input-calc" value="${sale25}" oninput="calcGrowth(${m}, ${mSalePerDay26}, ${mSale26})"></td>
+                    <td id="grw_sale_${m}" class="font-bold ${colorSale}">${formatPct(grwSale)}</td>
 
                     <td>${formatNum(mWasa)}</td><td>${formatNum(mHippo)}</td><td>${formatNum(mCke)}</td><td class="border-r">${formatNum(mUme)}</td>
                     <td class="text-slate-400">${formatPct(pctWasa)}</td><td class="text-slate-400">${formatPct(pctHippo)}</td><td class="text-slate-400">${formatPct(pctCke)}</td><td class="text-slate-400">${formatPct(pctUme)}</td>
@@ -404,31 +411,20 @@
             tbody.innerHTML += rowHtml;
         }
 
-        // สร้างแถว Total
         const tAch = tBudget > 0 ? (tSale26 / tBudget) : 0;
         const tSalePerDay = tDemo > 0 ? (tSale26 / tDemo) : 0;
-        const tPctWasa = tSale26 > 0 ? (tWasa / tSale26) : 0;
-        const tPctHippo = tSale26 > 0 ? (tHippo / tSale26) : 0;
-        const tPctCke = tSale26 > 0 ? (tCke / tSale26) : 0;
-        const tPctUme = tSale26 > 0 ? (tUme / tSale26) : 0;
-
-        const tfoot = document.getElementById('teamSummaryFoot');
-        tfoot.innerHTML = `
+        document.getElementById('teamSummaryFoot').innerHTML = `
             <tr>
-                <td>Total</td>
-                <td>${tDemo}</td>
-                <td>${formatNum(tBudget)}</td>
-                <td class="text-emerald-700">${formatNum(tSale26)}</td>
-                <td>${formatPct(tAch)}</td>
-                <td class="text-blue-700">${formatNum(tSalePerDay)}</td>
+                <td>Total</td><td>${tDemo}</td><td>${formatNum(tBudget)}</td><td class="text-emerald-700">${formatNum(tSale26)}</td>
+                <td>${formatPct(tAch)}</td><td class="text-blue-700">${formatNum(tSalePerDay)}</td>
                 <td class="bg-orange-100 border-none"></td><td class="border-none"></td><td class="bg-orange-100 border-none"></td><td class="border-none"></td>
                 <td>${formatNum(tWasa)}</td><td>${formatNum(tHippo)}</td><td>${formatNum(tCke)}</td><td class="border-r">${formatNum(tUme)}</td>
-                <td>${formatPct(tPctWasa)}</td><td>${formatPct(tPctHippo)}</td><td>${formatPct(tPctCke)}</td><td>${formatPct(tPctUme)}</td>
+                <td>${formatPct(tWasa/tSale26)}</td><td>${formatPct(tHippo/tSale26)}</td><td>${formatPct(tCke/tSale26)}</td><td>${formatPct(tUme/tSale26)}</td>
             </tr>
         `;
     }
 
-    // ฟังก์ชันคำนวณเปอร์เซ็นต์ Growth สดๆ เมื่อพิมพ์ตัวเลขลงในช่องปี 2025
+    // คำนวณเปอร์เซ็นต์แบบสดๆ เวลาพิมพ์แก้
     function calcGrowth(mIndex, mSalePerDay26, mSale26) {
         const spd25 = Number(document.getElementById(`spd25_${mIndex}`).value) || 0;
         const sale25 = Number(document.getElementById(`sale25_${mIndex}`).value) || 0;
@@ -444,6 +440,32 @@
 
         elGrwSale.innerText = grwSale !== 0 ? Math.round(grwSale * 100) + '%' : '0%';
         elGrwSale.className = grwSale > 0 ? 'font-bold text-emerald-500' : (grwSale < 0 ? 'font-bold text-red-500' : 'font-bold text-slate-500');
+    }
+
+    // ฟังก์ชันสำหรับบันทึกข้อมูลปี 2025 ลงฐานข้อมูล
+    async function saveTeamHistory() {
+        const lastYear = new Date().getFullYear() - 1; // 2025
+        let updates = [];
+
+        for (let m = 0; m < 12; m++) {
+            const spdVal = Number(document.getElementById(`spd25_${m}`).value) || 0;
+            const saleVal = Number(document.getElementById(`sale25_${m}`).value) || 0;
+            
+            updates.push({
+                year: lastYear,
+                month_index: m,
+                sale_per_day: spdVal,
+                total_sale: saleVal
+            });
+        }
+
+        const { error } = await supabaseClient.from('team_historical_data').upsert(updates, { onConflict: 'year,month_index' });
+        
+        if (error) {
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
+        } else {
+            alert('บันทึกข้อมูลเปรียบเทียบปี 2025 สำเร็จ!');
+        }
     }
   </script>
 </body>
