@@ -48,7 +48,9 @@
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div class="input-wrapper"><label>งวดเดือน (Month):</label><select id="vcMonth" onchange="syncMonths(this.value)"></select></div>
         <div class="input-wrapper"><label>พนักงาน (PC):</label><select id="vcEmp"><option value="">-- เลือกพนักงาน --</option></select></div>
-        <div class="input-wrapper col-span-2"><label>สาขาที่ไปจัดชิม (Branch/Mall):</label><input type="text" id="vcBranch" placeholder="เช่น Siam Paragon หรือ Big C พระราม 4"></div>
+        <div class="input-wrapper col-span-2"><label>สาขาที่ไปจัดชิม (Branch/Mall):</label>
+          <input type="text" id="vcBranch" list="branchListOptions" placeholder="เช่น Siam Paragon หรือ Big C พระราม 4">
+        </div>
         <div class="input-wrapper"><label>จำนวนวันจัดชิมที่สาขานี้ (Demo Days):</label><input type="number" id="vcDays" placeholder="0"></div>
         <div class="input-wrapper"><label class="text-blue-600">ค่าทริป / Expense สาขานี้ (THB):</label><input type="number" id="vcExpense" placeholder="0" class="border-blue-300 bg-blue-50"></div>
       </div>
@@ -77,7 +79,7 @@
         </div>
         <div class="input-wrapper min-w-[250px]">
           <select id="kpiEmp" onchange="loadMatrix()" class="border-blue-300 shadow-sm">
-            <option value="">-- เลือกพนักงานสาขาปกติ --</option>
+            <option value="">-- เลือกพนักงาน (Roving PC) --</option>
           </select>
         </div>
       </div>
@@ -114,7 +116,7 @@
           </div>
           <div class="input-wrapper min-w-[220px]">
             <select id="schedEmp" onchange="loadCalendar()">
-              <option value="">-- เลือกพนักงาน --</option>
+              <option value="">-- เลือกพนักงาน (Roving PC) --</option>
             </select>
           </div>
         </div>
@@ -158,11 +160,36 @@
       { id: 'comm', label: 'Commission', color: 'text-amber-600' }
     ];
 
+    // รายชื่อสาขา/ห้างที่ไปบ่อยๆ (สามารถแก้ไขเพิ่มเติมได้)
+    const commonBranches = [
+        "Siam Paragon",
+        "Central World",
+        "Central Ladprao",
+        "Central Westgate",
+        "IconSiam",
+        "EmQuartier",
+        "Emsphere",
+        "Lotus พระราม 4",
+        "Big C ราชดำริ",
+        "The Mall บางกะปิ",
+        "Mega Bangna",
+        "Donki Thonglor",
+        "Gourmet Market"
+    ];
+
     window.onload = async () => {
       initMonths();
+      initBranchList();
       await loadEmployees();
       loadVChefHistory();
     };
+
+    function initBranchList() {
+        const dataListHtml = `<datalist id="branchListOptions">
+            ${commonBranches.map(b => `<option value="${b}">`).join('')}
+        </datalist>`;
+        document.body.insertAdjacentHTML('beforeend', dataListHtml);
+    }
 
     function initMonths() {
         const curDate = new Date(); const curY = curDate.getFullYear(); const curM = curDate.getMonth();
@@ -189,30 +216,26 @@
         const kpiSel = document.getElementById('kpiEmp');
         const schedSel = document.getElementById('schedEmp');
         
-        // เคลียร์ค่าเริ่มต้นของ Dropdown ทั้ง 3 ตัว
         vcSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
         kpiSel.innerHTML = '<option value="">-- เลือกพนักงาน (Roving PC) --</option>';
         schedSel.innerHTML = '<option value="">-- เลือกพนักงาน (Roving PC) --</option>';
 
         employeesCache.forEach(e => {
-            // เช็คว่าเป็นฝ่ายขาย และยังไม่ลาออก
             if(e.is_sales === true && (!e.resigned_date || e.resigned_date === '')) {
-                
                 const branchStr = String(e.assigned_branch || '').toLowerCase();
                 const posStr = String(e.position || '').toLowerCase();
                 const deptStr = String(e.dept || '').toLowerCase();
                 
-                // เช็คว่าเป็น Roving PC หรือ VChef จากชื่อสาขา, ตำแหน่ง, หรือแผนก
+                // กรองให้โชว์เฉพาะคนที่เป็น Roving PC หรือ VChef
                 const isRovingOrVChef = branchStr.includes('vchef') || branchStr.includes('roving') || posStr.includes('vchef') || deptStr.includes('vchef') || posStr.includes('roving');
 
-                // ถ้าเป็น Roving PC / VChef ให้เพิ่มรายชื่อลงไปในทั้ง 3 เมนู
                 if (isRovingOrVChef) {
                     const displayBranch = e.assigned_branch ? e.assigned_branch : 'Roving PC';
                     const optionHtml = `<option value="${e.id}">${e.name} (${displayBranch})</option>`;
                     
-                    vcSel.innerHTML += optionHtml;    // เมนู 1
-                    kpiSel.innerHTML += optionHtml;   // เมนู 2
-                    schedSel.innerHTML += optionHtml; // เมนู 3
+                    vcSel.innerHTML += optionHtml;
+                    kpiSel.innerHTML += optionHtml;
+                    schedSel.innerHTML += optionHtml;
                 }
             }
         });
@@ -303,7 +326,7 @@
     // --- 3. CALENDAR DAILY SCHEDULE LOGIC ---
     async function loadCalendar() {
         const empId = document.getElementById('schedEmp').value;
-        const monthYearVal = document.getElementById('schedMonth').value; // เช่น "January 2026"
+        const monthYearVal = document.getElementById('schedMonth').value; 
         const container = document.getElementById('calendarBody');
         
         if (!empId || !monthYearVal) {
@@ -313,18 +336,15 @@
 
         container.innerHTML = `<div class="col-span-7 text-center text-slate-400 py-10 bg-slate-50 rounded-lg border"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังดึงข้อมูลปฏิทิน...</div>`;
 
-        // แยกเดือนและปี
         const parts = monthYearVal.split(' ');
         const monthStr = parts[0];
         const yearInt = parseInt(parts[1]);
         const monthIndex = monthNamesEng.indexOf(monthStr);
 
-        // คำนวณวันในเดือนนั้นๆ
         const firstDayDate = new Date(yearInt, monthIndex, 1);
-        const startDayOfWeek = firstDayDate.getDay(); // 0 = อาทิตย์, 1 = จันทร์...
+        const startDayOfWeek = firstDayDate.getDay(); 
         const totalDays = new Date(yearInt, monthIndex + 1, 0).getDate();
 
-        // ดึงข้อมูลจัดตารางที่มีอยู่แล้วจาก Supabase
         const startDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-01`;
         const endDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-${String(totalDays).padStart(2, '0')}`;
 
@@ -335,14 +355,12 @@
             .gte('schedule_date', startDateStr)
             .lte('schedule_date', endDateStr);
 
-        container.innerHTML = ''; // เคลียร์ loading
+        container.innerHTML = '';
 
-        // 1. สร้างช่องว่างก่อนเริ่มวันที่ 1
         for (let i = 0; i < startDayOfWeek; i++) {
             container.innerHTML += `<div class="calendar-cell-empty"></div>`;
         }
 
-        // 2. เจนกล่องวันที่ 1 ถึง วันสิ้นเดือน
         for (let day = 1; day <= totalDays; day++) {
             const currentLoopDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const existingMatch = activeSchedules?.find(s => s.schedule_date === currentLoopDateStr);
@@ -352,8 +370,9 @@
                 <div class="calendar-cell">
                     <span class="text-xs font-bold text-slate-400">${day}</span>
                     <input type="text" 
+                           list="branchListOptions"
                            class="w-full text-xs p-1 mt-1 border border-slate-200 rounded focus:border-purple-500 bg-slate-50 focus:bg-white text-center" 
-                           placeholder="ระบุสาขา/ห้าง" 
+                           placeholder="เลือกหรือพิมพ์สาขา" 
                            data-date="${currentLoopDateStr}" 
                            value="${inputVal}">
                 </div>
@@ -370,7 +389,6 @@
 
         inputs.forEach(input => {
             const branchName = input.value.trim();
-            // ยอมรับให้บันทึกแม้ค่าเป็นค่าว่าง (เพื่อลบหรือเคลียร์ข้อมูล)
             scheduleRows.push({
                 employee_id: empId,
                 schedule_date: input.dataset.date,
