@@ -10,76 +10,126 @@
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
-    .glass-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .glass-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    input, select { transition: 0.3s; }
+    input:focus, select:focus { border-color: #3b82f6; ring: 2px solid #bfdbfe; }
   </style>
 </head>
 <body class="p-4 md:p-8">
 
-  <!-- Header -->
-  <div class="max-w-7xl mx-auto mb-8">
-    <h1 class="text-3xl font-bold text-slate-800">📊 VChef Performance Studio</h1>
-    <p class="text-slate-500">ระบบบันทึกผลงานรายบุคคลและวิเคราะห์ยอดขาย</p>
-  </div>
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-end mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-slate-800">VChef Performance Studio</h1>
+        <p class="text-slate-500">จัดการข้อมูลแคมเปญจัดชิมและ KPI ยอดขาย</p>
+      </div>
+      <a href="index.html" class="bg-slate-800 text-white px-6 py-2 rounded-xl hover:bg-slate-900 transition"><i class="fa-solid fa-arrow-left mr-2"></i>Dashboard</a>
+    </div>
 
-  <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-    
-    <!-- Input Section (Form) -->
-    <div class="lg:col-span-1 space-y-6">
-      <div class="glass-card p-6">
-        <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fa-solid fa-pen-to-square mr-2"></i> บันทึกข้อมูลรายวัน</h3>
-        <div class="space-y-4">
-          <select id="pcSelect" class="w-full p-3 border rounded-xl"></select>
-          <input type="date" id="dateInput" class="w-full p-3 border rounded-xl">
-          <input type="text" id="branchInput" placeholder="ชื่อสาขา/ห้าง" class="w-full p-3 border rounded-xl">
-          <div class="grid grid-cols-2 gap-2">
-            <input type="number" id="wasabi" placeholder="Wasabi" class="p-3 border rounded-xl">
-            <input type="number" id="hippo" placeholder="Hippo" class="p-3 border rounded-xl">
-            <input type="number" id="cke" placeholder="CKE" class="p-3 border rounded-xl">
-            <input type="number" id="umeshu" placeholder="Umeshu" class="p-3 border rounded-xl">
-          </div>
-          <button onclick="savePerformance()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">บันทึกข้อมูล</button>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- 1. Form บันทึกข้อมูล VChef -->
+      <div class="glass-card p-6 border-t-4 border-amber-500">
+        <h3 class="font-bold text-lg mb-4 text-amber-700"><i class="fa-solid fa-boxes-stacked mr-2"></i>1. บันทึกผลงาน VChef</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <select id="vcMonth" class="p-3 border rounded-xl"></select>
+          <select id="vcEmp" class="p-3 border rounded-xl"><option>-- พนักงาน --</option></select>
+          <input type="number" id="vcDays" placeholder="วันจัดชิม" class="p-3 border rounded-xl">
+          <input type="number" id="vcExpense" placeholder="ค่าทริป" class="p-3 border rounded-xl">
+          <input type="number" id="vcWasabi" placeholder="Wasabi" class="p-3 border rounded-xl bg-slate-50">
+          <input type="number" id="vcHippo" placeholder="Hippo" class="p-3 border rounded-xl bg-slate-50">
+          <input type="number" id="vcCke" placeholder="CKE" class="p-3 border rounded-xl bg-slate-50">
+          <input type="number" id="vcUmesshu" placeholder="Umesshu" class="p-3 border rounded-xl bg-slate-50">
         </div>
+        <button onclick="saveVChef()" class="w-full mt-4 bg-amber-600 text-white py-3 rounded-xl font-semibold hover:bg-amber-700 transition">บันทึกข้อมูล VChef</button>
+      </div>
+
+      <!-- 2. Form บันทึก KPI ปกติ -->
+      <div class="glass-card p-6 border-t-4 border-blue-500">
+        <h3 class="font-bold text-lg mb-4 text-blue-700"><i class="fa-solid fa-bullseye mr-2"></i>2. บันทึกเป้ายอดขายสาขา</h3>
+        <div class="grid grid-cols-1 gap-4">
+          <select id="kpiMonth" class="p-3 border rounded-xl"></select>
+          <select id="kpiEmp" onchange="fillBranch()" class="p-3 border rounded-xl"><option>-- พนักงาน --</option></select>
+          <input type="text" id="kpiBranch" readonly placeholder="สาขาที่รับผิดชอบ" class="p-3 border rounded-xl bg-gray-50">
+          <div class="grid grid-cols-2 gap-4">
+            <input type="number" id="kpiTarget" placeholder="เป้ายอดขาย" class="p-3 border rounded-xl">
+            <input type="number" id="kpiActual" placeholder="ยอดขายจริง" class="p-3 border rounded-xl border-emerald-300">
+          </div>
+        </div>
+        <button onclick="saveKPI()" class="w-full mt-4 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">บันทึกเป้ายอดขาย</button>
       </div>
     </div>
 
-    <!-- Analytics & History Section -->
-    <div class="lg:col-span-2 space-y-6">
-      <!-- KPI Summary Cards -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-indigo-600 p-4 rounded-2xl text-white">
-          <p class="text-xs opacity-70">Total Sales</p>
-          <h4 class="text-xl font-bold" id="totalSale">฿0</h4>
-        </div>
-        <!-- เพิ่ม Card อื่นๆ ได้ที่นี่ -->
-      </div>
-
-      <!-- Main Table -->
+    <!-- 3. Tables History -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
       <div class="glass-card p-6 overflow-x-auto">
-        <h3 class="font-bold text-lg mb-4 text-slate-800">ประวัติการจัดชิม</h3>
-        <table class="w-full text-sm text-left">
-          <thead class="text-slate-500 border-b">
-            <tr><th class="p-3">วันที่</th><th class="p-3">PC</th><th class="p-3">สาขา</th><th class="p-3">ยอดรวม</th></tr>
-          </thead>
-          <tbody id="performanceBody"></tbody>
+        <h3 class="font-bold text-lg mb-4 text-slate-700">ประวัติ VChef</h3>
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50"><tr><th class="p-3">เดือน</th><th class="p-3">พนักงาน</th><th class="p-3">ยอดรวม</th><th class="p-3">Action</th></tr></thead>
+          <tbody id="vchefTableBody"></tbody>
+        </table>
+      </div>
+      <div class="glass-card p-6 overflow-x-auto">
+        <h3 class="font-bold text-lg mb-4 text-slate-700">ประวัติยอดขายสาขา</h3>
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50"><tr><th class="p-3">เดือน</th><th class="p-3">พนักงาน</th><th class="p-3">สาขา</th><th class="p-3">ยอดจริง</th></tr></thead>
+          <tbody id="kpiTableBody"></tbody>
         </table>
       </div>
     </div>
   </div>
 
   <script>
-    const supabase = window.supabase.createClient("YOUR_URL", "YOUR_KEY");
+    const supabaseClient = window.supabase.createClient("YOUR_URL", "YOUR_KEY");
+    let employeesCache = [];
 
-    // ฟังก์ชันรวมที่ดึงจาก Code เดิมของคุณ
-    async function savePerformance() {
-      // ... (ใช้ Logic เดิมในการ Save)
-      alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
+    // --- รวมฟังก์ชันเดิมของคุณ ---
+    window.onload = async () => {
+        initMonths();
+        await loadEmployees();
+        loadVChefHistory();
+        loadKPIHistory();
+    };
+
+    function initMonths() {
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const curDate = new Date();
+        let html = '';
+        months.forEach(m => { html += `<option value="${m} ${curDate.getFullYear()}">${m} ${curDate.getFullYear()}</option>`; });
+        document.getElementById('vcMonth').innerHTML = html;
+        document.getElementById('kpiMonth').innerHTML = html;
     }
 
-    async function loadData() {
-      // ... (ใช้ Logic ดึงข้อมูลและคำนวณ Ach%, Growth% ตามที่เคยทำ)
+    async function loadEmployees() {
+        const { data } = await supabaseClient.from('employees').select('*');
+        employeesCache = data || [];
+        const vcSel = document.getElementById('vcEmp');
+        const kpiSel = document.getElementById('kpiEmp');
+        employeesCache.forEach(e => {
+            const opt = `<option value="${e.id}">${e.name}</option>`;
+            vcSel.innerHTML += opt; kpiSel.innerHTML += opt;
+        });
     }
 
-    window.onload = loadData;
+    async function saveVChef() {
+        const p = {
+            payroll_month: document.getElementById('vcMonth').value,
+            salesperson_id: document.getElementById('vcEmp').value,
+            actual_demo_days: Number(document.getElementById('vcDays').value),
+            sales_wasabi: Number(document.getElementById('vcWasabi').value),
+            sales_hippo: Number(document.getElementById('vcHippo').value),
+            sales_cke: Number(document.getElementById('vcCke').value),
+            sales_umesshu: Number(document.getElementById('vcUmesshu').value),
+            expense_trip: Number(document.getElementById('vcExpense').value)
+        };
+        await supabaseClient.from('vchef_performance').insert([p]);
+        alert('บันทึกสำเร็จ');
+        loadVChefHistory();
+    }
+
+    // (เพิ่มเติมฟังก์ชัน loadVChefHistory, saveKPI, loadKPIHistory ที่คุณมีอยู่เดิมได้เลย)
+    
   </script>
 </body>
 </html>
