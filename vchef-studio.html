@@ -174,19 +174,39 @@
     </div>
 
     <div class="card-ui border-t-4 border-rose-500 xl:col-span-2">
-        <h3 class="text-lg font-bold text-rose-700 mb-6"><i class="fa-solid fa-chart-pie mr-2"></i>5. กราฟวิเคราะห์ผลงาน (Dashboard Analytics)</h3>
-        
+        <h3 class="text-lg font-bold text-rose-700 mb-6"><i class="fa-solid fa-chart-pie mr-2"></i>5. กราฟสรุปผลงานรวมทีม (Team Dashboard)</h3>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 bg-white p-4 border rounded-xl shadow-sm">
                 <h4 class="text-center font-semibold text-slate-700 mb-2 text-sm">ยอดขายปี 2025 vs 2026 และเป้าหมาย (Target)</h4>
                 <canvas id="salesChart" height="120"></canvas>
             </div>
-            
             <div class="bg-white p-4 border rounded-xl shadow-sm flex flex-col items-center justify-center">
-                <h4 class="text-center font-semibold text-slate-700 mb-2 text-sm">สัดส่วนยอดขายรายแบรนด์ (Brand Contribution)</h4>
+                <h4 class="text-center font-semibold text-slate-700 mb-2 text-sm">สัดส่วนยอดขายรายแบรนด์รวม (Brand Contribution)</h4>
                 <div style="width: 80%; margin: auto;">
                     <canvas id="brandChart"></canvas>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-ui border-t-4 border-sky-500 xl:col-span-2">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-lg font-bold text-sky-700"><i class="fa-solid fa-map-location-dot mr-2"></i>6. วิเคราะห์เจาะลึกระดับสาขา (Branch Analytics)</h3>
+                <p class="text-xs text-slate-500 mt-1">วิเคราะห์ว่าสาขาไหนทำยอดรวมได้ดีที่สุด และสินค้าแบรนด์ไหนขายดีในแต่ละสาขา</p>
+            </div>
+            <button onclick="loadBranchAnalytics()" class="btn-ui bg-slate-100 text-slate-700 hover:bg-slate-200 border"><i class="fa-solid fa-rotate"></i> อัปเดตข้อมูลสาขา</button>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-4 border rounded-xl shadow-sm">
+                <h4 class="text-center font-semibold text-slate-700 mb-4 text-sm">Top 10 สาขายอดขายรวมสูงสุด</h4>
+                <canvas id="branchTotalChart" height="200"></canvas>
+            </div>
+            
+            <div class="bg-white p-4 border rounded-xl shadow-sm">
+                <h4 class="text-center font-semibold text-slate-700 mb-4 text-sm">สัดส่วนยอดขายรายแบรนด์ (เฉพาะ Top 10 สาขา)</h4>
+                <canvas id="branchMixChart" height="200"></canvas>
             </div>
         </div>
     </div>
@@ -202,26 +222,19 @@
     const monthNamesEng = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    const kpiFields = [
-      { id: 'target', label: 'Target (เป้า)', color: 'text-slate-700' },
-      { id: 'actual', label: 'Actual (ทำได้)', color: 'text-emerald-600' },
-      { id: 'expense', label: 'Expense (ใช้จ่าย)', color: 'text-rose-500' },
-      { id: 'salary', label: 'Salary (เงินเดือน)', color: 'text-slate-600' },
-      { id: 'trip', label: 'Trip (ค่าเดินทาง)', color: 'text-blue-600' },
-      { id: 'comm', label: 'Commission', color: 'text-amber-600' }
-    ];
-
     const commonBranches = ["Siam Paragon","Central World","Central Ladprao","Central Westgate","IconSiam","EmQuartier","Emsphere","Lotus พระราม 4","Big C ราชดำริ","The Mall บางกะปิ","Mega Bangna","Donki Thonglor","Gourmet Market"];
 
-    // ตัวแปรสำหรับเก็บ Object ของกราฟ
     let salesChartObj = null;
     let brandChartObj = null;
+    let branchTotalChartObj = null;
+    let branchMixChartObj = null;
 
     window.onload = async () => {
       initMonths(); initBranchList();
       await loadEmployees();
       loadVChefHistory();
       loadTeamSummary(); 
+      loadBranchAnalytics(); // โหลดกราฟสาขาตอนเริ่มต้น
     };
 
     function initBranchList() {
@@ -276,7 +289,7 @@
         await supabaseClient.from('vchef_performance').insert([p]);
         alert('บันทึก VChef สาขานี้สำเร็จ!'); 
         document.getElementById('vcBranch').value = ''; document.getElementById('vcDays').value = '';
-        loadVChefHistory();
+        loadVChefHistory(); loadBranchAnalytics(); // อัปเดตกราฟสาขาเมื่อมีการบันทึกใหม่
     }
 
     async function loadVChefHistory() {
@@ -289,9 +302,14 @@
             tbody.innerHTML += `<tr><td class="text-left">${v.payroll_month}</td><td class="text-left">${eName}</td><td class="text-left font-bold text-slate-700">${v.branch_name || '-'}</td><td class="text-center">${v.actual_demo_days} วัน</td><td class="text-center font-bold text-emerald-600">฿${total.toLocaleString()}</td><td class="text-center"><button onclick="delVChef('${v.id}')" class="text-red-500"><i class="fa fa-trash"></i></button></td></tr>`;
         });
     }
-    async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); } }
+    async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); loadBranchAnalytics(); } }
 
     // --- 2. MATRIX KPI LOGIC ---
+    const kpiFieldsForMatrix = [
+      { id: 'target', label: 'Target (เป้า)', color: 'text-slate-700' }, { id: 'actual', label: 'Actual (ทำได้)', color: 'text-emerald-600' },
+      { id: 'expense', label: 'Expense (ใช้จ่าย)', color: 'text-rose-500' }, { id: 'salary', label: 'Salary (เงินเดือน)', color: 'text-slate-600' },
+      { id: 'trip', label: 'Trip (ค่าเดินทาง)', color: 'text-blue-600' }, { id: 'comm', label: 'Commission', color: 'text-amber-600' }
+    ];
     async function loadMatrix() {
         const empId = document.getElementById('kpiEmp').value; const tbody = document.getElementById('matrixBody'); tbody.innerHTML = '';
         if (!empId) { tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>`; return; }
@@ -299,7 +317,7 @@
         const currentYear = new Date().getFullYear();
         const { data: savedData } = await supabaseClient.from('sales_records_matrix').select('*').eq('employee_id', empId).eq('year', currentYear);
         tbody.innerHTML = '';
-        kpiFields.forEach(f => {
+        kpiFieldsForMatrix.forEach(f => {
             let row = `<tr><td class="font-bold ${f.color} text-left border-r text-xs whitespace-nowrap">${f.label}</td>`;
             for(let m=0; m<12; m++) {
                 const val = savedData?.find(d => d.month_index === m && d.field_type === f.id)?.value || '';
@@ -350,7 +368,7 @@
         else { alert('บันทึกแผนงานรายวันเข้าปฏิทินเรียบร้อยแล้ว!'); loadCalendar(); }
     }
 
-    // --- 4. TEAM PERFORMANCE SUMMARY (EDITABLE) ---
+    // --- 4. & 5. TEAM PERFORMANCE SUMMARY & TEAM CHARTS ---
     function formatNum(num) { return num ? Math.round(num).toLocaleString() : '0'; }
     function formatPct(num) { return isFinite(num) && num !== 0 ? Math.round(num * 100) + '%' : '0%'; }
 
@@ -483,7 +501,6 @@
             </tr>
         `;
         
-        // วาดกราฟใหม่ทุกครั้งที่มีการอัปเดตผลรวม
         updateCharts(tWasa, tHippo, tCke, tUme);
     }
 
@@ -509,83 +526,131 @@
         else alert('บันทึกข้อมูลตารางสรุปผลงานสำเร็จแล้ว!');
     }
 
-    // --- 5. DATA ANALYTICS (CHARTS) ---
     function updateCharts(tWasa, tHippo, tCke, tUme) {
         const labels = monthNamesShort;
-        const dataTarget = [];
-        const dataSale26 = [];
-        const dataSale25 = [];
+        const dataTarget = []; const dataSale26 = []; const dataSale25 = [];
 
-        // รวบรวมข้อมูลแต่ละเดือนจากตารางไปใส่ในกราฟแท่ง
         for(let m=0; m<12; m++) {
             dataTarget.push(Number(document.getElementById(`sm_budget_${m}`)?.value || 0));
             dataSale26.push(Number(document.getElementById(`sm_sale26_${m}`)?.value || 0));
             dataSale25.push(Number(document.getElementById(`sm_sale25_${m}`)?.value || 0));
         }
 
-        // --- วาดกราฟ 1: แท่ง + เส้นยอดขาย ---
         const ctxSales = document.getElementById('salesChart').getContext('2d');
-        if (salesChartObj) salesChartObj.destroy(); // เคลียร์ของเก่าก่อนวาดใหม่
+        if (salesChartObj) salesChartObj.destroy(); 
         salesChartObj = new Chart(ctxSales, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: 'เป้าหมาย Target',
-                        type: 'line',
-                        data: dataTarget,
-                        borderColor: '#ef4444', // สีแดง
-                        backgroundColor: '#ef4444',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        pointRadius: 3
-                    },
-                    {
-                        label: 'ยอดขาย 2026',
-                        data: dataSale26,
-                        backgroundColor: '#10b981', // สีเขียว
-                        borderRadius: 4
-                    },
-                    {
-                        label: 'ยอดขาย 2025',
-                        data: dataSale25,
-                        backgroundColor: '#fbbf24', // สีส้ม/เหลือง
-                        borderRadius: 4
-                    }
+                    { label: 'เป้าหมาย Target', type: 'line', data: dataTarget, borderColor: '#ef4444', backgroundColor: '#ef4444', borderWidth: 2, tension: 0.3, pointRadius: 3 },
+                    { label: 'ยอดขาย 2026', data: dataSale26, backgroundColor: '#10b981', borderRadius: 4 },
+                    { label: 'ยอดขาย 2025', data: dataSale25, backgroundColor: '#fbbf24', borderRadius: 4 }
                 ]
             },
-            options: {
-                responsive: true,
-                interaction: { mode: 'index', intersect: false },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                    x: { grid: { display: false } }
-                },
-                plugins: { legend: { position: 'top' } }
-            }
+            options: { responsive: true, interaction: { mode: 'index', intersect: false }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top' } } }
         });
 
-        // --- วาดกราฟ 2: โดนัท สัดส่วนแบรนด์ ---
         const ctxBrand = document.getElementById('brandChart').getContext('2d');
         if (brandChartObj) brandChartObj.destroy();
         brandChartObj = new Chart(ctxBrand, {
             type: 'doughnut',
             data: {
                 labels: ['Wasabi', 'Hippo', 'CKE', 'Umesshu'],
+                datasets: [{ data: [tWasa, tHippo, tCke, tUme], backgroundColor: ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'], borderWidth: 1 }]
+            },
+            options: { responsive: true, cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    // --- 6. BRANCH ANALYTICS (NEW) ---
+    async function loadBranchAnalytics() {
+        const { data: vchefData } = await supabaseClient.from('vchef_performance').select('*');
+        if (!vchefData || vchefData.length === 0) return;
+
+        let branchesObj = {};
+        
+        // จัดกลุ่มข้อมูลยอดขายตามรายชื่อสาขา
+        vchefData.forEach(r => {
+            let bName = r.branch_name ? r.branch_name.trim() : 'ไม่ระบุสาขา';
+            if (!branchesObj[bName]) {
+                branchesObj[bName] = { total: 0, wasa: 0, hippo: 0, cke: 0, ume: 0 };
+            }
+            const w = Number(r.sales_wasabi || 0);
+            const h = Number(r.sales_hippo || 0);
+            const c = Number(r.sales_cke || 0);
+            const u = Number(r.sales_umesshu || 0);
+            
+            branchesObj[bName].wasa += w;
+            branchesObj[bName].hippo += h;
+            branchesObj[bName].cke += c;
+            branchesObj[bName].ume += u;
+            branchesObj[bName].total += (w + h + c + u);
+        });
+
+        // แปลงเป็น Array แล้วเรียงลำดับจากสาขาที่ขายดีที่สุดไปน้อยที่สุด
+        let branchArr = Object.keys(branchesObj).map(k => ({ name: k, ...branchesObj[k] }));
+        branchArr.sort((a, b) => b.total - a.total);
+
+        // ดึงมาแค่ Top 10 เพื่อไม่ให้กราฟรกเกินไป
+        let top10 = branchArr.slice(0, 10);
+        
+        let labels = top10.map(b => b.name);
+        let totals = top10.map(b => b.total);
+        let wasas = top10.map(b => b.wasa);
+        let hippos = top10.map(b => b.hippo);
+        let ckes = top10.map(b => b.cke);
+        let umes = top10.map(b => b.ume);
+
+        // วาดกราฟ: Top 10 สาขายอดขายรวมสูงสุด (Horizontal Bar)
+        const ctxTotal = document.getElementById('branchTotalChart').getContext('2d');
+        if (branchTotalChartObj) branchTotalChartObj.destroy();
+        branchTotalChartObj = new Chart(ctxTotal, {
+            type: 'bar',
+            data: {
+                labels: labels,
                 datasets: [{
-                    data: [tWasa, tHippo, tCke, tUme],
-                    backgroundColor: ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'],
-                    borderWidth: 1
+                    label: 'ยอดขายรวมทุกแบรนด์ (THB)',
+                    data: totals,
+                    backgroundColor: '#0ea5e9', // สีฟ้า
+                    borderRadius: 4
                 }]
             },
             options: {
+                indexAxis: 'y', // ทำให้เป็นกราฟแท่งแนวนอน
                 responsive: true,
-                cutout: '65%', // ความกลวงตรงกลางโดนัท
+                maintainAspectRatio: false,
+                scales: { x: { beginAtZero: true } },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // วาดกราฟ: สัดส่วนแบรนด์รายสาขา (Stacked Bar)
+        const ctxMix = document.getElementById('branchMixChart').getContext('2d');
+        if (branchMixChartObj) branchMixChartObj.destroy();
+        branchMixChartObj = new Chart(ctxMix, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Wasabi', data: wasas, backgroundColor: '#3b82f6' },
+                    { label: 'Hippo', data: hippos, backgroundColor: '#f59e0b' },
+                    { label: 'CKE', data: ckes, backgroundColor: '#ec4899' },
+                    { label: 'Umesshu', data: umes, backgroundColor: '#8b5cf6' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true }
+                },
                 plugins: { legend: { position: 'bottom' } }
             }
         });
     }
+
   </script>
 </body>
 </html>
