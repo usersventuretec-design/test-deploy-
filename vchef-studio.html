@@ -111,38 +111,36 @@
         document.getElementById('vcMonth').innerHTML = html;
         document.getElementById('kpiMonth').innerHTML = html;
     }
-
-   async function loadEmployees() {
-        // ใช้ supabaseClient ดึงข้อมูลพนักงานทั้งหมด
+async function loadEmployees() {
         const { data } = await supabaseClient.from('employees').select('*').order('name');
         employeesCache = data || [];
         
         const vcSel = document.getElementById('vcEmp'); 
         const kpiSel = document.getElementById('kpiEmp');
         
-        // รีเซ็ตตัวเลือกดรอปดาวน์
         vcSel.innerHTML = '<option value="">-- เลือกพนักงาน VChef --</option>';
         kpiSel.innerHTML = '<option value="">-- เลือกพนักงานสาขาปกติ --</option>';
 
         employeesCache.forEach(e => {
-            // เช็คว่าเป็นพนักงานขายที่ยังไม่ลาออก
-            if(e.is_sales && (!e.resigned_date || e.resigned_date === '')) {
-                const opt = `<option value="${e.id}">${e.name} (${e.assigned_branch || 'Roving'})</option>`;
+            // 1. เช็คด่านแรก: ต้องติ๊กช่อง PC (is_sales) และยังไม่ลาออก
+            if(e.is_sales === true && (!e.resigned_date || e.resigned_date === '')) {
                 
-                // แปลงข้อความสาขา/ตำแหน่ง/แผนก ให้เป็นพิมพ์เล็กเพื่อใช้เช็คคำ
                 const branchStr = String(e.assigned_branch || '').toLowerCase();
                 const posStr = String(e.position || '').toLowerCase();
                 const deptStr = String(e.dept || '').toLowerCase();
 
-                // ตรรกะแยกคน: ถ้ามีคำว่า "vchef" หรือ "roving" ถือว่าเป็นทีมจัดชิม
+                // 2. แยกทีม VChef: หาคำว่า vchef หรือ roving
                 const isVChefTeam = branchStr.includes('vchef') || branchStr.includes('roving') || posStr.includes('vchef') || deptStr.includes('vchef');
 
                 if (isVChefTeam) {
-                    // ถ้าเป็นทีม VChef -> ให้ไปโผล่ดรอปดาวน์ฝั่งซ้าย (ฟอร์มที่ 1)
-                    vcSel.innerHTML += opt;
+                    // ส่งเข้าดรอปดาวน์ฝั่งซ้าย (VChef)
+                    vcSel.innerHTML += `<option value="${e.id}">${e.name} (${e.assigned_branch || 'Roving'})</option>`;
                 } else {
-                    // ถ้าเป็น PC ประจำห้างปกติ (เช่น Makro, LOTUS, Big C) -> ให้ไปโผล่ดรอปดาวน์ฝั่งขวา (ฟอร์มที่ 2)
-                    kpiSel.innerHTML += opt;
+                    // 3. แยกทีม PC ปกติ: "ต้องมีการระบุชื่อสาขาเท่านั้น" ถึงจะโผล่มาได้ 
+                    // (ป้องกันพนักงานคนอื่นที่เผลอติ๊กช่อง PC แต่ไม่ได้ใส่ชื่อห้าง โผล่มากวนใจ)
+                    if (e.assigned_branch && e.assigned_branch.trim() !== '') {
+                        kpiSel.innerHTML += `<option value="${e.id}">${e.name} (${e.assigned_branch})</option>`;
+                    }
                 }
             }
         });
