@@ -189,26 +189,30 @@
         const kpiSel = document.getElementById('kpiEmp');
         const schedSel = document.getElementById('schedEmp');
         
-        vcSel.innerHTML = '<option value="">-- เลือกพนักงาน VChef --</option>';
-        kpiSel.innerHTML = '<option value="">-- เลือกพนักงานสาขาปกติ --</option>';
-        schedSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
+        // เคลียร์ค่าเริ่มต้นของ Dropdown ทั้ง 3 ตัว
+        vcSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
+        kpiSel.innerHTML = '<option value="">-- เลือกพนักงาน (Roving PC) --</option>';
+        schedSel.innerHTML = '<option value="">-- เลือกพนักงาน (Roving PC) --</option>';
 
         employeesCache.forEach(e => {
+            // เช็คว่าเป็นฝ่ายขาย และยังไม่ลาออก
             if(e.is_sales === true && (!e.resigned_date || e.resigned_date === '')) {
+                
                 const branchStr = String(e.assigned_branch || '').toLowerCase();
                 const posStr = String(e.position || '').toLowerCase();
                 const deptStr = String(e.dept || '').toLowerCase();
-                const isVChefTeam = branchStr.includes('vchef') || branchStr.includes('roving') || posStr.includes('vchef') || deptStr.includes('vchef');
+                
+                // เช็คว่าเป็น Roving PC หรือ VChef จากชื่อสาขา, ตำแหน่ง, หรือแผนก
+                const isRovingOrVChef = branchStr.includes('vchef') || branchStr.includes('roving') || posStr.includes('vchef') || deptStr.includes('vchef') || posStr.includes('roving');
 
-                const optionHtml = `<option value="${e.id}">${e.name} (${e.assigned_branch || 'Roving'})</option>`;
-                schedSel.innerHTML += optionHtml;
-
-                if (isVChefTeam) {
-                    vcSel.innerHTML += optionHtml;
-                } else {
-                    if (e.assigned_branch && e.assigned_branch.trim() !== '') {
-                        kpiSel.innerHTML += optionHtml;
-                    }
+                // ถ้าเป็น Roving PC / VChef ให้เพิ่มรายชื่อลงไปในทั้ง 3 เมนู
+                if (isRovingOrVChef) {
+                    const displayBranch = e.assigned_branch ? e.assigned_branch : 'Roving PC';
+                    const optionHtml = `<option value="${e.id}">${e.name} (${displayBranch})</option>`;
+                    
+                    vcSel.innerHTML += optionHtml;    // เมนู 1
+                    kpiSel.innerHTML += optionHtml;   // เมนู 2
+                    schedSel.innerHTML += optionHtml; // เมนู 3
                 }
             }
         });
