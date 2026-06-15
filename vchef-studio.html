@@ -78,12 +78,17 @@
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h3 class="text-lg font-bold text-blue-700"><i class="fa-solid fa-table-cells mr-2"></i>2. สรุป KPI และค่าใช้จ่ายรายปี (Matrix)</h3>
-          <p class="text-xs text-slate-500 mt-1">เลือกพนักงานเพื่อดูและแก้ไขข้อมูลเป้าหมาย/ผลงาน/ค่าใช้จ่ายตลอดทั้งปี</p>
+          <p class="text-xs text-slate-500 mt-1">เลือกปีและพนักงานเพื่อดู/แก้ไขข้อมูลเป้าหมายและผลงานตลอดทั้ง 12 เดือน</p>
         </div>
-        <div class="input-wrapper min-w-[250px]">
-          <select id="kpiEmp" onchange="loadMatrix()" class="border-blue-300 shadow-sm">
-            <option value="">-- เลือกพนักงาน (Roving PC) --</option>
-          </select>
+        <div class="flex flex-wrap gap-4">
+          <div class="input-wrapper min-w-[120px]">
+            <select id="kpiYear" onchange="loadMatrix()" class="border-blue-300 shadow-sm"></select>
+          </div>
+          <div class="input-wrapper min-w-[250px]">
+            <select id="kpiEmp" onchange="loadMatrix()" class="border-blue-300 shadow-sm">
+              <option value="">-- เลือกพนักงาน (Roving PC) --</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="overflow-x-auto pb-4">
@@ -129,12 +134,17 @@
     </div>
 
     <div class="card-ui border-t-4 border-emerald-500 xl:col-span-2">
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <div>
           <h3 class="text-lg font-bold text-emerald-700"><i class="fa-solid fa-table mr-2"></i>4. สรุปผลงานรวมทีม VChef + PC (Performance Summary)</h3>
           <p class="text-xs text-slate-500 mt-1">ดึงข้อมูลเริ่มต้นจากระบบอัตโนมัติ (สามารถคลิกพิมพ์แก้ตัวเลขเองได้ทุกช่อง)</p>
         </div>
-        <button onclick="loadTeamSummary()" class="btn-ui bg-slate-100 text-slate-700 hover:bg-slate-200 border"><i class="fa-solid fa-rotate"></i> ดึงค่าเริ่มต้นใหม่ / รีเฟรช</button>
+        <div class="flex gap-4">
+          <div class="input-wrapper min-w-[120px]">
+            <select id="summaryYear" onchange="loadTeamSummary()" class="border-emerald-300 shadow-sm"></select>
+          </div>
+          <button onclick="loadTeamSummary()" class="btn-ui bg-slate-100 text-slate-700 hover:bg-slate-200 border"><i class="fa-solid fa-rotate"></i> ดึงค่าเริ่มต้นใหม่</button>
+        </div>
       </div>
 
       <div class="overflow-x-auto pb-4">
@@ -144,12 +154,12 @@
               <th rowspan="2" class="w-16">Month</th>
               <th rowspan="2">Demo<br>Day</th>
               <th rowspan="2">Budget<br>(Target)</th>
-              <th rowspan="2" class="bg-emerald-100">Sale 2026</th>
+              <th rowspan="2" class="bg-emerald-100">Sale (Current)</th>
               <th rowspan="2">Ach.%</th>
-              <th rowspan="2">Sale/Day<br>2026</th>
-              <th rowspan="2" class="bg-orange-50 text-orange-700 border-orange-200">Sale/Day<br>2025</th>
+              <th rowspan="2">Sale/Day<br>(Current)</th>
+              <th rowspan="2" class="bg-orange-50 text-orange-700 border-orange-200">Sale/Day<br>(Old)</th>
               <th rowspan="2">per day<br>Grw.%</th>
-              <th rowspan="2" class="bg-orange-50 text-orange-700 border-orange-200">Sale 2025</th>
+              <th rowspan="2" class="bg-orange-50 text-orange-700 border-orange-200">Sale (Old)</th>
               <th rowspan="2">Grw.%</th>
               <th colspan="4" class="bg-blue-50 border-l border-r">Sale contribute</th>
               <th colspan="4" class="bg-purple-50">Contribute %</th>
@@ -175,7 +185,7 @@
         <h3 class="text-lg font-bold text-rose-700 mb-6"><i class="fa-solid fa-chart-pie mr-2"></i>5. กราฟสรุปผลงานรวมทีม (Team Dashboard)</h3>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 bg-white p-4 border rounded-xl shadow-sm">
-                <h4 class="text-center font-semibold text-slate-700 mb-2 text-sm">ยอดขายปี 2025 vs 2026 และเป้าหมาย (Target)</h4>
+                <h4 class="text-center font-semibold text-slate-700 mb-2 text-sm">เปรียบเทียบยอดขายสุทธิ และเป้าหมาย (Target)</h4>
                 <div class="relative h-64 w-full">
                     <canvas id="salesChart"></canvas>
                 </div>
@@ -277,14 +287,22 @@
 
     function initMonths() {
         const curDate = new Date(); const curY = curDate.getFullYear(); const curM = curDate.getMonth();
-        let html = '';
+        
+        let htmlMonths = '';
         for (let y = curY + 1; y >= 2025; y--) {
-            html += `<optgroup label="--- Year ${y} ---">`;
-            monthNamesEng.forEach((m, i) => { html += `<option value="${m} ${y}" ${(i===curM && y===curY)?'selected':''}>${m} ${y}</option>`; });
-            html += `</optgroup>`;
+            htmlMonths += `<optgroup label="--- Year ${y} ---">`;
+            monthNamesEng.forEach((m, i) => { htmlMonths += `<option value="${m} ${y}" ${(i===curM && y===curY)?'selected':''}>${m} ${y}</option>`; });
+            htmlMonths += `</optgroup>`;
         }
-        document.getElementById('vcMonth').innerHTML = html;
-        document.getElementById('schedMonth').innerHTML = html;
+        document.getElementById('vcMonth').innerHTML = htmlMonths;
+        document.getElementById('schedMonth').innerHTML = htmlMonths;
+
+        let htmlYears = '';
+        for (let y = curY + 1; y >= 2025; y--) {
+            htmlYears += `<option value="${y}" ${y === curY ? 'selected' : ''}>ปี ${y}</option>`;
+        }
+        document.getElementById('kpiYear').innerHTML = htmlYears;
+        document.getElementById('summaryYear').innerHTML = htmlYears;
     }
 
     function syncMonths(val) { document.getElementById('schedMonth').value = val; loadCalendar(); }
@@ -339,12 +357,15 @@
 
     // --- 2. MATRIX KPI LOGIC ---
     async function loadMatrix() {
-        const empId = document.getElementById('kpiEmp').value; const tbody = document.getElementById('matrixBody'); tbody.innerHTML = '';
+        const empId = document.getElementById('kpiEmp').value; 
+        const tbody = document.getElementById('matrixBody'); tbody.innerHTML = '';
         if (!empId) { tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>`; return; }
         tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล...</td></tr>`;
-        const currentYear = new Date().getFullYear();
-        const { data: savedData } = await supabaseClient.from('sales_records_matrix').select('*').eq('employee_id', empId).eq('year', currentYear);
+        
+        const selectedYear = parseInt(document.getElementById('kpiYear').value);
+        const { data: savedData } = await supabaseClient.from('sales_records_matrix').select('*').eq('employee_id', empId).eq('year', selectedYear);
         tbody.innerHTML = '';
+        
         kpiFieldsForMatrix.forEach(f => {
             let row = `<tr><td class="font-bold ${f.color} text-left border-r text-xs whitespace-nowrap">${f.label}</td>`;
             for(let m=0; m<12; m++) {
@@ -358,10 +379,11 @@
     async function saveMatrix() {
         const empId = document.getElementById('kpiEmp').value;
         if (!empId) return alert('โปรดเลือกพนักงานก่อนบันทึก');
-        const inputs = document.querySelectorAll('#matrixBody input.matrix-input'); let updates = []; const currentYear = new Date().getFullYear();
+        const inputs = document.querySelectorAll('#matrixBody input.matrix-input'); let updates = []; 
+        const selectedYear = parseInt(document.getElementById('kpiYear').value);
         inputs.forEach(input => {
             const val = parseFloat(input.value);
-            if (!isNaN(val)) updates.push({ employee_id: empId, year: currentYear, month_index: parseInt(input.dataset.m), field_type: input.dataset.f, value: val });
+            if (!isNaN(val)) updates.push({ employee_id: empId, year: selectedYear, month_index: parseInt(input.dataset.m), field_type: input.dataset.f, value: val });
         });
         if (updates.length === 0) return alert('ไม่มีข้อมูลตัวเลขให้บันทึก');
         const { error } = await supabaseClient.from('sales_records_matrix').upsert(updates, { onConflict: 'employee_id,year,month_index,field_type' });
@@ -401,16 +423,17 @@
     function formatPct(num) { return isFinite(num) && num !== 0 ? Math.round(num * 100) + '%' : '0%'; }
 
     async function loadTeamSummary() {
-        const currentYear = new Date().getFullYear();
+        const selectedYear = parseInt(document.getElementById('summaryYear').value) || new Date().getFullYear();
+        
         const { data: vchefData } = await supabaseClient.from('vchef_performance').select('*');
-        const { data: matrixData } = await supabaseClient.from('sales_records_matrix').select('*').eq('year', currentYear).eq('field_type', 'target');
-        const { data: savedData } = await supabaseClient.from('team_summary_data').select('*').eq('year', currentYear);
+        const { data: matrixData } = await supabaseClient.from('sales_records_matrix').select('*').eq('year', selectedYear).eq('field_type', 'target');
+        const { data: savedData } = await supabaseClient.from('team_summary_data').select('*').eq('year', selectedYear);
 
         const tbody = document.getElementById('teamSummaryBody');
         tbody.innerHTML = '';
 
         for (let m = 0; m < 12; m++) {
-            const monthTextToMatch = `${monthNamesEng[m]} ${currentYear}`;
+            const monthTextToMatch = `${monthNamesEng[m]} ${selectedYear}`;
             const monthVChef = vchefData ? vchefData.filter(d => d.payroll_month === monthTextToMatch) : [];
             let mDemo=0, mWasa=0, mHippo=0, mCke=0, mUme=0;
             monthVChef.forEach(r => {
@@ -533,11 +556,11 @@
     }
 
     async function saveTeamSummary() {
-        const currentYear = new Date().getFullYear();
+        const selectedYear = parseInt(document.getElementById('summaryYear').value) || new Date().getFullYear();
         let updates = [];
         for (let m = 0; m < 12; m++) {
             updates.push({
-                year: currentYear, month_index: m,
+                year: selectedYear, month_index: m,
                 demo_day: Number(document.getElementById(`sm_demo_${m}`).value) || 0,
                 budget: Number(document.getElementById(`sm_budget_${m}`).value) || 0,
                 sale_current: Number(document.getElementById(`sm_sale26_${m}`).value) || 0,
@@ -557,6 +580,7 @@
     function updateCharts(tWasa, tHippo, tCke, tUme) {
         const labels = monthNamesShort;
         const dataTarget = []; const dataSale26 = []; const dataSale25 = [];
+        const selectedYear = document.getElementById('summaryYear').value;
 
         for(let m=0; m<12; m++) {
             dataTarget.push(Number(document.getElementById(`sm_budget_${m}`)?.value || 0));
@@ -572,8 +596,8 @@
                 labels: labels,
                 datasets: [
                     { label: 'เป้าหมาย Target', type: 'line', data: dataTarget, borderColor: '#ef4444', backgroundColor: '#ef4444', borderWidth: 2, tension: 0.3, pointRadius: 3 },
-                    { label: 'ยอดขาย 2026', data: dataSale26, backgroundColor: '#10b981', borderRadius: 4 },
-                    { label: 'ยอดขาย 2025', data: dataSale25, backgroundColor: '#fbbf24', borderRadius: 4 }
+                    { label: `ยอดขาย ${selectedYear}`, data: dataSale26, backgroundColor: '#10b981', borderRadius: 4 },
+                    { label: 'ยอดขายปีเก่า (Old)', data: dataSale25, backgroundColor: '#fbbf24', borderRadius: 4 }
                 ]
             },
             options: { 
@@ -715,7 +739,6 @@
             }
         });
     }
-
   </script>
 </body>
 </html>
