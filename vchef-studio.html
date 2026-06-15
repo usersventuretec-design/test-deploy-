@@ -47,18 +47,22 @@
 
 <script>
   const supabase = window.supabase.createClient("YOUR_URL", "YOUR_KEY");
+  
+  // !!! ใส่ชื่อตารางพนักงานที่คุณเห็นใน Supabase ตรงนี้ !!!
+  const TABLE_EMPLOYEES = "employees"; 
+
   let employeesCache = [];
 
   window.onload = async () => {
     try {
-      const { data, error } = await supabase.from('employees').select('*');
+      // ดึงข้อมูลพนักงาน
+      const { data, error } = await supabase.from(TABLE_EMPLOYEES).select('*');
       if (error) throw error;
-      employeesCache = data;
-      console.log("Employees Loaded:", employeesCache);
       
-      // เติมพนักงานลง Dropdown
+      employeesCache = data;
       const vcEmp = document.getElementById('vcEmp');
       const kpiEmp = document.getElementById('kpiEmp');
+      
       data.forEach(e => {
         const opt = `<option value="${e.id}">${e.name}</option>`;
         vcEmp.innerHTML += opt;
@@ -67,8 +71,8 @@
 
       loadHistory();
     } catch (e) {
-      console.error("Critical Load Error:", e);
-      alert("โหลดข้อมูลพนักงานไม่สำเร็จ: " + e.message);
+      console.error("Error:", e);
+      alert("เกิดข้อผิดพลาดในการดึงข้อมูล: " + e.message);
     }
   };
 
@@ -97,15 +101,17 @@
         tbody.innerHTML += `<tr>
           <td class="p-2">${emp ? emp.name : 'Unknown'}</td>
           <td class="p-2 text-emerald-600 font-bold">฿${total.toLocaleString()}</td>
-          <td class="p-2 text-red-500 cursor-pointer" onclick="del('${v.id}')">ลบ</td>
+          <td class="p-2 text-red-500 cursor-pointer" onclick="del('${v.id}')"><i class="fa fa-trash"></i></td>
         </tr>`;
       });
     }
   }
 
   async function del(id) {
-    await supabase.from('vchef_performance').delete().eq('id', id);
-    loadHistory();
+    if(confirm('ลบข้อมูลนี้ใช่หรือไม่?')){
+      await supabase.from('vchef_performance').delete().eq('id', id);
+      loadHistory();
+    }
   }
 </script>
 </body>
