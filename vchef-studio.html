@@ -1,55 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VChef Analytics Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    body { background-color: #f1f5f9; font-family: 'Prompt', sans-serif; }
-    .card-ui { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 20px; }
-    input, select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; }
-    td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Prompt', sans-serif; background: #f8fafc; }</style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-6">
 
-  <h1 class="text-2xl font-bold mb-6">VChef Campaign & KPI Analytics</h1>
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6 text-slate-800">📊 VChef Performance Dashboard</h1>
 
-  <div class="card-ui">
-    <h3 class="font-bold mb-4">บันทึกผลงานรายเดือน</h3>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <input type="text" id="month" placeholder="Month (เช่น Jan 2026)">
-      <input type="number" id="demoDays" placeholder="Demo Days">
-      <input type="number" id="target" placeholder="Target Budget">
-      <input type="number" id="prevYear" placeholder="Sale 2025 (สำหรับคิด Growth)">
-      <input type="number" id="wasabi" placeholder="Wasabi">
-      <input type="number" id="hippo" placeholder="Hippo">
-      <input type="number" id="cke" placeholder="CKE">
-      <input type="number" id="umesshu" placeholder="Umesshu">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+      <h2 class="text-lg font-semibold mb-4 text-slate-700">บันทึกผลงานรายเดือน</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <input type="text" id="month" placeholder="Month (เช่น Jan 2026)" class="p-2 border rounded">
+        <input type="number" id="demoDays" placeholder="Demo Days" class="p-2 border rounded">
+        <input type="number" id="target" placeholder="Target" class="p-2 border rounded">
+        <input type="number" id="prevYear" placeholder="Prev Year Sale" class="p-2 border rounded">
+        <input type="number" id="wasabi" placeholder="Wasabi" class="p-2 border rounded">
+        <input type="number" id="hippo" placeholder="Hippo" class="p-2 border rounded">
+        <input type="number" id="cke" placeholder="CKE" class="p-2 border rounded">
+        <input type="number" id="umesshu" placeholder="Umesshu" class="p-2 border rounded">
+      </div>
+      <button onclick="saveData()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold">
+        <i class="fa-solid fa-save mr-2"></i> บันทึกข้อมูล
+      </button>
     </div>
-    <button onclick="saveData()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded">บันทึกข้อมูล</button>
-  </div>
 
-  <div class="card-ui overflow-x-auto">
-    <table class="min-w-[1000px]">
-      <thead>
-        <tr>
-          <th>Month</th><th>Demo</th><th>Budget</th><th>Sale 2026</th>
-          <th>Ach %</th><th>Sale/Day</th><th>Grw %</th>
-          <th>Wasabi</th><th>Hippo</th><th>CKE</th><th>Umesshu</th>
-        </tr>
-      </thead>
-      <tbody id="analyticsBody"></tbody>
-    </table>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+      <h2 class="text-lg font-semibold mb-4 text-slate-700">สรุปผลวิเคราะห์ Performance</h2>
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="p-3 text-left">Month</th>
+            <th class="p-3">Demo</th>
+            <th class="p-3">Target</th>
+            <th class="p-3">Sale 2026</th>
+            <th class="p-3">Ach%</th>
+            <th class="p-3">Sale/Day</th>
+            <th class="p-3">Grw%</th>
+            <th class="p-3">Wasabi</th>
+            <th class="p-3">Hippo</th>
+            <th class="p-3">CKE</th>
+            <th class="p-3">Umesshu</th>
+          </tr>
+        </thead>
+        <tbody id="analyticsBody" class="text-center"></tbody>
+      </table>
+    </div>
   </div>
 
   <script>
-    const supabase = window.supabase.createClient("YOUR_SUPABASE_URL", "YOUR_SUPABASE_KEY");
+    const supabase = window.supabase.createClient("YOUR_URL", "YOUR_KEY");
 
     async function saveData() {
       const data = {
@@ -62,9 +66,8 @@
         cke: Number(document.getElementById('cke').value),
         umesshu: Number(document.getElementById('umesshu').value)
       };
-
       await supabase.from('monthly_performance').insert([data]);
-      alert('บันทึกสำเร็จ!');
+      alert('บันทึกข้อมูลเรียบร้อย!');
       loadData();
     }
 
@@ -80,23 +83,22 @@
         const growth = row.prev_year_sale > 0 ? ((total - row.prev_year_sale) / row.prev_year_sale) * 100 : 0;
 
         tbody.innerHTML += `
-          <tr>
-            <td class="font-bold">${row.month}</td>
-            <td>${row.demo_days}</td>
-            <td>฿${row.target.toLocaleString()}</td>
-            <td class="text-emerald-600 font-bold">฿${total.toLocaleString()}</td>
-            <td>${ach.toFixed(1)}%</td>
-            <td>${salePerDay.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
-            <td class="${growth >= 0 ? 'text-blue-600' : 'text-red-500'}">${growth.toFixed(1)}%</td>
-            <td>${row.wasabi.toLocaleString()}</td>
-            <td>${row.hippo.toLocaleString()}</td>
-            <td>${row.cke.toLocaleString()}</td>
-            <td>${row.umesshu.toLocaleString()}</td>
+          <tr class="border-b hover:bg-slate-50">
+            <td class="p-3 font-semibold text-left">${row.month}</td>
+            <td class="p-3">${row.demo_days}</td>
+            <td class="p-3">${row.target.toLocaleString()}</td>
+            <td class="p-3 font-bold text-blue-600">${total.toLocaleString()}</td>
+            <td class="p-3">${ach.toFixed(0)}%</td>
+            <td class="p-3">${salePerDay.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+            <td class="p-3 font-bold ${growth >= 0 ? 'text-emerald-600' : 'text-red-500'}">${growth.toFixed(1)}%</td>
+            <td class="p-3">${row.wasabi.toLocaleString()}</td>
+            <td class="p-3">${row.hippo.toLocaleString()}</td>
+            <td class="p-3">${row.cke.toLocaleString()}</td>
+            <td class="p-3">${row.umesshu.toLocaleString()}</td>
           </tr>
         `;
       });
     }
-
     window.onload = loadData;
   </script>
 </body>
