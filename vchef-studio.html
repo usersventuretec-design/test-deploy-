@@ -1,105 +1,88 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
-  <style>body { font-family: 'Prompt', sans-serif; background: #f8fafc; }</style>
+  <style>body { font-family: 'Prompt', sans-serif; background: #f1f5f9; }</style>
 </head>
-<body class="p-6">
+<body class="p-4">
 
-  <div class="max-w-6xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6 text-slate-800">📊 VChef Performance Dashboard</h1>
-
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
-      <h2 class="text-lg font-semibold mb-4 text-slate-700">บันทึกผลงานรายเดือน</h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <input type="text" id="month" placeholder="Month (เช่น Jan 2026)" class="p-2 border rounded">
-        <input type="number" id="demoDays" placeholder="Demo Days" class="p-2 border rounded">
-        <input type="number" id="target" placeholder="Target" class="p-2 border rounded">
-        <input type="number" id="prevYear" placeholder="Prev Year Sale" class="p-2 border rounded">
-        <input type="number" id="wasabi" placeholder="Wasabi" class="p-2 border rounded">
-        <input type="number" id="hippo" placeholder="Hippo" class="p-2 border rounded">
-        <input type="number" id="cke" placeholder="CKE" class="p-2 border rounded">
-        <input type="number" id="umesshu" placeholder="Umesshu" class="p-2 border rounded">
-      </div>
-      <button onclick="saveData()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold">
-        <i class="fa-solid fa-save mr-2"></i> บันทึกข้อมูล
-      </button>
+  <!-- สรุปตัวเลขสำคัญ (KPI Dashboard Card) -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-blue-600 p-4 rounded-xl text-white shadow-lg">
+      <p class="text-sm opacity-80">YTD Actual</p>
+      <h2 class="text-2xl font-bold" id="ytdActual">฿0</h2>
     </div>
-
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-      <h2 class="text-lg font-semibold mb-4 text-slate-700">สรุปผลวิเคราะห์ Performance</h2>
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50">
-          <tr>
-            <th class="p-3 text-left">Month</th>
-            <th class="p-3">Demo</th>
-            <th class="p-3">Target</th>
-            <th class="p-3">Sale 2026</th>
-            <th class="p-3">Ach%</th>
-            <th class="p-3">Sale/Day</th>
-            <th class="p-3">Grw%</th>
-            <th class="p-3">Wasabi</th>
-            <th class="p-3">Hippo</th>
-            <th class="p-3">CKE</th>
-            <th class="p-3">Umesshu</th>
-          </tr>
-        </thead>
-        <tbody id="analyticsBody" class="text-center"></tbody>
-      </table>
+    <div class="bg-emerald-600 p-4 rounded-xl text-white shadow-lg">
+      <p class="text-sm opacity-80">YTD Achieved</p>
+      <h2 class="text-2xl font-bold" id="ytdAch">0%</h2>
     </div>
+    <div class="bg-amber-500 p-4 rounded-xl text-white shadow-lg">
+      <p class="text-sm opacity-80">MTD Actual</p>
+      <h2 class="text-2xl font-bold" id="mtdActual">฿0</h2>
+    </div>
+    <div class="bg-slate-700 p-4 rounded-xl text-white shadow-lg">
+      <p class="text-sm opacity-80">Total Growth YOY</p>
+      <h2 class="text-2xl font-bold" id="yoyGrowth">0%</h2>
+    </div>
+  </div>
+
+  <!-- ตารางสรุปใหญ่ -->
+  <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+    <table class="w-full text-xs">
+      <thead>
+        <tr class="bg-slate-800 text-white">
+          <th class="p-2">Month</th><th class="p-2">Target</th><th class="p-2">Actual</th>
+          <th class="p-2">Ach%</th><th class="p-2">DemoDay</th><th class="p-2">Sale/Day</th>
+          <th class="p-2">Y25 Sale</th><th class="p-2">Growth%</th>
+        </tr>
+      </thead>
+      <tbody id="mainTableBody" class="text-center"></tbody>
+    </table>
   </div>
 
   <script>
     const supabase = window.supabase.createClient("YOUR_URL", "YOUR_KEY");
 
-    async function saveData() {
-      const data = {
-        month: document.getElementById('month').value,
-        demo_days: Number(document.getElementById('demoDays').value),
-        target: Number(document.getElementById('target').value),
-        prev_year_sale: Number(document.getElementById('prevYear').value),
-        wasabi: Number(document.getElementById('wasabi').value),
-        hippo: Number(document.getElementById('hippo').value),
-        cke: Number(document.getElementById('cke').value),
-        umesshu: Number(document.getElementById('umesshu').value)
-      };
-      await supabase.from('monthly_performance').insert([data]);
-      alert('บันทึกข้อมูลเรียบร้อย!');
-      loadData();
-    }
-
-    async function loadData() {
+    async function loadDashboard() {
       const { data } = await supabase.from('monthly_performance').select('*');
-      const tbody = document.getElementById('analyticsBody');
+      const tbody = document.getElementById('mainTableBody');
+      
+      let totalActual = 0, totalTarget = 0, totalPrev = 0;
       tbody.innerHTML = '';
 
       data.forEach(row => {
-        const total = row.wasabi + row.hippo + row.cke + row.umesshu;
-        const ach = (total / row.target) * 100;
-        const salePerDay = row.demo_days > 0 ? (total / row.demo_days) : 0;
-        const growth = row.prev_year_sale > 0 ? ((total - row.prev_year_sale) / row.prev_year_sale) * 100 : 0;
+        const actual = row.wasabi + row.hippo + row.cke + row.umesshu;
+        const ach = (actual / row.target) * 100;
+        const growth = ((actual - row.prev_year_sale) / row.prev_year_sale) * 100;
+        const saleDay = actual / row.actual_demoday;
+
+        totalActual += actual;
+        totalTarget += row.target;
+        totalPrev += row.prev_year_sale;
 
         tbody.innerHTML += `
           <tr class="border-b hover:bg-slate-50">
-            <td class="p-3 font-semibold text-left">${row.month}</td>
-            <td class="p-3">${row.demo_days}</td>
-            <td class="p-3">${row.target.toLocaleString()}</td>
-            <td class="p-3 font-bold text-blue-600">${total.toLocaleString()}</td>
-            <td class="p-3">${ach.toFixed(0)}%</td>
-            <td class="p-3">${salePerDay.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
-            <td class="p-3 font-bold ${growth >= 0 ? 'text-emerald-600' : 'text-red-500'}">${growth.toFixed(1)}%</td>
-            <td class="p-3">${row.wasabi.toLocaleString()}</td>
-            <td class="p-3">${row.hippo.toLocaleString()}</td>
-            <td class="p-3">${row.cke.toLocaleString()}</td>
-            <td class="p-3">${row.umesshu.toLocaleString()}</td>
+            <td class="p-2 font-bold">${row.month}</td>
+            <td class="p-2">${row.target.toLocaleString()}</td>
+            <td class="p-2 text-blue-600 font-bold">${actual.toLocaleString()}</td>
+            <td class="p-2">${ach.toFixed(0)}%</td>
+            <td class="p-2">${row.actual_demoday}</td>
+            <td class="p-2">${saleDay.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
+            <td class="p-2">${row.prev_year_sale.toLocaleString()}</td>
+            <td class="p-2 ${growth >=0 ? 'text-emerald-600' : 'text-red-500'}">${growth.toFixed(1)}%</td>
           </tr>
         `;
       });
+
+      // Update Summary Cards
+      document.getElementById('ytdActual').innerText = `฿${totalActual.toLocaleString()}`;
+      document.getElementById('ytdAch').innerText = `${((totalActual/totalTarget)*100).toFixed(0)}%`;
+      document.getElementById('yoyGrowth').innerText = `${(((totalActual-totalPrev)/totalPrev)*100).toFixed(1)}%`;
     }
-    window.onload = loadData;
+    
+    window.onload = loadDashboard;
   </script>
 </body>
 </html>
