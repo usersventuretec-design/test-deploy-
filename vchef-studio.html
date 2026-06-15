@@ -22,11 +22,16 @@
     .matrix-input { width: 100%; text-align: center; border: 1px solid transparent; background: transparent; padding: 6px; border-radius: 4px;}
     .matrix-input:hover, .matrix-input:focus { border: 1px solid #cbd5e1; background: #fff; }
     
-    /* สไตล์เพิ่มเติมสำหรับปฏิทิน */
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
     .calendar-day-head { text-align: center; font-weight: 600; font-size: 12px; padding: 8px; background-color: #f8fafc; border-radius: 6px; color: #64748b; }
     .calendar-cell { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; min-height: 85px; display: flex; flex-direction: column; justify-content: space-between; }
     .calendar-cell-empty { background: #f8fafc; border: 1px solid transparent; min-height: 85px; }
+
+    /* สไตล์สำหรับตารางสรุปทีม */
+    .summary-table th { font-size: 11px; padding: 6px; border: 1px solid #cbd5e1; background-color: #e2e8f0; color: #334155; }
+    .summary-table td { font-size: 12px; padding: 6px; border: 1px solid #e2e8f0; text-align: right; }
+    .summary-table td:first-child { text-align: left; font-weight: bold; background-color: #f8fafc; }
+    .input-calc { width: 60px; padding: 2px 4px; font-size: 11px; text-align: right; border: 1px solid #94a3b8; border-radius: 3px; }
   </style>
 </head>
 <body class="p-6 md:p-10">
@@ -44,7 +49,7 @@
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
     
     <div class="card-ui border-t-4 border-amber-500">
-      <h3 class="text-lg font-bold text-amber-700 mb-4"><i class="fa-solid fa-boxes-stacked mr-2"></i>1. บันทึกผลงาน VChef จัดชิม (แยกตามสาขาที่ลง)</h3>
+      <h3 class="text-lg font-bold text-amber-700 mb-4"><i class="fa-solid fa-boxes-stacked mr-2"></i>1. บันทึกผลงาน VChef จัดชิม</h3>
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div class="input-wrapper"><label>งวดเดือน (Month):</label><select id="vcMonth" onchange="syncMonths(this.value)"></select></div>
         <div class="input-wrapper"><label>พนักงาน (PC):</label><select id="vcEmp"><option value="">-- เลือกพนักงาน --</option></select></div>
@@ -66,8 +71,8 @@
     <div class="card-ui overflow-x-auto">
       <h3 class="text-md font-bold text-slate-700 mb-4"><i class="fa-solid fa-history mr-2"></i>ประวัติ VChef (ล่าสุด)</h3>
       <table class="data-table">
-        <thead><tr><th class="text-left">งวดเดือน</th><th class="text-left">ชื่อพนักงาน</th><th class="text-left">สาขาที่ลง</th><th>วันจัดชิม</th><th>ค่าทริป</th><th>ยอดรวมแบรนด์</th><th>ลบ</th></tr></thead>
-        <tbody id="vchefTableBody"><tr><td colspan="7" class="text-center text-slate-400">Loading...</td></tr></tbody>
+        <thead><tr><th class="text-left">งวดเดือน</th><th class="text-left">ชื่อพนักงาน</th><th class="text-left">สาขาที่ลง</th><th>วันจัดชิม</th><th>ยอดรวมแบรนด์</th><th>ลบ</th></tr></thead>
+        <tbody id="vchefTableBody"><tr><td colspan="6" class="text-center text-slate-400">Loading...</td></tr></tbody>
       </table>
     </div>
 
@@ -83,7 +88,6 @@
           </select>
         </div>
       </div>
-
       <div class="overflow-x-auto pb-4">
         <table class="data-table" id="kpiTable" style="min-width: 900px;">
           <thead>
@@ -98,7 +102,6 @@
           </tbody>
         </table>
       </div>
-      
       <button class="btn-ui bg-blue-600 hover:bg-blue-700 mt-4 w-full justify-center" onclick="saveMatrix()">
         <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลตาราง KPI ทั้งปี
       </button>
@@ -111,34 +114,60 @@
           <p class="text-xs text-slate-500 mt-1">บันทึกข้อมูลว่าแต่ละวันพนักงานเข้าปฏิบัติงานที่สาขาหรือห้างสรรพสินค้าใด</p>
         </div>
         <div class="flex flex-wrap gap-4">
-          <div class="input-wrapper min-w-[180px]">
-            <select id="schedMonth" onchange="loadCalendar()"></select>
-          </div>
-          <div class="input-wrapper min-w-[220px]">
-            <select id="schedEmp" onchange="loadCalendar()">
-              <option value="">-- เลือกพนักงาน (Roving PC) --</option>
-            </select>
-          </div>
+          <div class="input-wrapper min-w-[180px]"><select id="schedMonth" onchange="loadCalendar()"></select></div>
+          <div class="input-wrapper min-w-[220px]"><select id="schedEmp" onchange="loadCalendar()"><option value="">-- เลือกพนักงาน (Roving PC) --</option></select></div>
         </div>
       </div>
-
       <div class="calendar-grid mb-2">
-        <div class="calendar-day-head text-red-500">อา.</div>
-        <div class="calendar-day-head">จ.</div>
-        <div class="calendar-day-head">อ.</div>
-        <div class="calendar-day-head">พ.</div>
-        <div class="calendar-day-head">พฤ.</div>
-        <div class="calendar-day-head">ศ.</div>
-        <div class="calendar-day-head text-blue-500">ส.</div>
+        <div class="calendar-day-head text-red-500">อา.</div><div class="calendar-day-head">จ.</div><div class="calendar-day-head">อ.</div>
+        <div class="calendar-day-head">พ.</div><div class="calendar-day-head">พฤ.</div><div class="calendar-day-head">ศ.</div><div class="calendar-day-head text-blue-500">ส.</div>
       </div>
-
       <div class="calendar-grid" id="calendarBody">
         <div class="col-span-7 text-center text-slate-400 py-10 bg-slate-50 rounded-lg border">กรุณาเลือกเดือนและพนักงานเพื่อแสดงปฏิทิน</div>
       </div>
-
       <button class="btn-ui bg-purple-600 hover:bg-purple-700 mt-6 w-full justify-center" onclick="saveCalendar()">
         <i class="fa-solid fa-calendar-check"></i> บันทึกตารางปฏิทินประจำเดือน
       </button>
+    </div>
+
+    <div class="card-ui border-t-4 border-emerald-500 xl:col-span-2">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h3 class="text-lg font-bold text-emerald-700"><i class="fa-solid fa-chart-line mr-2"></i>4. สรุปผลงานรวมทีม VChef + PC (Performance Summary)</h3>
+          <p class="text-xs text-slate-500 mt-1">ดึงข้อมูลยอดขายสุทธิและเป้าหมายจากระบบอัตโนมัติ (สามารถกรอกยอดปีเก่าเพื่อดู Growth ได้)</p>
+        </div>
+        <button onclick="loadTeamSummary()" class="btn-ui bg-slate-100 text-slate-700 hover:bg-slate-200 border"><i class="fa-solid fa-rotate"></i> รีเฟรชข้อมูล</button>
+      </div>
+
+      <div class="overflow-x-auto pb-4">
+        <table class="data-table summary-table" style="min-width: 1400px;">
+          <thead>
+            <tr>
+              <th rowspan="2" class="w-16">Month</th>
+              <th rowspan="2">Demo<br>Day</th>
+              <th rowspan="2">Budget<br>(Target)</th>
+              <th rowspan="2" class="bg-emerald-100">Sale 2026</th>
+              <th rowspan="2">Ach.%</th>
+              <th rowspan="2">Sale/Day<br>2026</th>
+              <th rowspan="2" class="bg-orange-50 text-orange-700 border-orange-200">Sale/Day<br>2025</th>
+              <th rowspan="2">per day<br>Grw.%</th>
+              <th rowspan="2" class="bg-orange-50 text-orange-700 border-orange-200">Sale 2025</th>
+              <th rowspan="2">Grw.%</th>
+              <th colspan="4" class="bg-blue-50 border-l border-r">Sale contribute</th>
+              <th colspan="4" class="bg-purple-50">Contribute %</th>
+            </tr>
+            <tr>
+              <th class="bg-blue-50 border-l">Wasabi</th><th class="bg-blue-50">Hippo</th><th class="bg-blue-50">CKE</th><th class="bg-blue-50 border-r">Umesshu</th>
+              <th class="bg-purple-50">Wasabi</th><th class="bg-purple-50">Hippo</th><th class="bg-purple-50">CKE</th><th class="bg-purple-50">Umesshu</th>
+            </tr>
+          </thead>
+          <tbody id="teamSummaryBody">
+            <tr><td colspan="18" class="text-center py-6 text-slate-400">กำลังคำนวณข้อมูล...</td></tr>
+          </tbody>
+          <tfoot id="teamSummaryFoot" class="bg-slate-200 font-bold">
+            </tfoot>
+        </table>
+      </div>
     </div>
 
   </div>
@@ -150,6 +179,7 @@
 
     let employeesCache = [];
     const monthNamesEng = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     const kpiFields = [
       { id: 'target', label: 'Target (เป้า)', color: 'text-slate-700' },
@@ -160,34 +190,18 @@
       { id: 'comm', label: 'Commission', color: 'text-amber-600' }
     ];
 
-    // รายชื่อสาขา/ห้างที่ไปบ่อยๆ (สามารถแก้ไขเพิ่มเติมได้)
-    const commonBranches = [
-        "Siam Paragon",
-        "Central World",
-        "Central Ladprao",
-        "Central Westgate",
-        "IconSiam",
-        "EmQuartier",
-        "Emsphere",
-        "Lotus พระราม 4",
-        "Big C ราชดำริ",
-        "The Mall บางกะปิ",
-        "Mega Bangna",
-        "Donki Thonglor",
-        "Gourmet Market"
-    ];
+    const commonBranches = ["Siam Paragon","Central World","Central Ladprao","Central Westgate","IconSiam","EmQuartier","Emsphere","Lotus พระราม 4","Big C ราชดำริ","The Mall บางกะปิ","Mega Bangna","Donki Thonglor","Gourmet Market"];
 
     window.onload = async () => {
       initMonths();
       initBranchList();
       await loadEmployees();
       loadVChefHistory();
+      loadTeamSummary(); // โหลดตารางที่ 4
     };
 
     function initBranchList() {
-        const dataListHtml = `<datalist id="branchListOptions">
-            ${commonBranches.map(b => `<option value="${b}">`).join('')}
-        </datalist>`;
+        const dataListHtml = `<datalist id="branchListOptions">${commonBranches.map(b => `<option value="${b}">`).join('')}</datalist>`;
         document.body.insertAdjacentHTML('beforeend', dataListHtml);
     }
 
@@ -203,39 +217,24 @@
         document.getElementById('schedMonth').innerHTML = html;
     }
 
-    function syncMonths(val) {
-        document.getElementById('schedMonth').value = val;
-        loadCalendar();
-    }
+    function syncMonths(val) { document.getElementById('schedMonth').value = val; loadCalendar(); }
 
     async function loadEmployees() {
         const { data } = await supabaseClient.from('employees').select('*').order('name');
         employeesCache = data || [];
-        
-        const vcSel = document.getElementById('vcEmp'); 
-        const kpiSel = document.getElementById('kpiEmp');
-        const schedSel = document.getElementById('schedEmp');
-        
+        const vcSel = document.getElementById('vcEmp'); const kpiSel = document.getElementById('kpiEmp'); const schedSel = document.getElementById('schedEmp');
         vcSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
         kpiSel.innerHTML = '<option value="">-- เลือกพนักงาน (Roving PC) --</option>';
         schedSel.innerHTML = '<option value="">-- เลือกพนักงาน (Roving PC) --</option>';
 
         employeesCache.forEach(e => {
             if(e.is_sales === true && (!e.resigned_date || e.resigned_date === '')) {
-                const branchStr = String(e.assigned_branch || '').toLowerCase();
-                const posStr = String(e.position || '').toLowerCase();
-                const deptStr = String(e.dept || '').toLowerCase();
-                
-                // กรองให้โชว์เฉพาะคนที่เป็น Roving PC หรือ VChef
+                const branchStr = String(e.assigned_branch || '').toLowerCase(); const posStr = String(e.position || '').toLowerCase(); const deptStr = String(e.dept || '').toLowerCase();
                 const isRovingOrVChef = branchStr.includes('vchef') || branchStr.includes('roving') || posStr.includes('vchef') || deptStr.includes('vchef') || posStr.includes('roving');
-
                 if (isRovingOrVChef) {
                     const displayBranch = e.assigned_branch ? e.assigned_branch : 'Roving PC';
                     const optionHtml = `<option value="${e.id}">${e.name} (${displayBranch})</option>`;
-                    
-                    vcSel.innerHTML += optionHtml;
-                    kpiSel.innerHTML += optionHtml;
-                    schedSel.innerHTML += optionHtml;
+                    vcSel.innerHTML += optionHtml; kpiSel.innerHTML += optionHtml; schedSel.innerHTML += optionHtml;
                 }
             }
         });
@@ -244,170 +243,207 @@
     // --- 1. VCHEF LOGIC ---
     async function saveVChef() {
         const p = {
-            payroll_month: document.getElementById('vcMonth').value, 
-            salesperson_id: document.getElementById('vcEmp').value,
-            branch_name: document.getElementById('vcBranch').value.trim(),
-            actual_demo_days: Number(document.getElementById('vcDays').value)||0, 
-            expense_trip: Number(document.getElementById('vcExpense').value)||0,
-            sales_wasabi: Number(document.getElementById('vcWasabi').value)||0, 
-            sales_hippo: Number(document.getElementById('vcHippo').value)||0,
-            sales_cke: Number(document.getElementById('vcCke').value)||0, 
-            sales_umesshu: Number(document.getElementById('vcUmesshu').value)||0
+            payroll_month: document.getElementById('vcMonth').value, salesperson_id: document.getElementById('vcEmp').value,
+            branch_name: document.getElementById('vcBranch').value.trim(), actual_demo_days: Number(document.getElementById('vcDays').value)||0, 
+            expense_trip: Number(document.getElementById('vcExpense').value)||0, sales_wasabi: Number(document.getElementById('vcWasabi').value)||0, 
+            sales_hippo: Number(document.getElementById('vcHippo').value)||0, sales_cke: Number(document.getElementById('vcCke').value)||0, sales_umesshu: Number(document.getElementById('vcUmesshu').value)||0
         };
         if(!p.salesperson_id || !p.branch_name || p.actual_demo_days <= 0) return alert('กรุณาเลือกพนักงาน, ใส่ชื่อสาขา และจำนวนวันจัดชิมให้ถูกต้อง');
-        
         await supabaseClient.from('vchef_performance').insert([p]);
         alert('บันทึก VChef สาขานี้สำเร็จ!'); 
-        document.getElementById('vcBranch').value = ''; 
-        document.getElementById('vcDays').value = '';
-        loadVChefHistory();
+        document.getElementById('vcBranch').value = ''; document.getElementById('vcDays').value = '';
+        loadVChefHistory(); loadTeamSummary(); // อัปเดตตาราง 4 ทันที
     }
 
     async function loadVChefHistory() {
         const { data } = await supabaseClient.from('vchef_performance').select('*').order('created_at', {ascending: false}).limit(10);
         const tbody = document.getElementById('vchefTableBody'); tbody.innerHTML = '';
-        if(!data || data.length===0) return tbody.innerHTML = `<tr><td colspan="7" class="text-center text-slate-400">ยังไม่มีข้อมูล</td></tr>`;
-        
+        if(!data || data.length===0) return tbody.innerHTML = `<tr><td colspan="6" class="text-center text-slate-400">ยังไม่มีข้อมูล</td></tr>`;
         data.forEach(v => {
             const eName = employeesCache.find(e => String(e.id) === String(v.salesperson_id))?.name || v.salesperson_id;
             const total = Number(v.sales_wasabi) + Number(v.sales_hippo) + Number(v.sales_cke) + Number(v.sales_umesshu);
-            tbody.innerHTML += `<tr><td class="text-left">${v.payroll_month}</td><td class="text-left">${eName}</td><td class="text-left font-bold text-slate-700">${v.branch_name || '-'}</td><td class="text-center">${v.actual_demo_days} วัน</td><td class="text-center text-blue-600">฿${v.expense_trip.toLocaleString()}</td><td class="text-center font-bold text-emerald-600">฿${total.toLocaleString()}</td><td class="text-center"><button onclick="delVChef('${v.id}')" class="text-red-500"><i class="fa fa-trash"></i></button></td></tr>`;
+            tbody.innerHTML += `<tr><td class="text-left">${v.payroll_month}</td><td class="text-left">${eName}</td><td class="text-left font-bold text-slate-700">${v.branch_name || '-'}</td><td class="text-center">${v.actual_demo_days} วัน</td><td class="text-center font-bold text-emerald-600">฿${total.toLocaleString()}</td><td class="text-center"><button onclick="delVChef('${v.id}')" class="text-red-500"><i class="fa fa-trash"></i></button></td></tr>`;
         });
     }
-    async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); } }
-
+    async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); loadTeamSummary(); } }
 
     // --- 2. MATRIX KPI LOGIC ---
     async function loadMatrix() {
-        const empId = document.getElementById('kpiEmp').value;
-        const tbody = document.getElementById('matrixBody');
-        tbody.innerHTML = '';
-        if (!empId) {
-            tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>`;
-            return;
-        }
+        const empId = document.getElementById('kpiEmp').value; const tbody = document.getElementById('matrixBody'); tbody.innerHTML = '';
+        if (!empId) { tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>`; return; }
         tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล...</td></tr>`;
         const currentYear = new Date().getFullYear();
-
         const { data: savedData } = await supabaseClient.from('sales_records_matrix').select('*').eq('employee_id', empId).eq('year', currentYear);
         tbody.innerHTML = '';
-
         kpiFields.forEach(f => {
             let row = `<tr><td class="font-bold ${f.color} text-left border-r text-xs whitespace-nowrap">${f.label}</td>`;
             for(let m=0; m<12; m++) {
                 const val = savedData?.find(d => d.month_index === m && d.field_type === f.id)?.value || '';
                 row += `<td><input type="number" class="matrix-input" data-m="${m}" data-f="${f.id}" value="${val}" placeholder="-"></td>`;
             }
-            row += '</tr>';
-            tbody.innerHTML += row;
+            row += '</tr>'; tbody.innerHTML += row;
         });
     }
 
     async function saveMatrix() {
         const empId = document.getElementById('kpiEmp').value;
         if (!empId) return alert('โปรดเลือกพนักงานก่อนบันทึก');
-        const inputs = document.querySelectorAll('#matrixBody input.matrix-input');
-        let updates = [];
-        const currentYear = new Date().getFullYear();
-
+        const inputs = document.querySelectorAll('#matrixBody input.matrix-input'); let updates = []; const currentYear = new Date().getFullYear();
         inputs.forEach(input => {
             const val = parseFloat(input.value);
-            if (!isNaN(val)) {
-                updates.push({ employee_id: empId, year: currentYear, month_index: parseInt(input.dataset.m), field_type: input.dataset.f, value: val });
-            }
+            if (!isNaN(val)) updates.push({ employee_id: empId, year: currentYear, month_index: parseInt(input.dataset.m), field_type: input.dataset.f, value: val });
         });
         if (updates.length === 0) return alert('ไม่มีข้อมูลตัวเลขให้บันทึก');
         const { error } = await supabaseClient.from('sales_records_matrix').upsert(updates, { onConflict: 'employee_id,year,month_index,field_type' });
         if(error) alert('เกิดข้อผิดพลาด: ' + error.message);
-        else alert('บันทึกข้อมูลตาราง Matrix สำเร็จ!');
+        else { alert('บันทึกข้อมูลตาราง Matrix สำเร็จ!'); loadTeamSummary(); }
     }
-
 
     // --- 3. CALENDAR DAILY SCHEDULE LOGIC ---
     async function loadCalendar() {
+        // (ส่วนเดิมของปฏิทิน ไม่ได้เปลี่ยนแปลง)
         const empId = document.getElementById('schedEmp').value;
         const monthYearVal = document.getElementById('schedMonth').value; 
         const container = document.getElementById('calendarBody');
-        
-        if (!empId || !monthYearVal) {
-            container.innerHTML = `<div class="col-span-7 text-center text-slate-400 py-10 bg-slate-50 rounded-lg border">กรุณาเลือกเดือนและพนักงานเพื่อแสดงปฏิทิน</div>`;
-            return;
-        }
-
+        if (!empId || !monthYearVal) { container.innerHTML = `<div class="col-span-7 text-center text-slate-400 py-10 bg-slate-50 rounded-lg border">กรุณาเลือกเดือนและพนักงานเพื่อแสดงปฏิทิน</div>`; return; }
         container.innerHTML = `<div class="col-span-7 text-center text-slate-400 py-10 bg-slate-50 rounded-lg border"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังดึงข้อมูลปฏิทิน...</div>`;
-
-        const parts = monthYearVal.split(' ');
-        const monthStr = parts[0];
-        const yearInt = parseInt(parts[1]);
-        const monthIndex = monthNamesEng.indexOf(monthStr);
-
-        const firstDayDate = new Date(yearInt, monthIndex, 1);
-        const startDayOfWeek = firstDayDate.getDay(); 
-        const totalDays = new Date(yearInt, monthIndex + 1, 0).getDate();
-
-        const startDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-01`;
-        const endDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-${String(totalDays).padStart(2, '0')}`;
-
-        const { data: activeSchedules } = await supabaseClient
-            .from('daily_schedules')
-            .select('*')
-            .eq('employee_id', empId)
-            .gte('schedule_date', startDateStr)
-            .lte('schedule_date', endDateStr);
-
+        const parts = monthYearVal.split(' '); const monthStr = parts[0]; const yearInt = parseInt(parts[1]); const monthIndex = monthNamesEng.indexOf(monthStr);
+        const firstDayDate = new Date(yearInt, monthIndex, 1); const startDayOfWeek = firstDayDate.getDay(); const totalDays = new Date(yearInt, monthIndex + 1, 0).getDate();
+        const startDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-01`; const endDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-${String(totalDays).padStart(2, '0')}`;
+        const { data: activeSchedules } = await supabaseClient.from('daily_schedules').select('*').eq('employee_id', empId).gte('schedule_date', startDateStr).lte('schedule_date', endDateStr);
         container.innerHTML = '';
-
-        for (let i = 0; i < startDayOfWeek; i++) {
-            container.innerHTML += `<div class="calendar-cell-empty"></div>`;
-        }
-
+        for (let i = 0; i < startDayOfWeek; i++) { container.innerHTML += `<div class="calendar-cell-empty"></div>`; }
         for (let day = 1; day <= totalDays; day++) {
             const currentLoopDateStr = `${yearInt}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const existingMatch = activeSchedules?.find(s => s.schedule_date === currentLoopDateStr);
-            const inputVal = existingMatch ? existingMatch.branch_name : '';
-
-            container.innerHTML += `
-                <div class="calendar-cell">
-                    <span class="text-xs font-bold text-slate-400">${day}</span>
-                    <input type="text" 
-                           list="branchListOptions"
-                           class="w-full text-xs p-1 mt-1 border border-slate-200 rounded focus:border-purple-500 bg-slate-50 focus:bg-white text-center" 
-                           placeholder="เลือกหรือพิมพ์สาขา" 
-                           data-date="${currentLoopDateStr}" 
-                           value="${inputVal}">
-                </div>
-            `;
+            const existingMatch = activeSchedules?.find(s => s.schedule_date === currentLoopDateStr); const inputVal = existingMatch ? existingMatch.branch_name : '';
+            container.innerHTML += `<div class="calendar-cell"><span class="text-xs font-bold text-slate-400">${day}</span><input type="text" list="branchListOptions" class="w-full text-xs p-1 mt-1 border border-slate-200 rounded focus:border-purple-500 bg-slate-50 focus:bg-white text-center" placeholder="เลือกหรือพิมพ์สาขา" data-date="${currentLoopDateStr}" value="${inputVal}"></div>`;
         }
     }
 
     async function saveCalendar() {
-        const empId = document.getElementById('schedEmp').value;
-        if(!empId) return alert('โปรดเลือกพนักงานก่อนกดบันทึก');
+        const empId = document.getElementById('schedEmp').value; if(!empId) return alert('โปรดเลือกพนักงานก่อนกดบันทึก');
+        const inputs = document.querySelectorAll('#calendarBody input'); let scheduleRows = [];
+        inputs.forEach(input => { scheduleRows.push({ employee_id: empId, schedule_date: input.dataset.date, branch_name: input.value.trim() }); });
+        const { error } = await supabaseClient.from('daily_schedules').upsert(scheduleRows, { onConflict: 'employee_id,schedule_date' });
+        if(error) alert('เกิดข้อผิดพลาดในการบันทึกปฏิทิน: ' + error.message);
+        else { alert('บันทึกแผนงานรายวันเข้าปฏิทินเรียบร้อยแล้ว!'); loadCalendar(); }
+    }
 
-        const inputs = document.querySelectorAll('#calendarBody input');
-        let scheduleRows = [];
+    // --- 4. TEAM PERFORMANCE SUMMARY LOGIC (NEW) ---
+    function formatNum(num) { return num ? Math.round(num).toLocaleString() : '0'; }
+    function formatPct(num) { return isFinite(num) && num !== 0 ? Math.round(num * 100) + '%' : '0%'; }
 
-        inputs.forEach(input => {
-            const branchName = input.value.trim();
-            scheduleRows.push({
-                employee_id: empId,
-                schedule_date: input.dataset.date,
-                branch_name: branchName
+    async function loadTeamSummary() {
+        const currentYear = new Date().getFullYear(); // ดึงปี 2026
+        
+        // 1. ดึงข้อมูลยอดขายทั้งหมดของปีนี้ จาก VChef
+        const { data: vchefData } = await supabaseClient.from('vchef_performance').select('*');
+        
+        // 2. ดึงเป้าหมาย Budget จาก Matrix
+        const { data: matrixData } = await supabaseClient.from('sales_records_matrix').select('*').eq('year', currentYear).eq('field_type', 'target');
+
+        const tbody = document.getElementById('teamSummaryBody');
+        tbody.innerHTML = '';
+
+        // ตัวแปรเก็บผลรวมทั้งปี
+        let tDemo=0, tBudget=0, tSale26=0, tWasa=0, tHippo=0, tCke=0, tUme=0;
+
+        for (let m = 0; m < 12; m++) {
+            const monthTextToMatch = `${monthNamesEng[m]} ${currentYear}`;
+            
+            // กรอง VChef เฉพาะเดือนนี้
+            const monthVChef = vchefData ? vchefData.filter(d => d.payroll_month === monthTextToMatch) : [];
+            
+            let mDemo = 0, mWasa = 0, mHippo = 0, mCke = 0, mUme = 0;
+            monthVChef.forEach(r => {
+                mDemo += Number(r.actual_demo_days || 0);
+                mWasa += Number(r.sales_wasabi || 0);
+                mHippo += Number(r.sales_hippo || 0);
+                mCke += Number(r.sales_cke || 0);
+                mUme += Number(r.sales_umesshu || 0);
             });
-        });
 
-        if(scheduleRows.length === 0) return alert('ไม่มีตารางให้บันทึก');
+            const mSale26 = mWasa + mHippo + mCke + mUme;
+            
+            // กรอง Matrix หา Budget (Sum ของ target ทุกคนในเดือนนี้)
+            const monthTargets = matrixData ? matrixData.filter(d => d.month_index === m) : [];
+            const mBudget = monthTargets.reduce((sum, d) => sum + Number(d.value || 0), 0);
 
-        const { error } = await supabaseClient
-            .from('daily_schedules')
-            .upsert(scheduleRows, { onConflict: 'employee_id,schedule_date' });
+            // คำนวณเปอร์เซ็นต์
+            const mAch = mBudget > 0 ? (mSale26 / mBudget) : 0;
+            const mSalePerDay = mDemo > 0 ? (mSale26 / mDemo) : 0;
+            
+            const pctWasa = mSale26 > 0 ? (mWasa / mSale26) : 0;
+            const pctHippo = mSale26 > 0 ? (mHippo / mSale26) : 0;
+            const pctCke = mSale26 > 0 ? (mCke / mSale26) : 0;
+            const pctUme = mSale26 > 0 ? (mUme / mSale26) : 0;
 
-        if(error) {
-            alert('เกิดข้อผิดพลาดในการบันทึกปฏิทิน: ' + error.message);
-        } else {
-            alert('บันทึกแผนงานรายวันเข้าปฏิทินเรียบร้อยแล้ว!');
-            loadCalendar();
+            // บวกรวม Total
+            tDemo += mDemo; tBudget += mBudget; tSale26 += mSale26; 
+            tWasa += mWasa; tHippo += mHippo; tCke += mCke; tUme += mUme;
+
+            // แถวตาราง (รวมถึงช่อง Input กรอกของปี 2025 สำหรับคำนวณ Growth)
+            const rowHtml = `
+                <tr>
+                    <td>${monthNamesShort[m]}</td>
+                    <td>${mDemo}</td>
+                    <td>${formatNum(mBudget)}</td>
+                    <td class="font-bold text-emerald-600 bg-emerald-50">${formatNum(mSale26)}</td>
+                    <td>${formatPct(mAch)}</td>
+                    <td class="text-blue-600">${formatNum(mSalePerDay)}</td>
+                    
+                    <td class="bg-orange-50"><input type="number" id="spd25_${m}" class="input-calc" value="0" oninput="calcGrowth(${m}, ${mSalePerDay}, ${mSale26})"></td>
+                    <td id="grw_spd_${m}" class="font-bold text-slate-500">0%</td>
+                    <td class="bg-orange-50"><input type="number" id="sale25_${m}" class="input-calc" value="0" oninput="calcGrowth(${m}, ${mSalePerDay}, ${mSale26})"></td>
+                    <td id="grw_sale_${m}" class="font-bold text-slate-500">0%</td>
+
+                    <td>${formatNum(mWasa)}</td><td>${formatNum(mHippo)}</td><td>${formatNum(mCke)}</td><td class="border-r">${formatNum(mUme)}</td>
+                    <td class="text-slate-400">${formatPct(pctWasa)}</td><td class="text-slate-400">${formatPct(pctHippo)}</td><td class="text-slate-400">${formatPct(pctCke)}</td><td class="text-slate-400">${formatPct(pctUme)}</td>
+                </tr>
+            `;
+            tbody.innerHTML += rowHtml;
         }
+
+        // สร้างแถว Total
+        const tAch = tBudget > 0 ? (tSale26 / tBudget) : 0;
+        const tSalePerDay = tDemo > 0 ? (tSale26 / tDemo) : 0;
+        const tPctWasa = tSale26 > 0 ? (tWasa / tSale26) : 0;
+        const tPctHippo = tSale26 > 0 ? (tHippo / tSale26) : 0;
+        const tPctCke = tSale26 > 0 ? (tCke / tSale26) : 0;
+        const tPctUme = tSale26 > 0 ? (tUme / tSale26) : 0;
+
+        const tfoot = document.getElementById('teamSummaryFoot');
+        tfoot.innerHTML = `
+            <tr>
+                <td>Total</td>
+                <td>${tDemo}</td>
+                <td>${formatNum(tBudget)}</td>
+                <td class="text-emerald-700">${formatNum(tSale26)}</td>
+                <td>${formatPct(tAch)}</td>
+                <td class="text-blue-700">${formatNum(tSalePerDay)}</td>
+                <td class="bg-orange-100 border-none"></td><td class="border-none"></td><td class="bg-orange-100 border-none"></td><td class="border-none"></td>
+                <td>${formatNum(tWasa)}</td><td>${formatNum(tHippo)}</td><td>${formatNum(tCke)}</td><td class="border-r">${formatNum(tUme)}</td>
+                <td>${formatPct(tPctWasa)}</td><td>${formatPct(tPctHippo)}</td><td>${formatPct(tPctCke)}</td><td>${formatPct(tPctUme)}</td>
+            </tr>
+        `;
+    }
+
+    // ฟังก์ชันคำนวณเปอร์เซ็นต์ Growth สดๆ เมื่อพิมพ์ตัวเลขลงในช่องปี 2025
+    function calcGrowth(mIndex, mSalePerDay26, mSale26) {
+        const spd25 = Number(document.getElementById(`spd25_${mIndex}`).value) || 0;
+        const sale25 = Number(document.getElementById(`sale25_${mIndex}`).value) || 0;
+        
+        const grwSpd = spd25 > 0 ? ((mSalePerDay26 - spd25) / spd25) : 0;
+        const grwSale = sale25 > 0 ? ((mSale26 - sale25) / sale25) : 0;
+
+        const elGrwSpd = document.getElementById(`grw_spd_${mIndex}`);
+        const elGrwSale = document.getElementById(`grw_sale_${mIndex}`);
+
+        elGrwSpd.innerText = grwSpd !== 0 ? Math.round(grwSpd * 100) + '%' : '0%';
+        elGrwSpd.className = grwSpd > 0 ? 'font-bold text-emerald-500' : (grwSpd < 0 ? 'font-bold text-red-500' : 'font-bold text-slate-500');
+
+        elGrwSale.innerText = grwSale !== 0 ? Math.round(grwSale * 100) + '%' : '0%';
+        elGrwSale.className = grwSale > 0 ? 'font-bold text-emerald-500' : (grwSale < 0 ? 'font-bold text-red-500' : 'font-bold text-slate-500');
     }
   </script>
 </body>
