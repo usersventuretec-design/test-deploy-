@@ -22,7 +22,6 @@
     .matrix-input { width: 100%; text-align: center; border: 1px solid transparent; background: transparent; padding: 6px; border-radius: 4px;}
     .matrix-input:hover, .matrix-input:focus { border: 1px solid #cbd5e1; background: #fff; }
     
-    /* สไตล์เพิ่มเติมสำหรับปฏิทิน */
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
     .calendar-day-head { text-align: center; font-weight: 600; font-size: 12px; padding: 8px; background-color: #f8fafc; border-radius: 6px; color: #64748b; }
     .calendar-cell { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; min-height: 85px; display: flex; flex-direction: column; justify-content: space-between; }
@@ -30,9 +29,10 @@
 
     /* สไตล์สำหรับตารางสรุปทีม */
     .summary-table th { font-size: 11px; padding: 6px; border: 1px solid #cbd5e1; background-color: #e2e8f0; color: #334155; }
-    .summary-table td { font-size: 12px; padding: 6px; border: 1px solid #e2e8f0; text-align: right; }
-    .summary-table td:first-child { text-align: left; font-weight: bold; background-color: #f8fafc; }
-    .input-calc { width: 60px; padding: 2px 4px; font-size: 11px; text-align: right; border: 1px solid #94a3b8; border-radius: 3px; }
+    .summary-table td { font-size: 12px; padding: 4px; border: 1px solid #e2e8f0; text-align: right; vertical-align: middle; }
+    .summary-table td:first-child { text-align: left; font-weight: bold; background-color: #f8fafc; padding-left: 12px;}
+    .input-calc { width: 100%; min-width: 60px; padding: 6px 4px; font-size: 12px; text-align: right; border: 1px solid transparent; border-radius: 4px; background: transparent; }
+    .input-calc:hover, .input-calc:focus { border: 1px solid #cbd5e1; background: #fff; }
   </style>
 </head>
 <body class="p-6 md:p-10">
@@ -40,11 +40,8 @@
   <div class="flex justify-between items-center mb-8">
     <div>
       <h1 class="text-3xl font-bold text-slate-800"><i class="fa-solid fa-stroopwafel text-amber-500 mr-2"></i>VChef Campaign & KPI Studio</h1>
-      <p class="text-slate-500 mt-1">ระบบจัดการเป้ายอดขายและบันทึกผลงานแคมเปญจัดชิมหมุนเวียน (รองรับการสลับสาขารายวัน)</p>
+      <p class="text-slate-500 mt-1">ระบบจัดการเป้ายอดขายและบันทึกผลงานแคมเปญจัดชิมหมุนเวียน</p>
     </div>
-    <a href="index.html" class="btn-ui bg-slate-700 hover:bg-slate-800" style="text-decoration: none;">
-      <i class="fa-solid fa-arrow-left"></i> กลับสู่หน้า Dashboard หลัก
-    </a>
   </div>
 
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -135,9 +132,9 @@
       <div class="flex justify-between items-center mb-4">
         <div>
           <h3 class="text-lg font-bold text-emerald-700"><i class="fa-solid fa-chart-line mr-2"></i>4. สรุปผลงานรวมทีม VChef + PC (Performance Summary)</h3>
-          <p class="text-xs text-slate-500 mt-1">ดึงข้อมูลยอดขายสุทธิและเป้าหมายจากระบบอัตโนมัติ (สามารถกรอกและบันทึกยอดปีเก่าเพื่อเปรียบเทียบ Growth ได้)</p>
+          <p class="text-xs text-slate-500 mt-1">ดึงข้อมูลเริ่มต้นจากระบบอัตโนมัติ (แต่สามารถคลิกพิมพ์แก้ตัวเลขเองได้ทุกช่องในตารางนี้)</p>
         </div>
-        <button onclick="loadTeamSummary()" class="btn-ui bg-slate-100 text-slate-700 hover:bg-slate-200 border"><i class="fa-solid fa-rotate"></i> รีเฟรชข้อมูล</button>
+        <button onclick="loadTeamSummary()" class="btn-ui bg-slate-100 text-slate-700 hover:bg-slate-200 border"><i class="fa-solid fa-rotate"></i> ดึงค่าเริ่มต้นใหม่ / รีเฟรช</button>
       </div>
 
       <div class="overflow-x-auto pb-4">
@@ -170,8 +167,8 @@
         </table>
       </div>
       
-      <button class="btn-ui bg-emerald-600 hover:bg-emerald-700 mt-4 w-full justify-center" onclick="saveTeamHistory()">
-        <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลเปรียบเทียบปี 2025
+      <button class="btn-ui bg-emerald-600 hover:bg-emerald-700 mt-4 w-full justify-center" onclick="saveTeamSummary()">
+        <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลตารางสรุปผลงาน
       </button>
     </div>
 
@@ -198,8 +195,7 @@
     const commonBranches = ["Siam Paragon","Central World","Central Ladprao","Central Westgate","IconSiam","EmQuartier","Emsphere","Lotus พระราม 4","Big C ราชดำริ","The Mall บางกะปิ","Mega Bangna","Donki Thonglor","Gourmet Market"];
 
     window.onload = async () => {
-      initMonths();
-      initBranchList();
+      initMonths(); initBranchList();
       await loadEmployees();
       loadVChefHistory();
       loadTeamSummary(); 
@@ -257,7 +253,7 @@
         await supabaseClient.from('vchef_performance').insert([p]);
         alert('บันทึก VChef สาขานี้สำเร็จ!'); 
         document.getElementById('vcBranch').value = ''; document.getElementById('vcDays').value = '';
-        loadVChefHistory(); loadTeamSummary(); 
+        loadVChefHistory();
     }
 
     async function loadVChefHistory() {
@@ -270,7 +266,7 @@
             tbody.innerHTML += `<tr><td class="text-left">${v.payroll_month}</td><td class="text-left">${eName}</td><td class="text-left font-bold text-slate-700">${v.branch_name || '-'}</td><td class="text-center">${v.actual_demo_days} วัน</td><td class="text-center font-bold text-emerald-600">฿${total.toLocaleString()}</td><td class="text-center"><button onclick="delVChef('${v.id}')" class="text-red-500"><i class="fa fa-trash"></i></button></td></tr>`;
         });
     }
-    async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); loadTeamSummary(); } }
+    async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); } }
 
     // --- 2. MATRIX KPI LOGIC ---
     async function loadMatrix() {
@@ -301,14 +297,12 @@
         if (updates.length === 0) return alert('ไม่มีข้อมูลตัวเลขให้บันทึก');
         const { error } = await supabaseClient.from('sales_records_matrix').upsert(updates, { onConflict: 'employee_id,year,month_index,field_type' });
         if(error) alert('เกิดข้อผิดพลาด: ' + error.message);
-        else { alert('บันทึกข้อมูลตาราง Matrix สำเร็จ!'); loadTeamSummary(); }
+        else { alert('บันทึกข้อมูลตาราง Matrix สำเร็จ!'); }
     }
 
     // --- 3. CALENDAR DAILY SCHEDULE LOGIC ---
     async function loadCalendar() {
-        const empId = document.getElementById('schedEmp').value;
-        const monthYearVal = document.getElementById('schedMonth').value; 
-        const container = document.getElementById('calendarBody');
+        const empId = document.getElementById('schedEmp').value; const monthYearVal = document.getElementById('schedMonth').value; const container = document.getElementById('calendarBody');
         if (!empId || !monthYearVal) { container.innerHTML = `<div class="col-span-7 text-center text-slate-400 py-10 bg-slate-50 rounded-lg border">กรุณาเลือกเดือนและพนักงานเพื่อแสดงปฏิทิน</div>`; return; }
         container.innerHTML = `<div class="col-span-7 text-center text-slate-400 py-10 bg-slate-50 rounded-lg border"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังดึงข้อมูลปฏิทิน...</div>`;
         const parts = monthYearVal.split(' '); const monthStr = parts[0]; const yearInt = parseInt(parts[1]); const monthIndex = monthNamesEng.indexOf(monthStr);
@@ -333,138 +327,184 @@
         else { alert('บันทึกแผนงานรายวันเข้าปฏิทินเรียบร้อยแล้ว!'); loadCalendar(); }
     }
 
-    // --- 4. TEAM PERFORMANCE SUMMARY LOGIC ---
+    // --- 4. TEAM PERFORMANCE SUMMARY (EDITABLE) ---
     function formatNum(num) { return num ? Math.round(num).toLocaleString() : '0'; }
     function formatPct(num) { return isFinite(num) && num !== 0 ? Math.round(num * 100) + '%' : '0%'; }
 
     async function loadTeamSummary() {
-        const currentYear = new Date().getFullYear(); // 2026
-        const lastYear = currentYear - 1; // 2025
+        const currentYear = new Date().getFullYear();
         
-        // ดึงข้อมูล VChef (ปี 2026)
+        // 1. ดึงข้อมูล Auto จาก VChef และ Matrix
         const { data: vchefData } = await supabaseClient.from('vchef_performance').select('*');
-        // ดึงข้อมูลเป้าหมาย (ปี 2026)
         const { data: matrixData } = await supabaseClient.from('sales_records_matrix').select('*').eq('year', currentYear).eq('field_type', 'target');
-        // ดึงข้อมูลปีที่แล้ว (ปี 2025) ที่เคยบันทึกไว้
-        const { data: historyData } = await supabaseClient.from('team_historical_data').select('*').eq('year', lastYear);
+        
+        // 2. ดึงข้อมูลที่คุณเคยพิมพ์ Save ทับไว้ (ถ้ามี)
+        const { data: savedData } = await supabaseClient.from('team_summary_data').select('*').eq('year', currentYear);
 
         const tbody = document.getElementById('teamSummaryBody');
         tbody.innerHTML = '';
 
-        let tDemo=0, tBudget=0, tSale26=0, tWasa=0, tHippo=0, tCke=0, tUme=0;
-
         for (let m = 0; m < 12; m++) {
+            // คำนวณค่าเริ่มต้นจาก VChef / Matrix
             const monthTextToMatch = `${monthNamesEng[m]} ${currentYear}`;
-            
             const monthVChef = vchefData ? vchefData.filter(d => d.payroll_month === monthTextToMatch) : [];
-            let mDemo = 0, mWasa = 0, mHippo = 0, mCke = 0, mUme = 0;
+            let mDemo=0, mWasa=0, mHippo=0, mCke=0, mUme=0;
             monthVChef.forEach(r => {
                 mDemo += Number(r.actual_demo_days || 0);
                 mWasa += Number(r.sales_wasabi || 0); mHippo += Number(r.sales_hippo || 0);
                 mCke += Number(r.sales_cke || 0); mUme += Number(r.sales_umesshu || 0);
             });
-
             const mSale26 = mWasa + mHippo + mCke + mUme;
             const monthTargets = matrixData ? matrixData.filter(d => d.month_index === m) : [];
             const mBudget = monthTargets.reduce((sum, d) => sum + Number(d.value || 0), 0);
 
-            const mAch = mBudget > 0 ? (mSale26 / mBudget) : 0;
-            const mSalePerDay26 = mDemo > 0 ? (mSale26 / mDemo) : 0;
-            
-            const pctWasa = mSale26 > 0 ? (mWasa / mSale26) : 0;
-            const pctHippo = mSale26 > 0 ? (mHippo / mSale26) : 0;
-            const pctCke = mSale26 > 0 ? (mCke / mSale26) : 0;
-            const pctUme = mSale26 > 0 ? (mUme / mSale26) : 0;
+            // เช็คว่ามีข้อมูลที่เคยพิมพ์ Save ไว้ไหม? ถ้ามีให้ใช้ค่าที่ Save ไว้แทน
+            const histMonth = savedData?.find(d => d.month_index === m);
+            const fDemo = histMonth ? Number(histMonth.demo_day) : mDemo;
+            const fBudget = histMonth ? Number(histMonth.budget) : mBudget;
+            const fSale26 = histMonth ? Number(histMonth.sale_current) : mSale26;
+            const fSpd25 = histMonth ? Number(histMonth.sale_per_day_old) : 0;
+            const fSale25 = histMonth ? Number(histMonth.sale_old) : 0;
+            const fWasa = histMonth ? Number(histMonth.wasa) : mWasa;
+            const fHippo = histMonth ? Number(histMonth.hippo) : mHippo;
+            const fCke = histMonth ? Number(histMonth.cke) : mCke;
+            const fUme = histMonth ? Number(histMonth.ume) : mUme;
 
-            // --- คำนวณข้อมูลปี 2025 ที่ดึงมา ---
-            const histMonth = historyData?.find(d => d.month_index === m);
-            const spd25 = histMonth ? Number(histMonth.sale_per_day) : 0;
-            const sale25 = histMonth ? Number(histMonth.total_sale) : 0;
-
-            const grwSpd = spd25 > 0 ? ((mSalePerDay26 - spd25) / spd25) : 0;
-            const grwSale = sale25 > 0 ? ((mSale26 - sale25) / sale25) : 0;
-
-            const colorSpd = grwSpd > 0 ? 'text-emerald-500' : (grwSpd < 0 ? 'text-red-500' : 'text-slate-500');
-            const colorSale = grwSale > 0 ? 'text-emerald-500' : (grwSale < 0 ? 'text-red-500' : 'text-slate-500');
-
-            tDemo += mDemo; tBudget += mBudget; tSale26 += mSale26; 
-            tWasa += mWasa; tHippo += mHippo; tCke += mCke; tUme += mUme;
-
+            // วาดตารางเป็น Input เพื่อให้พิมพ์แก้ได้
             const rowHtml = `
                 <tr>
                     <td>${monthNamesShort[m]}</td>
-                    <td>${mDemo}</td>
-                    <td>${formatNum(mBudget)}</td>
-                    <td class="font-bold text-emerald-600 bg-emerald-50">${formatNum(mSale26)}</td>
-                    <td>${formatPct(mAch)}</td>
-                    <td class="text-blue-600">${formatNum(mSalePerDay26)}</td>
+                    <td><input type="number" id="sm_demo_${m}" class="input-calc" value="${fDemo}" oninput="recalcRow(${m})"></td>
+                    <td><input type="number" id="sm_budget_${m}" class="input-calc" value="${fBudget}" oninput="recalcRow(${m})"></td>
+                    <td class="bg-emerald-50"><input type="number" id="sm_sale26_${m}" class="input-calc font-bold text-emerald-600" value="${fSale26}" oninput="recalcRow(${m})"></td>
                     
-                    <td class="bg-orange-50"><input type="number" id="spd25_${m}" class="input-calc" value="${spd25}" oninput="calcGrowth(${m}, ${mSalePerDay26}, ${mSale26})"></td>
-                    <td id="grw_spd_${m}" class="font-bold ${colorSpd}">${formatPct(grwSpd)}</td>
-                    <td class="bg-orange-50"><input type="number" id="sale25_${m}" class="input-calc" value="${sale25}" oninput="calcGrowth(${m}, ${mSalePerDay26}, ${mSale26})"></td>
-                    <td id="grw_sale_${m}" class="font-bold ${colorSale}">${formatPct(grwSale)}</td>
+                    <td id="sm_ach_${m}" class="text-right px-2">0%</td>
+                    <td id="sm_spd26_${m}" class="text-right px-2 text-blue-600 font-bold">0</td>
+                    
+                    <td class="bg-orange-50"><input type="number" id="sm_spd25_${m}" class="input-calc text-orange-700" value="${fSpd25}" oninput="recalcRow(${m})"></td>
+                    <td id="sm_grwspd_${m}" class="font-bold text-right px-2">0%</td>
+                    <td class="bg-orange-50"><input type="number" id="sm_sale25_${m}" class="input-calc text-orange-700" value="${fSale25}" oninput="recalcRow(${m})"></td>
+                    <td id="sm_grwsale_${m}" class="font-bold text-right px-2">0%</td>
 
-                    <td>${formatNum(mWasa)}</td><td>${formatNum(mHippo)}</td><td>${formatNum(mCke)}</td><td class="border-r">${formatNum(mUme)}</td>
-                    <td class="text-slate-400">${formatPct(pctWasa)}</td><td class="text-slate-400">${formatPct(pctHippo)}</td><td class="text-slate-400">${formatPct(pctCke)}</td><td class="text-slate-400">${formatPct(pctUme)}</td>
+                    <td><input type="number" id="sm_wasa_${m}" class="input-calc" value="${fWasa}" oninput="recalcRow(${m})"></td>
+                    <td><input type="number" id="sm_hippo_${m}" class="input-calc" value="${fHippo}" oninput="recalcRow(${m})"></td>
+                    <td><input type="number" id="sm_cke_${m}" class="input-calc" value="${fCke}" oninput="recalcRow(${m})"></td>
+                    <td class="border-r"><input type="number" id="sm_ume_${m}" class="input-calc" value="${fUme}" oninput="recalcRow(${m})"></td>
+                    
+                    <td id="sm_pctwasa_${m}" class="text-slate-500 text-right px-2">0%</td>
+                    <td id="sm_pcthippo_${m}" class="text-slate-500 text-right px-2">0%</td>
+                    <td id="sm_pctcke_${m}" class="text-slate-500 text-right px-2">0%</td>
+                    <td id="sm_pctume_${m}" class="text-slate-500 text-right px-2">0%</td>
                 </tr>
             `;
             tbody.innerHTML += rowHtml;
         }
 
+        // เมื่อวาดตารางเสร็จ สั่งคำนวณ % ทั้ง 12 เดือนให้แสดงผล
+        for(let m=0; m<12; m++) { recalcRow(m); }
+    }
+
+    // ฟังก์ชันคำนวณเมื่อมีการพิมพ์ตัวเลขลงในช่อง
+    function recalcRow(m) {
+        const demo = Number(document.getElementById(`sm_demo_${m}`).value) || 0;
+        const budget = Number(document.getElementById(`sm_budget_${m}`).value) || 0;
+        const sale26 = Number(document.getElementById(`sm_sale26_${m}`).value) || 0;
+        const spd25 = Number(document.getElementById(`sm_spd25_${m}`).value) || 0;
+        const sale25 = Number(document.getElementById(`sm_sale25_${m}`).value) || 0;
+        const wasa = Number(document.getElementById(`sm_wasa_${m}`).value) || 0;
+        const hippo = Number(document.getElementById(`sm_hippo_${m}`).value) || 0;
+        const cke = Number(document.getElementById(`sm_cke_${m}`).value) || 0;
+        const ume = Number(document.getElementById(`sm_ume_${m}`).value) || 0;
+
+        const ach = budget > 0 ? (sale26 / budget) : 0;
+        const spd26 = demo > 0 ? (sale26 / demo) : 0;
+        const grwSpd = spd25 > 0 ? ((spd26 - spd25) / spd25) : 0;
+        const grwSale = sale25 > 0 ? ((sale26 - sale25) / sale25) : 0;
+        const pctWasa = sale26 > 0 ? (wasa / sale26) : 0;
+        const pctHippo = sale26 > 0 ? (hippo / sale26) : 0;
+        const pctCke = sale26 > 0 ? (cke / sale26) : 0;
+        const pctUme = sale26 > 0 ? (ume / sale26) : 0;
+
+        // อัปเดต % ในแถวนั้นๆ
+        document.getElementById(`sm_ach_${m}`).innerText = formatPct(ach);
+        document.getElementById(`sm_spd26_${m}`).innerText = formatNum(spd26);
+        document.getElementById(`sm_grwspd_${m}`).innerText = formatPct(grwSpd);
+        document.getElementById(`sm_grwspd_${m}`).className = grwSpd > 0 ? 'font-bold text-right px-2 text-emerald-500' : (grwSpd < 0 ? 'font-bold text-right px-2 text-red-500' : 'font-bold text-right px-2 text-slate-500');
+        document.getElementById(`sm_grwsale_${m}`).innerText = formatPct(grwSale);
+        document.getElementById(`sm_grwsale_${m}`).className = grwSale > 0 ? 'font-bold text-right px-2 text-emerald-500' : (grwSale < 0 ? 'font-bold text-right px-2 text-red-500' : 'font-bold text-right px-2 text-slate-500');
+        
+        document.getElementById(`sm_pctwasa_${m}`).innerText = formatPct(pctWasa);
+        document.getElementById(`sm_pcthippo_${m}`).innerText = formatPct(pctHippo);
+        document.getElementById(`sm_pctcke_${m}`).innerText = formatPct(pctCke);
+        document.getElementById(`sm_pctume_${m}`).innerText = formatPct(pctUme);
+
+        // คำนวณบรรทัดล่างสุด (Total) ใหม่เสมอ
+        recalcAllTotals();
+    }
+
+    // ฟังก์ชันคำนวณผลรวมแถว Total
+    function recalcAllTotals() {
+        let tDemo=0, tBudget=0, tSale26=0, tWasa=0, tHippo=0, tCke=0, tUme=0;
+        for (let m = 0; m < 12; m++) {
+            tDemo += Number(document.getElementById(`sm_demo_${m}`)?.value || 0);
+            tBudget += Number(document.getElementById(`sm_budget_${m}`)?.value || 0);
+            tSale26 += Number(document.getElementById(`sm_sale26_${m}`)?.value || 0);
+            tWasa += Number(document.getElementById(`sm_wasa_${m}`)?.value || 0);
+            tHippo += Number(document.getElementById(`sm_hippo_${m}`)?.value || 0);
+            tCke += Number(document.getElementById(`sm_cke_${m}`)?.value || 0);
+            tUme += Number(document.getElementById(`sm_ume_${m}`)?.value || 0);
+        }
         const tAch = tBudget > 0 ? (tSale26 / tBudget) : 0;
         const tSalePerDay = tDemo > 0 ? (tSale26 / tDemo) : 0;
+
         document.getElementById('teamSummaryFoot').innerHTML = `
             <tr>
-                <td>Total</td><td>${tDemo}</td><td>${formatNum(tBudget)}</td><td class="text-emerald-700">${formatNum(tSale26)}</td>
-                <td>${formatPct(tAch)}</td><td class="text-blue-700">${formatNum(tSalePerDay)}</td>
+                <td>Total</td>
+                <td class="text-right px-2">${formatNum(tDemo)}</td>
+                <td class="text-right px-2">${formatNum(tBudget)}</td>
+                <td class="text-right px-2 text-emerald-700">${formatNum(tSale26)}</td>
+                <td class="text-right px-2">${formatPct(tAch)}</td>
+                <td class="text-right px-2 text-blue-700">${formatNum(tSalePerDay)}</td>
                 <td class="bg-orange-100 border-none"></td><td class="border-none"></td><td class="bg-orange-100 border-none"></td><td class="border-none"></td>
-                <td>${formatNum(tWasa)}</td><td>${formatNum(tHippo)}</td><td>${formatNum(tCke)}</td><td class="border-r">${formatNum(tUme)}</td>
-                <td>${formatPct(tWasa/tSale26)}</td><td>${formatPct(tHippo/tSale26)}</td><td>${formatPct(tCke/tSale26)}</td><td>${formatPct(tUme/tSale26)}</td>
+                <td class="text-right px-2">${formatNum(tWasa)}</td>
+                <td class="text-right px-2">${formatNum(tHippo)}</td>
+                <td class="text-right px-2">${formatNum(tCke)}</td>
+                <td class="text-right px-2 border-r">${formatNum(tUme)}</td>
+                <td class="text-right px-2">${formatPct(tSale26>0?tWasa/tSale26:0)}</td>
+                <td class="text-right px-2">${formatPct(tSale26>0?tHippo/tSale26:0)}</td>
+                <td class="text-right px-2">${formatPct(tSale26>0?tCke/tSale26:0)}</td>
+                <td class="text-right px-2">${formatPct(tSale26>0?tUme/tSale26:0)}</td>
             </tr>
         `;
     }
 
-    // คำนวณเปอร์เซ็นต์แบบสดๆ เวลาพิมพ์แก้
-    function calcGrowth(mIndex, mSalePerDay26, mSale26) {
-        const spd25 = Number(document.getElementById(`spd25_${mIndex}`).value) || 0;
-        const sale25 = Number(document.getElementById(`sale25_${mIndex}`).value) || 0;
-        
-        const grwSpd = spd25 > 0 ? ((mSalePerDay26 - spd25) / spd25) : 0;
-        const grwSale = sale25 > 0 ? ((mSale26 - sale25) / sale25) : 0;
-
-        const elGrwSpd = document.getElementById(`grw_spd_${mIndex}`);
-        const elGrwSale = document.getElementById(`grw_sale_${mIndex}`);
-
-        elGrwSpd.innerText = grwSpd !== 0 ? Math.round(grwSpd * 100) + '%' : '0%';
-        elGrwSpd.className = grwSpd > 0 ? 'font-bold text-emerald-500' : (grwSpd < 0 ? 'font-bold text-red-500' : 'font-bold text-slate-500');
-
-        elGrwSale.innerText = grwSale !== 0 ? Math.round(grwSale * 100) + '%' : '0%';
-        elGrwSale.className = grwSale > 0 ? 'font-bold text-emerald-500' : (grwSale < 0 ? 'font-bold text-red-500' : 'font-bold text-slate-500');
-    }
-
-    // ฟังก์ชันสำหรับบันทึกข้อมูลปี 2025 ลงฐานข้อมูล
-    async function saveTeamHistory() {
-        const lastYear = new Date().getFullYear() - 1; // 2025
+    // ฟังก์ชันบันทึกข้อมูลทุกช่องที่ถูกพิมพ์แก้ลงฐานข้อมูล
+    async function saveTeamSummary() {
+        const currentYear = new Date().getFullYear();
         let updates = [];
 
         for (let m = 0; m < 12; m++) {
-            const spdVal = Number(document.getElementById(`spd25_${m}`).value) || 0;
-            const saleVal = Number(document.getElementById(`sale25_${m}`).value) || 0;
-            
             updates.push({
-                year: lastYear,
+                year: currentYear,
                 month_index: m,
-                sale_per_day: spdVal,
-                total_sale: saleVal
+                demo_day: Number(document.getElementById(`sm_demo_${m}`).value) || 0,
+                budget: Number(document.getElementById(`sm_budget_${m}`).value) || 0,
+                sale_current: Number(document.getElementById(`sm_sale26_${m}`).value) || 0,
+                sale_per_day_old: Number(document.getElementById(`sm_spd25_${m}`).value) || 0,
+                sale_old: Number(document.getElementById(`sm_sale25_${m}`).value) || 0,
+                wasa: Number(document.getElementById(`sm_wasa_${m}`).value) || 0,
+                hippo: Number(document.getElementById(`sm_hippo_${m}`).value) || 0,
+                cke: Number(document.getElementById(`sm_cke_${m}`).value) || 0,
+                ume: Number(document.getElementById(`sm_ume_${m}`).value) || 0
             });
         }
 
-        const { error } = await supabaseClient.from('team_historical_data').upsert(updates, { onConflict: 'year,month_index' });
+        const { error } = await supabaseClient.from('team_summary_data').upsert(updates, { onConflict: 'year,month_index' });
         
         if (error) {
             alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
         } else {
-            alert('บันทึกข้อมูลเปรียบเทียบปี 2025 สำเร็จ!');
+            alert('บันทึกข้อมูลตารางสรุปผลงานสำเร็จแล้ว!');
         }
     }
   </script>
