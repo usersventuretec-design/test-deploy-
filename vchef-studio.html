@@ -103,10 +103,12 @@
           <tbody id="matrixBody">
             <tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>
           </tbody>
+          <tfoot id="matrixFoot">
+            </tfoot>
         </table>
       </div>
       <button class="btn-ui bg-blue-600 hover:bg-blue-700 mt-4 w-full justify-center" onclick="saveMatrix()">
-        <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลตาราง KPI ทั้งปี
+        <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลตาราง KPI ทั้งปี (Save All)
       </button>
     </div>
 
@@ -359,6 +361,8 @@
     async function loadMatrix() {
         const empId = document.getElementById('kpiEmp').value; 
         const tbody = document.getElementById('matrixBody'); tbody.innerHTML = '';
+        const tfoot = document.getElementById('matrixFoot'); tfoot.innerHTML = '';
+        
         if (!empId) { tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>`; return; }
         tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล...</td></tr>`;
         
@@ -374,6 +378,30 @@
             }
             row += '</tr>'; tbody.innerHTML += row;
         });
+
+        // สร้างปุ่มเซฟแยกเดือนด้านล่างตาราง
+        let footRow = `<tr><td class="font-bold text-slate-500 text-center bg-slate-100 border-r">เซฟแยกเดือน</td>`;
+        for(let m=0; m<12; m++) {
+            footRow += `<td class="bg-slate-50 p-2"><button onclick="saveMatrixMonth(${m})" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs py-1.5 rounded shadow-sm transition"><i class="fa-solid fa-save"></i> บันทึก</button></td>`;
+        }
+        footRow += `</tr>`;
+        tfoot.innerHTML = footRow;
+    }
+
+    async function saveMatrixMonth(m) {
+        const empId = document.getElementById('kpiEmp').value;
+        if (!empId) return alert('โปรดเลือกพนักงานก่อนบันทึก');
+        const selectedYear = parseInt(document.getElementById('kpiYear').value);
+        const inputs = document.querySelectorAll(`#matrixBody input.matrix-input[data-m="${m}"]`); 
+        let updates = []; 
+        inputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (!isNaN(val)) updates.push({ employee_id: empId, year: selectedYear, month_index: m, field_type: input.dataset.f, value: val });
+        });
+        if (updates.length === 0) return alert('ไม่มีข้อมูลให้บันทึกในเดือนนี้');
+        const { error } = await supabaseClient.from('sales_records_matrix').upsert(updates, { onConflict: 'employee_id,year,month_index,field_type' });
+        if(error) alert('เกิดข้อผิดพลาด: ' + error.message);
+        else { alert(`บันทึกข้อมูลเดือน ${monthNamesEng[m]} สำเร็จ!`); loadTeamSummary(); }
     }
 
     async function saveMatrix() {
