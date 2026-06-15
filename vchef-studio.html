@@ -28,7 +28,6 @@
     .calendar-cell { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; min-height: 85px; display: flex; flex-direction: column; justify-content: space-between; }
     .calendar-cell-empty { background: #f8fafc; border: 1px solid transparent; min-height: 85px; }
 
-    /* สไตล์สำหรับตารางสรุปทีม */
     .summary-table th { font-size: 11px; padding: 6px; border: 1px solid #cbd5e1; background-color: #e2e8f0; color: #334155; }
     .summary-table td { font-size: 12px; padding: 4px; border: 1px solid #e2e8f0; text-align: right; vertical-align: middle; }
     .summary-table td:first-child { text-align: left; font-weight: bold; background-color: #f8fafc; padding-left: 12px;}
@@ -167,7 +166,6 @@
             </tfoot>
         </table>
       </div>
-      
       <button class="btn-ui bg-emerald-600 hover:bg-emerald-700 mt-4 w-full justify-center" onclick="saveTeamSummary()">
         <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลตารางสรุปผลงาน
       </button>
@@ -203,10 +201,31 @@
                 <h4 class="text-center font-semibold text-slate-700 mb-4 text-sm">Top 10 สาขายอดขายรวมสูงสุด</h4>
                 <canvas id="branchTotalChart" height="200"></canvas>
             </div>
-            
             <div class="bg-white p-4 border rounded-xl shadow-sm">
                 <h4 class="text-center font-semibold text-slate-700 mb-4 text-sm">สัดส่วนยอดขายรายแบรนด์ (เฉพาะ Top 10 สาขา)</h4>
                 <canvas id="branchMixChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-ui border-t-4 border-indigo-500 xl:col-span-2">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-lg font-bold text-indigo-700"><i class="fa-solid fa-ranking-star mr-2"></i>7. วิเคราะห์ผลงานพนักงาน & ความคุ้มค่า (PC Leaderboard & ROI)</h3>
+                <p class="text-xs text-slate-500 mt-1">จัดอันดับยอดขายรายบุคคล และเปรียบเทียบยอดขายกับค่าใช้จ่าย (ค่าทริป) ของแต่ละสาขา</p>
+            </div>
+            <button onclick="loadAdvancedAnalytics()" class="btn-ui bg-slate-100 text-slate-700 hover:bg-slate-200 border"><i class="fa-solid fa-rotate"></i> อัปเดตข้อมูล</button>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-4 border rounded-xl shadow-sm">
+                <h4 class="text-center font-semibold text-slate-700 mb-4 text-sm">Top Sales (จัดอันดับพนักงานยอดเยี่ยม)</h4>
+                <canvas id="leaderboardChart" height="200"></canvas>
+            </div>
+            
+            <div class="bg-white p-4 border rounded-xl shadow-sm">
+                <h4 class="text-center font-semibold text-slate-700 mb-4 text-sm">ความคุ้มค่า (Sales vs Expense) แยกตามสาขา</h4>
+                <canvas id="roiChart" height="200"></canvas>
             </div>
         </div>
     </div>
@@ -221,20 +240,25 @@
     let employeesCache = [];
     const monthNamesEng = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
     const commonBranches = ["Siam Paragon","Central World","Central Ladprao","Central Westgate","IconSiam","EmQuartier","Emsphere","Lotus พระราม 4","Big C ราชดำริ","The Mall บางกะปิ","Mega Bangna","Donki Thonglor","Gourmet Market"];
 
-    let salesChartObj = null;
-    let brandChartObj = null;
-    let branchTotalChartObj = null;
-    let branchMixChartObj = null;
+    const kpiFieldsForMatrix = [
+      { id: 'target', label: 'Target (เป้า)', color: 'text-slate-700' }, { id: 'actual', label: 'Actual (ทำได้)', color: 'text-emerald-600' },
+      { id: 'expense', label: 'Expense (ใช้จ่าย)', color: 'text-rose-500' }, { id: 'salary', label: 'Salary (เงินเดือน)', color: 'text-slate-600' },
+      { id: 'trip', label: 'Trip (ค่าเดินทาง)', color: 'text-blue-600' }, { id: 'comm', label: 'Commission', color: 'text-amber-600' }
+    ];
+
+    let salesChartObj = null; let brandChartObj = null;
+    let branchTotalChartObj = null; let branchMixChartObj = null;
+    let leaderboardChartObj = null; let roiChartObj = null;
 
     window.onload = async () => {
       initMonths(); initBranchList();
       await loadEmployees();
       loadVChefHistory();
       loadTeamSummary(); 
-      loadBranchAnalytics(); // โหลดกราฟสาขาตอนเริ่มต้น
+      loadBranchAnalytics();
+      loadAdvancedAnalytics(); // โหลดกราฟข้อ 7
     };
 
     function initBranchList() {
@@ -289,7 +313,7 @@
         await supabaseClient.from('vchef_performance').insert([p]);
         alert('บันทึก VChef สาขานี้สำเร็จ!'); 
         document.getElementById('vcBranch').value = ''; document.getElementById('vcDays').value = '';
-        loadVChefHistory(); loadBranchAnalytics(); // อัปเดตกราฟสาขาเมื่อมีการบันทึกใหม่
+        loadVChefHistory(); loadBranchAnalytics(); loadAdvancedAnalytics();
     }
 
     async function loadVChefHistory() {
@@ -302,14 +326,9 @@
             tbody.innerHTML += `<tr><td class="text-left">${v.payroll_month}</td><td class="text-left">${eName}</td><td class="text-left font-bold text-slate-700">${v.branch_name || '-'}</td><td class="text-center">${v.actual_demo_days} วัน</td><td class="text-center font-bold text-emerald-600">฿${total.toLocaleString()}</td><td class="text-center"><button onclick="delVChef('${v.id}')" class="text-red-500"><i class="fa fa-trash"></i></button></td></tr>`;
         });
     }
-    async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); loadBranchAnalytics(); } }
+    async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); loadBranchAnalytics(); loadAdvancedAnalytics(); } }
 
     // --- 2. MATRIX KPI LOGIC ---
-    const kpiFieldsForMatrix = [
-      { id: 'target', label: 'Target (เป้า)', color: 'text-slate-700' }, { id: 'actual', label: 'Actual (ทำได้)', color: 'text-emerald-600' },
-      { id: 'expense', label: 'Expense (ใช้จ่าย)', color: 'text-rose-500' }, { id: 'salary', label: 'Salary (เงินเดือน)', color: 'text-slate-600' },
-      { id: 'trip', label: 'Trip (ค่าเดินทาง)', color: 'text-blue-600' }, { id: 'comm', label: 'Commission', color: 'text-amber-600' }
-    ];
     async function loadMatrix() {
         const empId = document.getElementById('kpiEmp').value; const tbody = document.getElementById('matrixBody'); tbody.innerHTML = '';
         if (!empId) { tbody.innerHTML = `<tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>`; return; }
@@ -338,7 +357,7 @@
         if (updates.length === 0) return alert('ไม่มีข้อมูลตัวเลขให้บันทึก');
         const { error } = await supabaseClient.from('sales_records_matrix').upsert(updates, { onConflict: 'employee_id,year,month_index,field_type' });
         if(error) alert('เกิดข้อผิดพลาด: ' + error.message);
-        else { alert('บันทึกข้อมูลตาราง Matrix สำเร็จ!'); }
+        else { alert('บันทึกข้อมูลตาราง Matrix สำเร็จ!'); loadTeamSummary(); }
     }
 
     // --- 3. CALENDAR DAILY SCHEDULE LOGIC ---
@@ -563,69 +582,37 @@
         });
     }
 
-    // --- 6. BRANCH ANALYTICS (NEW) ---
+    // --- 6. BRANCH ANALYTICS ---
     async function loadBranchAnalytics() {
         const { data: vchefData } = await supabaseClient.from('vchef_performance').select('*');
         if (!vchefData || vchefData.length === 0) return;
 
         let branchesObj = {};
         
-        // จัดกลุ่มข้อมูลยอดขายตามรายชื่อสาขา
         vchefData.forEach(r => {
             let bName = r.branch_name ? r.branch_name.trim() : 'ไม่ระบุสาขา';
-            if (!branchesObj[bName]) {
-                branchesObj[bName] = { total: 0, wasa: 0, hippo: 0, cke: 0, ume: 0 };
-            }
-            const w = Number(r.sales_wasabi || 0);
-            const h = Number(r.sales_hippo || 0);
-            const c = Number(r.sales_cke || 0);
-            const u = Number(r.sales_umesshu || 0);
-            
-            branchesObj[bName].wasa += w;
-            branchesObj[bName].hippo += h;
-            branchesObj[bName].cke += c;
-            branchesObj[bName].ume += u;
+            if (!branchesObj[bName]) { branchesObj[bName] = { total: 0, wasa: 0, hippo: 0, cke: 0, ume: 0 }; }
+            const w = Number(r.sales_wasabi || 0); const h = Number(r.sales_hippo || 0); const c = Number(r.sales_cke || 0); const u = Number(r.sales_umesshu || 0);
+            branchesObj[bName].wasa += w; branchesObj[bName].hippo += h; branchesObj[bName].cke += c; branchesObj[bName].ume += u;
             branchesObj[bName].total += (w + h + c + u);
         });
 
-        // แปลงเป็น Array แล้วเรียงลำดับจากสาขาที่ขายดีที่สุดไปน้อยที่สุด
         let branchArr = Object.keys(branchesObj).map(k => ({ name: k, ...branchesObj[k] }));
         branchArr.sort((a, b) => b.total - a.total);
-
-        // ดึงมาแค่ Top 10 เพื่อไม่ให้กราฟรกเกินไป
         let top10 = branchArr.slice(0, 10);
         
         let labels = top10.map(b => b.name);
         let totals = top10.map(b => b.total);
-        let wasas = top10.map(b => b.wasa);
-        let hippos = top10.map(b => b.hippo);
-        let ckes = top10.map(b => b.cke);
-        let umes = top10.map(b => b.ume);
+        let wasas = top10.map(b => b.wasa); let hippos = top10.map(b => b.hippo); let ckes = top10.map(b => b.cke); let umes = top10.map(b => b.ume);
 
-        // วาดกราฟ: Top 10 สาขายอดขายรวมสูงสุด (Horizontal Bar)
         const ctxTotal = document.getElementById('branchTotalChart').getContext('2d');
         if (branchTotalChartObj) branchTotalChartObj.destroy();
         branchTotalChartObj = new Chart(ctxTotal, {
             type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'ยอดขายรวมทุกแบรนด์ (THB)',
-                    data: totals,
-                    backgroundColor: '#0ea5e9', // สีฟ้า
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                indexAxis: 'y', // ทำให้เป็นกราฟแท่งแนวนอน
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { x: { beginAtZero: true } },
-                plugins: { legend: { display: false } }
-            }
+            data: { labels: labels, datasets: [{ label: 'ยอดขายรวมทุกแบรนด์ (THB)', data: totals, backgroundColor: '#0ea5e9', borderRadius: 4 }] },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true } }, plugins: { legend: { display: false } } }
         });
 
-        // วาดกราฟ: สัดส่วนแบรนด์รายสาขา (Stacked Bar)
         const ctxMix = document.getElementById('branchMixChart').getContext('2d');
         if (branchMixChartObj) branchMixChartObj.destroy();
         branchMixChartObj = new Chart(ctxMix, {
@@ -639,14 +626,113 @@
                     { label: 'Umesshu', data: umes, backgroundColor: '#8b5cf6' }
                 ]
             },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    // --- 7. PC LEADERBOARD & ROI ANALYTICS (NEW) ---
+    async function loadAdvancedAnalytics() {
+        const { data: vchefData } = await supabaseClient.from('vchef_performance').select('*');
+        if (!vchefData || vchefData.length === 0) return;
+
+        // 1. ประมวลผลสำหรับ Leaderboard (เรียงตามพนักงาน)
+        let pcObj = {};
+        vchefData.forEach(r => {
+            const empId = r.salesperson_id;
+            const empName = employeesCache.find(e => String(e.id) === String(empId))?.name || 'พนักงานไม่ระบุชื่อ';
+            if (!pcObj[empName]) pcObj[empName] = 0;
+            const totalSale = Number(r.sales_wasabi || 0) + Number(r.sales_hippo || 0) + Number(r.sales_cke || 0) + Number(r.sales_umesshu || 0);
+            pcObj[empName] += totalSale;
+        });
+
+        let pcArr = Object.keys(pcObj).map(k => ({ name: k, total: pcObj[k] }));
+        pcArr.sort((a, b) => b.total - a.total); // เรียงจากมากไปน้อย
+        let topPCs = pcArr.slice(0, 10); // เอามาแค่ 10 อันดับแรก
+
+        const ctxLeaderboard = document.getElementById('leaderboardChart').getContext('2d');
+        if (leaderboardChartObj) leaderboardChartObj.destroy();
+        leaderboardChartObj = new Chart(ctxLeaderboard, {
+            type: 'bar',
+            data: {
+                labels: topPCs.map(p => p.name),
+                datasets: [{
+                    label: 'ยอดขายรวมส่วนตัว (THB)',
+                    data: topPCs.map(p => p.total),
+                    backgroundColor: '#8b5cf6', // สีม่วง Indigo
+                    borderRadius: 4
+                }]
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // 2. ประมวลผลสำหรับ ROI / Expense (เรียงตามสาขา)
+        let branchObj = {};
+        vchefData.forEach(r => {
+            let bName = r.branch_name ? r.branch_name.trim() : 'ไม่ระบุสาขา';
+            if (!branchObj[bName]) branchObj[bName] = { sales: 0, expense: 0 };
+            
+            const totalSale = Number(r.sales_wasabi || 0) + Number(r.sales_hippo || 0) + Number(r.sales_cke || 0) + Number(r.sales_umesshu || 0);
+            const expense = Number(r.expense_trip || 0);
+            
+            branchObj[bName].sales += totalSale;
+            branchObj[bName].expense += expense;
+        });
+
+        let branchArrROI = Object.keys(branchObj).map(k => ({ name: k, ...branchObj[k] }));
+        branchArrROI.sort((a, b) => b.sales - a.sales); // เรียงตามยอดขายสูงสุด
+        let topBranchesROI = branchArrROI.slice(0, 10);
+
+        const ctxROI = document.getElementById('roiChart').getContext('2d');
+        if (roiChartObj) roiChartObj.destroy();
+        roiChartObj = new Chart(ctxROI, {
+            type: 'bar',
+            data: {
+                labels: topBranchesROI.map(b => b.name),
+                datasets: [
+                    {
+                        label: 'ค่าใช้จ่ายทริป (Expense)',
+                        type: 'line',
+                        data: topBranchesROI.map(b => b.expense),
+                        borderColor: '#ef4444', // สีแดง
+                        backgroundColor: '#ef4444',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        yAxisID: 'y1' // แกน Y ที่สอง
+                    },
+                    {
+                        label: 'ยอดขายสุทธิ (Sales)',
+                        data: topBranchesROI.map(b => b.sales),
+                        backgroundColor: '#10b981', // สีเขียว
+                        borderRadius: 4,
+                        yAxisID: 'y' // แกน Y หลัก
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
                 scales: {
-                    x: { stacked: true },
-                    y: { stacked: true, beginAtZero: true }
+                    y: { 
+                        type: 'linear', 
+                        display: true, 
+                        position: 'left',
+                        title: { display: true, text: 'Sales (THB)' }
+                    },
+                    y1: { 
+                        type: 'linear', 
+                        display: true, 
+                        position: 'right',
+                        title: { display: true, text: 'Expense (THB)' },
+                        grid: { drawOnChartArea: false } // ไม่ให้เส้น Grid ทับกัน
+                    }
                 },
-                plugins: { legend: { position: 'bottom' } }
+                plugins: { legend: { position: 'top' } }
             }
         });
     }
