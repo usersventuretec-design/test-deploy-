@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght=300;400;500;600&display=swap" rel="stylesheet">
   <style>
     body { background-color: #f1f5f9; font-family: 'Prompt', sans-serif; color: #1e293b; }
     .card-ui { background: rgba(255, 255, 255, 0.9); border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); padding: 25px; margin-bottom: 25px;}
@@ -50,9 +50,32 @@
       <h3 class="text-lg font-bold text-amber-700 mb-4"><i class="fa-solid fa-boxes-stacked mr-2"></i>1. บันทึกผลงาน VChef จัดชิม</h3>
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div class="input-wrapper"><label>งวดเดือน (Month):</label><select id="vcMonth" onchange="syncMonths(this.value)"></select></div>
+        <div class="input-wrapper"><label>ช่วงวันที่ (Date Range):</label><input type="text" id="vcDateRange" placeholder="เช่น 1-4 หรือ 14-18"></div>
         <div class="input-wrapper"><label>พนักงาน (PC):</label><select id="vcEmp"><option value="">-- เลือกพนักงาน --</option></select></div>
-        <div class="input-wrapper col-span-2"><label>สาขาที่ไปจัดชิม (Branch/Mall):</label>
-          <input type="text" id="vcBranch" list="branchListOptions" placeholder="เช่น Siam Paragon หรือ Big C พระราม 4">
+        <div class="input-wrapper"><label>กลุ่มห้าง (Account):</label>
+          <select id="vcAccount">
+            <option value="">-- เลือกกลุ่มห้าง --</option>
+            <option value="Donki">Donki</option>
+            <option value="Makro">Makro</option>
+            <option value="Big C">Big C</option>
+            <option value="The Mall">The Mall</option>
+            <option value="Lotus">Lotus</option>
+            <option value="Central">Central</option>
+            <option value="Foodland">Foodland</option>
+          </select>
+        </div>
+        <div class="input-wrapper"><label>สาขาที่ไปจัดชิม (Store):</label>
+          <input type="text" id="vcBranch" list="branchListOptions" placeholder="เช่น Sriracha หรือ Thonglor">
+        </div>
+        <div class="input-wrapper"><label>โซนพื้นที่ (Area):</label>
+          <select id="vcArea">
+            <option value="">-- เลือกพื้นที่ --</option>
+            <option value="BKK">BKK</option>
+            <option value="Central">Central</option>
+            <option value="East">East</option>
+            <option value="North">North</option>
+            <option value="South">South</option>
+          </select>
         </div>
         <div class="input-wrapper"><label>จำนวนวันจัดชิมที่สาขานี้ (Demo Days):</label><input type="number" id="vcDays" placeholder="0"></div>
         <div class="input-wrapper"><label class="text-blue-600">ค่าทริป / Expense สาขานี้ (THB):</label><input type="number" id="vcExpense" placeholder="0" class="border-blue-300 bg-blue-50"></div>
@@ -60,7 +83,7 @@
       <div class="grid grid-cols-4 gap-4 mb-6 bg-slate-50 p-4 rounded-lg border">
         <div class="input-wrapper"><label>ยอด Wasabi</label><input type="number" id="vcWasabi" value="0"></div>
         <div class="input-wrapper"><label>ยอด Hippo</label><input type="number" id="vcHippo" value="0"></div>
-        <div class="input-wrapper"><label>ยอด CKE</label><input type="number" id="vcCke" value="0"></div>
+        <div class="input-wrapper"><label>ยอด CKE+Oden</label><input type="number" id="vcCke" value="0"></div>
         <div class="input-wrapper"><label>ยอด Umesshu</label><input type="number" id="vcUmesshu" value="0"></div>
       </div>
       <button class="btn-ui bg-amber-600 hover:bg-amber-700 w-full justify-center" onclick="saveVChef()"><i class="fa-solid fa-save"></i> บันทึกข้อมูล VChef สาขานี้</button>
@@ -104,7 +127,7 @@
             <tr><td colspan="13" class="text-center text-slate-400 py-10">กรุณาเลือกพนักงานเพื่อเริ่มโหลดข้อมูล</td></tr>
           </tbody>
           <tfoot id="matrixFoot">
-            </tfoot>
+          </tfoot>
         </table>
       </div>
       <button class="btn-ui bg-blue-600 hover:bg-blue-700 mt-4 w-full justify-center" onclick="saveMatrix()">
@@ -167,15 +190,15 @@
               <th colspan="4" class="bg-purple-50">Contribute %</th>
             </tr>
             <tr>
-              <th class="bg-blue-50 border-l">Wasabi</th><th class="bg-blue-50">Hippo</th><th class="bg-blue-50">CKE</th><th class="bg-blue-50 border-r">Umesshu</th>
-              <th class="bg-purple-50">Wasabi</th><th class="bg-purple-50">Hippo</th><th class="bg-purple-50">CKE</th><th class="bg-purple-50">Umesshu</th>
+              <th class="bg-blue-50 border-l">Wasabi</th><th class="bg-blue-50">Hippo</th><th class="bg-blue-50">CKE+Oden</th><th class="bg-blue-50 border-r">Umesshu</th>
+              <th class="bg-purple-50">Wasabi</th><th class="bg-purple-50">Hippo</th><th class="bg-purple-50">CKE+Oden</th><th class="bg-purple-50">Umesshu</th>
             </tr>
           </thead>
           <tbody id="teamSummaryBody">
             <tr><td colspan="18" class="text-center py-6 text-slate-400">กำลังคำนวณข้อมูล...</td></tr>
           </tbody>
           <tfoot id="teamSummaryFoot" class="bg-slate-200 font-bold">
-            </tfoot>
+          </tfoot>
         </table>
       </div>
       <button class="btn-ui bg-emerald-600 hover:bg-emerald-700 mt-4 w-full justify-center" onclick="saveTeamSummary()">
@@ -261,7 +284,7 @@
     let employeesCache = [];
     const monthNamesEng = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const commonBranches = ["Siam Paragon","Central World","Central Ladprao","Central Westgate","IconSiam","EmQuartier","Emsphere","Lotus พระราม 4","Big C ราชดำริ","The Mall บางกะปิ","Mega Bangna","Donki Thonglor","Gourmet Market"];
+    const commonBranches = ["Siam Paragon","Central World","Central Ladprao","Central Westgate","IconSiam","EmQuartier","Emsphere","Lotus พระราม 4","Big C ราชดำริ","The Mall บางกะปิ","Mega Bangna","Donki Thonglor","Gourmet Market","Sriracha","North Pattaya","Rayong","Bangkae","Thonglor","Fashion Island","MBK"];
 
     const kpiFieldsForMatrix = [
       { id: 'target', label: 'Target (เป้า)', color: 'text-slate-700' }, { id: 'actual', label: 'Actual (ทำได้)', color: 'text-emerald-600' },
@@ -333,16 +356,36 @@
     // --- 1. VCHEF LOGIC ---
     async function saveVChef() {
         const p = {
-            payroll_month: document.getElementById('vcMonth').value, salesperson_id: document.getElementById('vcEmp').value,
-            branch_name: document.getElementById('vcBranch').value.trim(), actual_demo_days: Number(document.getElementById('vcDays').value)||0, 
-            expense_trip: Number(document.getElementById('vcExpense').value)||0, sales_wasabi: Number(document.getElementById('vcWasabi').value)||0, 
-            sales_hippo: Number(document.getElementById('vcHippo').value)||0, sales_cke: Number(document.getElementById('vcCke').value)||0, sales_umesshu: Number(document.getElementById('vcUmesshu').value)||0
+            payroll_month: document.getElementById('vcMonth').value,
+            date_range: document.getElementById('vcDateRange').value.trim(),
+            salesperson_id: document.getElementById('vcEmp').value,
+            account: document.getElementById('vcAccount').value,
+            branch_name: document.getElementById('vcBranch').value.trim(),
+            area: document.getElementById('vcArea').value,
+            actual_demo_days: Number(document.getElementById('vcDays').value)||0, 
+            expense_trip: Number(document.getElementById('vcExpense').value)||0, 
+            sales_wasabi: Number(document.getElementById('vcWasabi').value)||0, 
+            sales_hippo: Number(document.getElementById('vcHippo').value)||0, 
+            sales_cke: Number(document.getElementById('vcCke').value)||0, 
+            sales_umesshu: Number(document.getElementById('vcUmesshu').value)||0
         };
         if(!p.salesperson_id || !p.branch_name || p.actual_demo_days <= 0) return alert('กรุณาเลือกพนักงาน, ใส่ชื่อสาขา และจำนวนวันจัดชิมให้ถูกต้อง');
+        
         await supabaseClient.from('vchef_performance').insert([p]);
         alert('บันทึก VChef สาขานี้สำเร็จ!'); 
-        document.getElementById('vcBranch').value = ''; document.getElementById('vcDays').value = '';
-        loadVChefHistory(); loadBranchAnalytics(); loadAdvancedAnalytics();
+        
+        document.getElementById('vcDateRange').value = '';
+        document.getElementById('vcAccount').value = '';
+        document.getElementById('vcBranch').value = ''; 
+        document.getElementById('vcArea').value = '';
+        document.getElementById('vcDays').value = '';
+        document.getElementById('vcExpense').value = '0';
+        document.getElementById('vcWasabi').value = '0';
+        document.getElementById('vcHippo').value = '0';
+        document.getElementById('vcCke').value = '0';
+        document.getElementById('vcUmesshu').value = '0';
+        
+        loadVChefHistory(); loadTeamSummary(); loadBranchAnalytics(); loadAdvancedAnalytics();
     }
 
     async function loadVChefHistory() {
@@ -355,7 +398,7 @@
             tbody.innerHTML += `<tr><td class="text-left">${v.payroll_month}</td><td class="text-left">${eName}</td><td class="text-left font-bold text-slate-700">${v.branch_name || '-'}</td><td class="text-center">${v.actual_demo_days} วัน</td><td class="text-center font-bold text-emerald-600">฿${total.toLocaleString()}</td><td class="text-center"><button onclick="delVChef('${v.id}')" class="text-red-500"><i class="fa fa-trash"></i></button></td></tr>`;
         });
     }
-    async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); loadBranchAnalytics(); loadAdvancedAnalytics(); } }
+    async function delVChef(id) { if(confirm('ลบประวัติแถวนี้?')){ await supabaseClient.from('vchef_performance').delete().eq('id',id); loadVChefHistory(); loadTeamSummary(); loadBranchAnalytics(); loadAdvancedAnalytics(); } }
 
     // --- 2. MATRIX KPI LOGIC ---
     async function loadMatrix() {
@@ -379,7 +422,6 @@
             row += '</tr>'; tbody.innerHTML += row;
         });
 
-        // สร้างปุ่มเซฟแยกเดือนด้านล่างตาราง
         let footRow = `<tr><td class="font-bold text-slate-500 text-center bg-slate-100 border-r">เซฟแยกเดือน</td>`;
         for(let m=0; m<12; m++) {
             footRow += `<td class="bg-slate-50 p-2"><button onclick="saveMatrixMonth(${m})" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs py-1.5 rounded shadow-sm transition"><i class="fa-solid fa-save"></i> บันทึก</button></td>`;
@@ -642,7 +684,7 @@
         brandChartObj = new Chart(ctxBrand, {
             type: 'doughnut',
             data: {
-                labels: ['Wasabi', 'Hippo', 'CKE', 'Umesshu'],
+                labels: ['Wasabi', 'Hippo', 'CKE+Oden', 'Umesshu'],
                 datasets: [{ data: [tWasa, tHippo, tCke, tUme], backgroundColor: ['#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'], borderWidth: 1 }]
             },
             options: { 
@@ -693,7 +735,7 @@
                 datasets: [
                     { label: 'Wasabi', data: wasas, backgroundColor: '#3b82f6' },
                     { label: 'Hippo', data: hippos, backgroundColor: '#f59e0b' },
-                    { label: 'CKE', data: ckes, backgroundColor: '#ec4899' },
+                    { label: 'CKE+Oden', data: ckes, backgroundColor: '#ec4899' },
                     { label: 'Umesshu', data: umes, backgroundColor: '#8b5cf6' }
                 ]
             },
