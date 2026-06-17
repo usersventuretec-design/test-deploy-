@@ -483,13 +483,61 @@
       </div>
 
       <div id="view-scan" class="tab-view">
-        <div class="card-ui">
+        <div class="card-ui mb-6">
             <h3><i class="fa-solid fa-fingerprint"></i> Raw Working Attendance Records Box (Log Data Input)</h3>
             <div class="input-wrapper"><textarea id="rawFingerprintText" placeholder="Paste biometric timestamp text rows here..."></textarea></div>
             <div style="margin-top: 15px;">
                 <button class="btn-ui" onclick="importLogs()"><i class="fa-solid fa-database"></i> Parse & Upload Logs to Database</button>
                 <div class="loading" id="scanLoader"><i class="fa-solid fa-circle-notch"></i> Character sorting and automated Overtime (OT) calculating...</div>
             </div>
+        </div>
+
+        <div class="card-ui overflow-auto">
+            <h3><i class="fa-solid fa-clock-rotate-left text-blue-600"></i> Admin Attendance Logs Viewer</h3>
+            
+            <div class="grid-form mb-4" style="grid-template-columns: 1fr 1fr 1.5fr auto;">
+                <div class="input-wrapper">
+                    <label>Period (เดือน/ปี):</label>
+                    <select id="filterScanPeriod" onchange="loadAdminAttendanceLogs()">
+                        <option value="ALL">-- All Periods --</option>
+                    </select>
+                </div>
+                <div class="input-wrapper">
+                    <label>Department (แผนก):</label>
+                    <select id="filterScanDept" onchange="renderAdminScanTable()">
+                        <option value="ALL">-- Show All Departments --</option>
+                        <option value="MDT">MDT</option><option value="BSU">BSU</option><option value="EXP">EXP</option><option value="LGT">LGT</option><option value="HRC">HRC</option><option value="MKT">MKT</option><option value="ACC">ACC</option><option value="HR">HR</option>
+                    </select>
+                </div>
+                <div class="input-wrapper">
+                    <label>Employee (พนักงาน):</label>
+                    <select id="filterScanEmp" onchange="renderAdminScanTable()">
+                        <option value="ALL">-- Show All Employees --</option>
+                    </select>
+                </div>
+                <div class="input-wrapper flex items-end">
+                    <button class="btn-ui bg-blue-600 hover:bg-blue-700" onclick="loadAdminAttendanceLogs()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                </div>
+            </div>
+
+            <table class="data-table w-full">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-700 border-b">
+                        <th>Emp ID</th>
+                        <th>Name</th>
+                        <th>Dept</th>
+                        <th>Period</th>
+                        <th>Date</th>
+                        <th>Scan In</th>
+                        <th>Scan Out</th>
+                        <th>Late (Min)</th>
+                        <th>OT (Min)</th>
+                    </tr>
+                </thead>
+                <tbody id="adminScanTableBody">
+                    <tr><td colspan="9" class="text-center py-8 text-slate-400">คลิกปุ่ม Refresh เพื่อโหลดประวัติการสแกนนิ้ว...</td></tr>
+                </tbody>
+            </table>
         </div>
       </div>
 
@@ -639,6 +687,7 @@
     let localEmployeesCache = [];
     let cachedTargetSalesRows = [];
     let bulkProcessedPayloads = []; 
+    let adminLogsCache = [];
     
     let globalTimelinePeriods = [];
     let globalTimelineRevenue = [];
@@ -725,7 +774,6 @@
             }
         });
 
-        // ดักจับว่าหน้าแรกที่โหลดขึ้นมา ถูกปิดสิทธิ์อยู่ไหม
         const activeMenu = document.querySelector('.nav-item.active');
         if (activeMenu && activeMenu.classList.contains('disabled-nav')) {
             switchTab('view-myscan', document.getElementById('nav-myscan'));
@@ -748,16 +796,105 @@
       if(tabId === 'view-turnover') renderTurnoverViewOperations();
       if(tabId === 'view-usermgt') loadSystemUsers();
       if(tabId === 'view-myscan') loadMyAttendance(); 
+      if(tabId === 'view-scan') { generateScanFilters(); loadAdminAttendanceLogs(); }
     }
 
-    // 🔴 3. ระบบจัดการผู้ใช้งาน (มีช่องกรอก Emp ID ด้วย)
-  // 🔴 3. ระบบจัดการผู้ใช้งาน (อัปเดต: เปลี่ยนเป็น Dropdown เลือกชื่อพนักงาน)
+    // 🟢 สร้างตัวเลือกใน Dropdown ค้นหาหน้า Admin Scan
+    function generateScanFilters() {
+        const periodSelect = document.getElementById('filterScanPeriod');
+        const targetSelect = document.getElementById('targetMonthFilter');
+        if(periodSelect && targetSelect && periodSelect.options.length <= 1) {
+            periodSelect.innerHTML = '<option value="ALL">-- All Periods --</option>' + targetSelect.innerHTML;
+        }
+
+        const empSelect = document.getElementById('filterScanEmp');
+        if(empSelect) {
+            empSelect.innerHTML = '<option value="ALL">-- Show All Employees --</option>';
+            localEmployeesCache.forEach(e => {
+                empSelect.innerHTML += `<option value="${e.id}">[ID: ${e.id}] ${e.name}</option>`;
+            });
+        }
+    }
+
+    // 🟢 ดึงข้อมูลจากฐานข้อมูล Supabase สำหรับหน้า Admin
+    async function loadAdminAttendanceLogs() {
+        const tbody = document.getElementById('adminScanTableBody');
+        if(!tbody) return;
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-blue-500"><i class="fa fa-spinner fa-spin mr-2"></i>Loading global attendance records...</td></tr>`;
+
+        const periodFilter = document.getElementById('filterScanPeriod').value;
+        
+        try {
+            let query = supabaseClient.from('attendance_logs').select('*');
+            
+            if (periodFilter !== 'ALL') {
+                query = query.eq('payroll_period', periodFilter);
+            } else {
+                query = query.order('date_str', { ascending: false }).limit(1000); 
+            }
+
+            const { data: logs, error } = await query;
+            if (error) throw error;
+
+            adminLogsCache = logs || [];
+            renderAdminScanTable();
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-red-500 py-4">Error: ${err.message}</td></tr>`;
+        }
+    }
+
+    // 🟢 แสดงผลข้อมูลลงตารางพร้อมระบบกรอง (Filter)
+    function renderAdminScanTable() {
+        const tbody = document.getElementById('adminScanTableBody');
+        if(!tbody) return;
+
+        const deptFilter = document.getElementById('filterScanDept').value;
+        const empFilter = document.getElementById('filterScanEmp').value;
+
+        tbody.innerHTML = '';
+
+        let filteredLogs = adminLogsCache.filter(log => {
+            const empInfo = localEmployeesCache.find(e => String(e.id) === String(log.employee_id)) || {};
+            const empDept = empInfo.dept || 'Unassigned';
+
+            let matchDept = (deptFilter === 'ALL' || empDept === deptFilter);
+            let matchEmp = (empFilter === 'ALL' || String(log.employee_id) === empFilter);
+
+            return matchDept && matchEmp;
+        });
+
+        if (filteredLogs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400">ไม่พบประวัติการสแกนนิ้วตามเงื่อนไขที่เลือก</td></tr>`;
+            return;
+        }
+
+        filteredLogs.sort((a, b) => new Date(b.date_str) - new Date(a.date_str));
+
+        filteredLogs.forEach(log => {
+            const empInfo = localEmployeesCache.find(e => String(e.id) === String(log.employee_id)) || { name: 'Unknown User', dept: 'Unassigned' };
+            
+            tbody.innerHTML += `
+                <tr class="border-b border-slate-50 hover:bg-slate-50/80 transition">
+                    <td class="font-semibold text-slate-700">${log.employee_id}</td>
+                    <td class="text-slate-800">${empInfo.name}</td>
+                    <td class="text-blue-600 font-bold">${empInfo.dept}</td>
+                    <td class="text-slate-500 text-xs">${log.payroll_period}</td>
+                    <td class="text-slate-700">${log.date_str}</td>
+                    <td class="text-emerald-600 font-bold">${log.scan_in || '-'}</td>
+                    <td class="text-indigo-600 font-bold">${log.scan_out || '-'}</td>
+                    <td class="${log.late_minutes > 0 ? 'text-red-500 font-bold bg-red-50' : 'text-slate-400'} text-center rounded">${log.late_minutes}</td>
+                    <td class="${log.ot_minutes > 0 ? 'text-orange-500 font-bold bg-orange-50' : 'text-slate-400'} text-center rounded">${log.ot_minutes}</td>
+                </tr>
+            `;
+        });
+    }
+
+    // 🔴 3. ระบบจัดการผู้ใช้งาน
     async function loadSystemUsers() {
         const tbody = document.getElementById('userManagementTableBody');
         if (!tbody) return;
 
         try {
-            // ดึงข้อมูล User Profiles และ ดึงรายชื่อพนักงานทั้งหมดมาพร้อมกัน
             const [profilesRes, employeesRes] = await Promise.all([
                 supabaseClient.from('profiles').select('*').order('created_at', { ascending: false }),
                 supabaseClient.from('employees').select('id, name').order('id', { ascending: true })
@@ -786,7 +923,6 @@
             profiles.forEach(profile => {
                 const userMenus = profile.accessible_menus || [];
                 
-                // --- ส่วน Checkbox สิทธิ์เข้าเมนู ---
                 let checkboxesHTML = `<div class="grid grid-cols-2 gap-y-2 gap-x-4 text-[11px] bg-white p-3 rounded border shadow-sm">`;
                 allMenus.forEach(m => {
                     const isChecked = userMenus.includes(m.id) ? 'checked' : '';
@@ -800,7 +936,6 @@
                 });
                 checkboxesHTML += `</div>`;
 
-                // --- 🟢 สร้าง Dropdown เลือกพนักงาน ---
                 let empSelectHTML = `<select onchange="updateUserEmpId('${profile.id}', this.value)" class="border border-slate-300 p-1 rounded text-xs w-full shadow-sm outline-none focus:border-blue-500">`;
                 empSelectHTML += `<option value="">-- ไม่ผูกรหัสพนักงาน --</option>`;
                 employeesList.forEach(emp => {
@@ -850,7 +985,6 @@
         }
     }
 
-    // 🟢 อัปเดต Emp ID เข้าฐานข้อมูล
     async function updateUserEmpId(userId, newEmpId) {
         try {
             const { error } = await supabaseClient.from('profiles').update({ emp_id: newEmpId.trim() }).eq('id', userId);
@@ -954,9 +1088,6 @@
         }
     }
 
-    // ==========================================
-    // โค้ดส่วนอื่นๆ (Dashboard, Charts, Payroll)
-    // ==========================================
     function generateDynamicMonths() {
         const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const currentDate = new Date();
@@ -2005,6 +2136,7 @@
         } catch (err) { alert('เกิดข้อผิดพลาด: ' + err.message); }
     }
 
+    // 🟢 ฟังก์ชันนำเข้าข้อมูล (ปรับเป็น เข้า 08:30 น. และ เลิก 18:30 น.)
     async function importLogs() {
       const rawText = document.getElementById('rawFingerprintText').value.trim();
       if(!rawText) { alert('Please insert biometric raw logs data strings first.'); return; }
@@ -2043,12 +2175,14 @@
 
           if (scanIn) {
             const firstInMins = timeMinutes[0].totalMins;
-            if (firstInMins > 480) lateMinutes = firstInMins - 480; 
+            // 🔴 เข้างาน 08:30 (8 * 60 + 30 = 510 นาที)
+            if (firstInMins > 510) lateMinutes = firstInMins - 510; 
           }
           if (scanOut) {
             const lastOutMins = timeMinutes[timeMinutes.length - 1].totalMins;
-            if (lastOutMins > 1020) { 
-              let rawOt = lastOutMins - 1020;
+            // 🔴 เลิกงาน 18:30 (18 * 60 + 30 = 1110 นาที)
+            if (lastOutMins > 1110) { 
+              let rawOt = lastOutMins - 1110;
               if (lateMinutes > 0) rawOt = rawOt - lateMinutes; 
               if (rawOt > 30) otMinutes = rawOt; 
             }
