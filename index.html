@@ -813,16 +813,33 @@
     }
 
     async function fetchRoleAndInitApp() {
+        let employeeName = "STAFF"; // ตั้งค่าเริ่มต้น
+        
         try {
+            // เพิ่มการดึงค่า emp_id มาด้วย
             const { data: profile, error } = await supabaseClient
                 .from('profiles')
-                .select('role, accessible_menus')
+                .select('role, accessible_menus, emp_id')
                 .eq('id', currentUser.id)
                 .single();
 
             if (error) throw error;
             currentUserRole = profile.role;
             currentUserMenus = profile.accessible_menus || [];
+
+            // ตรวจสอบว่ามีการผูกรหัสพนักงาน (emp_id) ไว้หรือไม่ ถ้ามีให้ไปดึงชื่อมา
+            if (profile.emp_id) {
+                const { data: empData, error: empError } = await supabaseClient
+                    .from('employees')
+                    .select('name')
+                    .eq('id', profile.emp_id)
+                    .single();
+                    
+                if (empData && empData.name) {
+                    employeeName = empData.name; // นำชื่อจากฐานข้อมูลมาแทนที่
+                }
+            }
+            
         } catch (e) {
             console.warn("Role fetch error: ", e);
             currentUserRole = 'admin'; 
@@ -830,7 +847,12 @@
         }
 
         document.getElementById('profileEmail').innerText = currentUser.email;
-        document.getElementById('profileRole').innerText = currentUserRole;
+        
+        // ถ้าเป็น Admin ให้โชว์คำว่า ADMIN แต่ถ้าเป็น Staff ให้โชว์ชื่อจริงแทน
+        document.getElementById('profileRole').innerText = currentUserRole === 'admin' ? 'ADMIN' : employeeName;
+
+        // อัปเดตรูป Avatar ให้สร้างรูปจากชื่อจริง
+        document.getElementById('profileAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUserRole === 'admin' ? 'Admin' : employeeName)}&background=2563eb&color=fff`;
 
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('app-section').style.display = 'flex';
