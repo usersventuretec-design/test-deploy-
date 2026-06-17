@@ -34,16 +34,17 @@
         color: #64748b !important;
         border-left-color: transparent !important;
     }
-    .nav-item.disabled-nav i {
-        color: #64748b !important;
-    }
-    .nav-item.disabled-nav:hover {
-        background-color: rgba(255,255,255,0.05) !important;
-    }
+    .nav-item.disabled-nav i { color: #64748b !important; }
+    .nav-item.disabled-nav:hover { background-color: rgba(255,255,255,0.05) !important; }
 
     .main-content { margin-left: 260px; padding: 32px; width: calc(100% - 260px); min-height: 100vh; }
     .tab-view { display: none; animation: fadeIn 0.3s ease-in-out; }
     .tab-view.active { display: block; }
+    
+    /* 🔴 Modal CSS */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+    .modal-overlay.active { display: flex; }
+
     @media print {
         body { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; }
         .sidebar, .header-app, .card-ui, .btn-ui, .control-panel-row, .card-header { display: none !important; }
@@ -112,6 +113,34 @@
     </div>
   </div>
 
+  <div id="createUserModal" class="modal-overlay">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+      <div class="flex justify-between items-center mb-6 border-b pb-3">
+        <h2 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-user-plus text-emerald-600 mr-2"></i> สร้างผู้ใช้งานใหม่</h2>
+        <button onclick="closeCreateUserModal()" class="text-slate-400 hover:text-red-500 text-xl"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="text-xs text-amber-600 bg-amber-50 p-3 rounded mb-4 border border-amber-200">
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i> เมื่อกดสร้างบัญชีเรียบร้อยแล้ว ระบบความปลอดภัยจะนำบัญชี Admin ของคุณออกจากระบบชั่วคราวเพื่อให้สิทธิ์พนักงานใหม่ คุณสามารถล็อกอินบัญชี Admin กลับเข้ามาใหม่ได้ทันทีครับ
+      </p>
+      <form onsubmit="handleCreateNewUser(event)">
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-slate-600 mb-2">อีเมลพนักงาน (Email)</label>
+          <input type="email" id="newUserEmail" required class="w-full px-4 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition outline-none" placeholder="staff@venturetec.com">
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-slate-600 mb-2">ตั้งรหัสผ่าน (Password - ขั้นต่ำ 6 ตัว)</label>
+          <input type="password" id="newUserPassword" required minlength="6" class="w-full px-4 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition outline-none" placeholder="••••••••">
+        </div>
+        <div class="flex justify-end gap-3">
+            <button type="button" onclick="closeCreateUserModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded transition">ยกเลิก</button>
+            <button type="submit" id="btnCreateUser" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded transition flex items-center">
+              <i class="fa-solid fa-check mr-2"></i> สร้างบัญชี
+            </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="app-section" class="flex w-full" style="display: none;">
     
     <div class="sidebar">
@@ -121,7 +150,7 @@
       </div>
       <div class="flex-1 mt-2">
         <div id="nav-ceo" class="nav-item active" onclick="switchTab('view-summary', this)"><i class="fa-solid fa-chart-pie"></i> CEO Dashboard</div>
-        <div id="nav-vchef" class="nav-item text-amber-400 font-semibold" onclick="window.location.href='vchef-studio.html'"><i class="fa-solid fa-stroopwafel"></i> VChef & KPI Studio</div>
+        <div id="nav-vchef" class="nav-item text-amber-400 font-semibold" onclick="if(!this.classList.contains('disabled-nav')) window.location.href='vchef-studio.html'"><i class="fa-solid fa-stroopwafel"></i> VChef & KPI Studio</div>
         <div id="nav-employee" class="nav-item" onclick="switchTab('view-employee', this)"><i class="fa-solid fa-users-gear"></i> Employee Database</div>
         <div id="nav-turnover" class="nav-item" onclick="switchTab('view-turnover', this)"><i class="fa-solid fa-user-slash text-rose-500"></i> Employee Turnover Analytics</div>
         <div id="nav-scan" class="nav-item" onclick="switchTab('view-scan', this)"><i class="fa-solid fa-fingerprint"></i> Attendance Logs (Fingerprint)</div>
@@ -136,7 +165,7 @@
         <div class="flex items-center">
           <img src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" id="profileAvatar" class="w-10 h-10 rounded-full" alt="Profile">
           <div class="ml-3">
-            <p class="text-sm font-bold text-white" id="profileRole">System Admin</p>
+            <p class="text-sm font-bold text-white uppercase" id="profileRole">Admin</p>
             <p class="text-[11px] text-slate-400 truncate w-32" id="profileEmail">user@email.com</p>
           </div>
         </div>
@@ -354,51 +383,6 @@
           </div>
       </div>
 
-      <div id="view-ceo-setting" class="tab-view">
-          <div class="card-ui">
-              <h3><i class="fa-solid fa-sliders text-amber-500"></i> Executive Sales Target & Budgeting Input Form</h3>
-              <div class="grid-form" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
-                  <div class="input-wrapper">
-                      <label>Target Month Period:</label>
-                      <select id="kpiPeriodMonth"></select>
-                  </div>
-                  <div class="input-wrapper">
-                      <label>Choose Salesperson Name:</label>
-                      <select id="kpiSalespersonSelect" onchange="autoFillBranchFromCache()">
-                          <option value="">-- Loading Salespersons List --</option>
-                      </select>
-                  </div>
-                  <div class="input-wrapper">
-                      <label>Assigned Branch / Mall:</label>
-                      <input type="text" id="kpiBranchInput" readonly placeholder="Auto-filled from Employee profile" class="bg-gray-100 cursor-not-allowed">
-                  </div>
-              </div>
-              <div class="grid-form" style="grid-template-columns: 1.5fr 1.5fr;">
-                  <div class="input-wrapper">
-                      <label>Branch Target Revenue Amount (Target Sales / THB):</label>
-                      <input type="number" id="kpiTargetInput" placeholder="e.g. 250000" min="0">
-                  </div>
-                  <div class="input-wrapper">
-                      <label>Branch Actual Closing Revenue (Actual Sales / THB):</label>
-                      <input type="number" id="kpiActualInput" placeholder="e.g. 272000" min="0">
-                  </div>
-              </div>
-              <button class="btn-ui" style="background-color: #d97706;" onclick="saveSalesRecordToSupabase()"><i class="fa-solid fa-cloud-arrow-up"></i> Sync Sales Records to Cloud Project</button>
-              <div class="loading" id="kpiLoader"><i class="fa-solid fa-circle-notch"></i> Syncing financial metrics with database server...</div>
-          </div>
-          <div class="card-ui overflow-auto">
-              <h3><i class="fa-solid fa-list-ol"></i> Target Achievement Records Log Table</h3>
-              <table class="data-table">
-                  <thead>
-                      <tr><th>Month Period</th><th>Sales Person Name</th><th>Assigned Branch</th><th>Target Budget</th><th>Actual Sales</th><th>% Achievement</th><th>Action</th></tr>
-                  </thead>
-                  <tbody id="kpiHistoryTableBody">
-                      <tr><td colspan="7" class="text-center text-slate-400 py-4">Loading operational performance history from Supabase...</td></tr>
-                  </tbody>
-              </table>
-          </div>
-      </div>
-
       <div id="view-employee" class="tab-view">
         <div class="card-ui">
             <h3><i class="fa-solid fa-users-gear"></i> Corporate Employee Profile Management Form</h3>
@@ -535,9 +519,9 @@
           <div class="header-app flex justify-between items-center mb-6 card-ui py-4">
               <div>
                   <h2 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-user-shield text-emerald-600 mr-2"></i> System Users & Roles</h2>
-                  <p class="text-sm text-slate-500">จัดการสิทธิ์การเข้าถึงเมนู และส่งลิงก์รีเซ็ตรหัสผ่านให้พนักงาน</p>
+                  <p class="text-sm text-slate-500">จัดการสิทธิ์การเข้าถึงเมนูแบบละเอียด และส่งลิงก์รีเซ็ตรหัสผ่านให้พนักงาน</p>
               </div>
-              <button onclick="alert('เนื่องจากความปลอดภัยของ Supabase การสร้าง User ใหม่พร้อมรหัสผ่านด้วยฝั่ง Client จะทำให้คุณเด้งออกจากระบบ แนะนำให้เชิญพนักงาน (Invite User) ผ่าน Supabase Dashboard ไปก่อนครับ')" class="btn-ui bg-emerald-600 hover:bg-emerald-700">
+              <button onclick="openCreateUserModal()" class="btn-ui bg-emerald-600 hover:bg-emerald-700">
                   <i class="fa-solid fa-user-plus"></i> Create New User
               </button>
           </div>
@@ -546,10 +530,10 @@
               <table class="data-table w-full">
                   <thead>
                       <tr>
-                          <th>User ID (UUID)</th>
+                          <th>User ID</th>
                           <th>Email Address</th>
-                          <th>System Role (สิทธิ์)</th>
-                          <th>Action (รีเซ็ตรหัสผ่าน)</th>
+                          <th>Menu Access Permissions (สิทธิ์รายเมนู)</th>
+                          <th>Role & Reset Password</th>
                       </tr>
                   </thead>
                   <tbody id="userManagementTableBody">
@@ -568,6 +552,7 @@
 
     let currentUser = null;
     let currentUserRole = null;
+    let currentUserMenus = []; // เมนูที่ถูกติ๊กเลือกให้เข้าได้
 
     let charts = {};
     let cachedReportData = [];
@@ -620,68 +605,60 @@
         try {
             const { data: profile, error } = await supabaseClient
                 .from('profiles')
-                .select('role')
+                .select('role, accessible_menus')
                 .eq('id', currentUser.id)
                 .single();
 
             if (error) throw error;
             currentUserRole = profile.role;
+            currentUserMenus = profile.accessible_menus || [];
         } catch (e) {
             console.warn("Role fetch error: ", e);
             currentUserRole = 'admin'; 
+            // กรณีเป็นแอดมิน ให้เข้าได้ทุกหน้าโดยอัตโนมัติ
+            currentUserMenus = ['nav-ceo', 'nav-vchef', 'nav-employee', 'nav-turnover', 'nav-scan', 'nav-slip', 'nav-report', 'nav-usermgt'];
         }
 
         document.getElementById('profileEmail').innerText = currentUser.email;
-        document.getElementById('profileRole').innerText = currentUserRole.toUpperCase();
+        document.getElementById('profileRole').innerText = currentUserRole;
 
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('app-section').style.display = 'flex';
 
-        applyRBAC(currentUserRole);
+        applyRBAC(currentUserRole, currentUserMenus);
 
         generateDynamicMonths(); 
         loadDashboardData();   
         loadEmployeeList();    
     }
 
-    // 🔴 ฟังก์ชันปิด/เปิดเมนูโดยใช้สีเทา (Disabled)
-    function applyRBAC(role) {
-        const menus = {
-            ceo: document.getElementById('nav-ceo'),
-            vchef: document.getElementById('nav-vchef'),
-            employee: document.getElementById('nav-employee'),
-            turnover: document.getElementById('nav-turnover'),
-            scan: document.getElementById('nav-scan'),
-            slip: document.getElementById('nav-slip'),
-            report: document.getElementById('nav-report'),
-            usermgt: document.getElementById('nav-usermgt')
-        };
+    // 🔴 1. ระบบ Checkbox Access Control ปรับเปลี่ยนสีเทาเมนู เช็คจาก Database
+    function applyRBAC(role, accessibleMenus) {
+        const allMenuIds = ['nav-ceo', 'nav-vchef', 'nav-employee', 'nav-turnover', 'nav-scan', 'nav-slip', 'nav-report', 'nav-usermgt'];
 
-        // ล้างค่าให้กดได้ทุกเมนูก่อน
-        Object.values(menus).forEach(menu => {
-            if (menu) menu.classList.remove('disabled-nav');
+        allMenuIds.forEach(id => {
+            const menuEl = document.getElementById(id);
+            if (menuEl) {
+                // แอดมินเข้าได้หมด หรือ เมนูนั้นถูกติ๊กสิทธิ์ไว้
+                if (role === 'admin' || accessibleMenus.includes(id)) {
+                    menuEl.classList.remove('disabled-nav');
+                } else {
+                    menuEl.classList.add('disabled-nav');
+                }
+            }
         });
 
-        if (role === 'staff') {
-            if (menus.ceo) menus.ceo.classList.add('disabled-nav');
-            if (menus.vchef) menus.vchef.classList.add('disabled-nav');
-            if (menus.employee) menus.employee.classList.add('disabled-nav');
-            if (menus.turnover) menus.turnover.classList.add('disabled-nav');
-            if (menus.slip) menus.slip.classList.add('disabled-nav');
-            if (menus.report) menus.report.classList.add('disabled-nav');
-            if (menus.usermgt) menus.usermgt.classList.add('disabled-nav');
-            switchTab('view-scan', menus.scan);
-        } else if (role === 'hr') {
-            if (menus.ceo) menus.ceo.classList.add('disabled-nav');
-            if (menus.usermgt) menus.usermgt.classList.add('disabled-nav');
-            switchTab('view-employee', menus.employee);
+        // ดักจับว่าหน้าแรกที่โหลดขึ้นมา ถูกปิดสิทธิ์อยู่ไหม (เช่น CEO Dashboard)
+        const activeMenu = document.querySelector('.nav-item.active');
+        if (activeMenu && activeMenu.classList.contains('disabled-nav')) {
+            switchTab('view-scan', document.getElementById('nav-scan'));
         }
     }
 
-    // 🔴 เปลี่ยนเงื่อนไขปุ่มไม่ให้กดได้ถ้ามี Class .disabled-nav
+    // 🔴 2. เปลี่ยนเงื่อนไขปุ่มไม่ให้กดได้ถ้ามี Class .disabled-nav
     function switchTab(tabId, element) {
       if (element && element.classList.contains('disabled-nav')) {
-          alert("🔒 คุณไม่มีสิทธิ์เข้าถึงเมนูส่วนนี้ครับ (Access Denied)");
+          alert("🔒 คุณไม่มีสิทธิ์เข้าถึงเมนูนี้ครับ โปรดติดต่อ Admin");
           return;
       }
 
@@ -691,12 +668,11 @@
       if (element) element.classList.add('active');
       
       if(tabId === 'view-report') loadPayrollReport();
-      if(tabId === 'view-ceo-setting') loadCompanyKPIHistoryList();
       if(tabId === 'view-turnover') renderTurnoverViewOperations();
-      if(tabId === 'view-usermgt') loadSystemUsers(); // 🔴 โหลดข้อมูลเมื่อเปิดหน้าจัดการ User
+      if(tabId === 'view-usermgt') loadSystemUsers();
     }
 
-    // 🔴 ระบบจัดการผู้ใช้งาน 
+    // 🔴 3. ระบบจัดการผู้ใช้งาน และสร้าง Checkbox
     async function loadSystemUsers() {
         const tbody = document.getElementById('userManagementTableBody');
         if (!tbody) return;
@@ -706,25 +682,49 @@
             if (error) throw error;
 
             tbody.innerHTML = '';
+            
+            const allMenus = [
+                { id: 'nav-ceo', name: 'CEO Dashboard' },
+                { id: 'nav-vchef', name: 'VChef Studio' },
+                { id: 'nav-employee', name: 'Employee Data' },
+                { id: 'nav-turnover', name: 'Turnover Analysis' },
+                { id: 'nav-scan', name: 'Attendance Logs' },
+                { id: 'nav-slip', name: 'Payroll Slip' },
+                { id: 'nav-report', name: 'Expense Report' },
+                { id: 'nav-usermgt', name: 'System Settings' }
+            ];
+
             profiles.forEach(profile => {
-                const roleSelect = `
-                    <select onchange="updateUserRole('${profile.id}', this.value)" class="border border-slate-300 p-1 rounded text-sm w-32 ${profile.role === 'admin' ? 'bg-amber-50 font-bold text-amber-700' : ''}">
-                        <option value="staff" ${profile.role === 'staff' ? 'selected' : ''}>Staff</option>
-                        <option value="hr" ${profile.role === 'hr' ? 'selected' : ''}>HR</option>
-                        <option value="manager" ${profile.role === 'manager' ? 'selected' : ''}>Manager</option>
-                        <option value="ceo" ${profile.role === 'ceo' ? 'selected' : ''}>CEO</option>
-                        <option value="admin" ${profile.role === 'admin' ? 'selected' : ''}>Admin</option>
-                    </select>
-                `;
+                const userMenus = profile.accessible_menus || [];
+                
+                // สร้าง Checkbox กล่องสิทธิ์
+                let checkboxesHTML = `<div class="grid grid-cols-2 gap-y-2 gap-x-4 text-[11.5px] bg-white p-3 rounded border">`;
+                allMenus.forEach(m => {
+                    const isChecked = userMenus.includes(m.id) ? 'checked' : '';
+                    const isDisabled = (profile.role === 'admin' && m.id === 'nav-usermgt') ? 'disabled' : '';
+                    
+                    checkboxesHTML += `
+                        <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-50 p-1 rounded transition">
+                            <input type="checkbox" value="${m.id}" class="menu-cb-${profile.id} cursor-pointer w-3.5 h-3.5 accent-emerald-600" ${isChecked} ${isDisabled} onchange="updateUserMenus('${profile.id}')">
+                            <span class="${isChecked ? 'text-emerald-700 font-bold' : 'text-slate-500'}">${m.name}</span>
+                        </label>
+                    `;
+                });
+                checkboxesHTML += `</div>`;
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="text-xs text-slate-400 font-mono">${profile.id}</td>
+                    <tr class="hover:bg-slate-50/50 transition border-b border-slate-100">
+                        <td class="text-xs text-slate-400 font-mono">${profile.id.substring(0, 8)}...</td>
                         <td class="font-semibold text-slate-700">${profile.email}</td>
-                        <td>${roleSelect}</td>
-                        <td>
-                            <button onclick="sendPasswordReset('${profile.email}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded text-xs font-semibold transition">
-                                <i class="fa-solid fa-envelope mr-1"></i> Send Reset Link
+                        <td class="py-2.5 w-1/2">${checkboxesHTML}</td>
+                        <td class="align-top py-4">
+                            <select onchange="updateUserRole('${profile.id}', this.value)" class="border border-slate-300 p-1 rounded text-xs w-24 mb-2 shadow-sm ${profile.role === 'admin' ? 'bg-amber-50 font-bold text-amber-700 border-amber-300' : ''}">
+                                <option value="user" ${profile.role !== 'admin' ? 'selected' : ''}>User (Staff)</option>
+                                <option value="admin" ${profile.role === 'admin' ? 'selected' : ''}>Admin (CEO)</option>
+                            </select>
+                            <br>
+                            <button onclick="sendPasswordReset('${profile.email}')" class="bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white px-2.5 py-1 rounded text-[11px] font-semibold transition w-24 shadow-sm">
+                                <i class="fa-solid fa-key mr-1"></i> Reset Pass
                             </button>
                         </td>
                     </tr>
@@ -739,10 +739,23 @@
         try {
             const { error } = await supabaseClient.from('profiles').update({ role: newRole }).eq('id', userId);
             if (error) throw error;
-            console.log(`Role updated to ${newRole}`);
         } catch (err) {
             alert("Update failed: " + err.message);
             loadSystemUsers(); 
+        }
+    }
+
+    // 🔴 4. อัปเดตสิทธิ์เมนูเข้าฐานข้อมูลทันทีเมื่อแอดมินติ๊กถูก
+    async function updateUserMenus(userId) {
+        const checkboxes = document.querySelectorAll(`.menu-cb-${userId}:checked`);
+        const selectedMenus = Array.from(checkboxes).map(cb => cb.value);
+
+        try {
+            const { error } = await supabaseClient.from('profiles').update({ accessible_menus: selectedMenus }).eq('id', userId);
+            if (error) throw error;
+            loadSystemUsers(); // รีโหลดเพื่อเปลี่ยนสีตัวอักษรเป็นตัวหนาสีเขียว
+        } catch (err) {
+            alert("Failed to update permissions: " + err.message);
         }
     }
 
@@ -757,6 +770,43 @@
         }
     }
 
+    // 🔴 5. Modal จัดการการสร้าง User
+    function openCreateUserModal() {
+        document.getElementById('createUserModal').classList.add('active');
+    }
+    
+    function closeCreateUserModal() {
+        document.getElementById('createUserModal').classList.remove('active');
+        document.getElementById('newUserEmail').value = '';
+        document.getElementById('newUserPassword').value = '';
+    }
+
+    async function handleCreateNewUser(e) {
+        e.preventDefault();
+        const email = document.getElementById('newUserEmail').value;
+        const password = document.getElementById('newUserPassword').value;
+        const btn = document.getElementById('btnCreateUser');
+        
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังสร้าง...';
+        btn.disabled = true;
+
+        try {
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) throw error;
+
+            alert('🎉 สร้างบัญชีสำเร็จ! ระบบจะทำการ Logout บัญชี Admin ออกเพื่อความปลอดภัย กรุณาล็อกอินด้วยบัญชี Admin ของคุณใหม่อีกครั้งครับ');
+            await supabaseClient.auth.signOut();
+            window.location.reload();
+        } catch (err) {
+            alert("เกิดข้อผิดพลาดในการสร้างบัญชี: " + err.message);
+            btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> สร้างบัญชี';
+            btn.disabled = false;
+        }
+    }
+
+    // ==========================================
+    // โค้ดส่วนอื่นๆ (Dashboard, Charts, Payroll)
+    // ==========================================
     function generateDynamicMonths() {
         const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const currentDate = new Date();
