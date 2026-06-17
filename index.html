@@ -751,17 +751,26 @@
     }
 
     // 🔴 3. ระบบจัดการผู้ใช้งาน (มีช่องกรอก Emp ID ด้วย)
+  // 🔴 3. ระบบจัดการผู้ใช้งาน (อัปเดต: เปลี่ยนเป็น Dropdown เลือกชื่อพนักงาน)
     async function loadSystemUsers() {
         const tbody = document.getElementById('userManagementTableBody');
         if (!tbody) return;
 
         try {
-            const { data: profiles, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
-            if (error) throw error;
+            // ดึงข้อมูล User Profiles และ ดึงรายชื่อพนักงานทั้งหมดมาพร้อมกัน
+            const [profilesRes, employeesRes] = await Promise.all([
+                supabaseClient.from('profiles').select('*').order('created_at', { ascending: false }),
+                supabaseClient.from('employees').select('id, name').order('id', { ascending: true })
+            ]);
+
+            if (profilesRes.error) throw profilesRes.error;
+            if (employeesRes.error) throw employeesRes.error;
+
+            const profiles = profilesRes.data;
+            const employeesList = employeesRes.data || [];
 
             tbody.innerHTML = '';
             
-            // 🟢 อัปเดตรายชื่อเมนูทั้งหมดที่มีในระบบ
             const allMenus = [
                 { id: 'nav-ceo', name: 'CEO Dashboard' },
                 { id: 'nav-vchef', name: 'VChef Studio' },
@@ -777,6 +786,7 @@
             profiles.forEach(profile => {
                 const userMenus = profile.accessible_menus || [];
                 
+                // --- ส่วน Checkbox สิทธิ์เข้าเมนู ---
                 let checkboxesHTML = `<div class="grid grid-cols-2 gap-y-2 gap-x-4 text-[11px] bg-white p-3 rounded border shadow-sm">`;
                 allMenus.forEach(m => {
                     const isChecked = userMenus.includes(m.id) ? 'checked' : '';
@@ -790,11 +800,20 @@
                 });
                 checkboxesHTML += `</div>`;
 
+                // --- 🟢 สร้าง Dropdown เลือกพนักงาน ---
+                let empSelectHTML = `<select onchange="updateUserEmpId('${profile.id}', this.value)" class="border border-slate-300 p-1 rounded text-xs w-full shadow-sm outline-none focus:border-blue-500">`;
+                empSelectHTML += `<option value="">-- ไม่ผูกรหัสพนักงาน --</option>`;
+                employeesList.forEach(emp => {
+                    const isSelected = profile.emp_id === String(emp.id) ? 'selected' : '';
+                    empSelectHTML += `<option value="${emp.id}" ${isSelected}>[ID: ${emp.id}] ${emp.name}</option>`;
+                });
+                empSelectHTML += `</select>`;
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50/50 transition border-b border-slate-100">
                         <td class="align-top py-4">
                             <div class="font-semibold text-slate-700 text-sm mb-1">${profile.email}</div>
-                            <div class="text-[10px] text-slate-400 font-mono">ID: ${profile.id.substring(0, 12)}...</div>
+                            <div class="text-[10px] text-slate-400 font-mono">UUID: ${profile.id.substring(0, 12)}...</div>
                         </td>
                         <td class="py-2.5 w-1/2">${checkboxesHTML}</td>
                         <td class="align-top py-4">
@@ -807,7 +826,7 @@
                             </div>
                             <div class="flex items-center gap-2 mb-3">
                                 <span class="text-xs font-bold text-slate-500 w-12">Emp ID:</span>
-                                <input type="text" placeholder="รหัส พนง." value="${profile.emp_id || ''}" onchange="updateUserEmpId('${profile.id}', this.value)" class="border border-slate-300 p-1 rounded text-xs w-full shadow-sm outline-none focus:border-blue-500">
+                                ${empSelectHTML}
                             </div>
                             <button onclick="sendPasswordReset('${profile.email}')" class="bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white px-2.5 py-1.5 rounded text-[11px] font-semibold transition w-full shadow-sm flex items-center justify-center">
                                 <i class="fa-solid fa-key mr-1.5"></i> Reset Password
