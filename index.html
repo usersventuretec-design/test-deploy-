@@ -26,7 +26,6 @@
     .nav-item:hover, .nav-item.active { background-color: #1e293b; color: white; border-left-color: #3b82f6; }
     .nav-item i { width: 24px; font-size: 1.1rem; }
     
-    /* 🔴 CSS สำหรับเมนูที่ถูกระงับสิทธิ์ (สีเทาและกดไม่ได้) */
     .nav-item.disabled-nav {
         opacity: 0.35;
         cursor: not-allowed;
@@ -41,7 +40,6 @@
     .tab-view { display: none; animation: fadeIn 0.3s ease-in-out; }
     .tab-view.active { display: block; }
     
-    /* 🔴 Modal CSS */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
     .modal-overlay.active { display: flex; }
 
@@ -117,6 +115,26 @@
     </div>
   </div>
 
+  <div id="resetPasswordModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900" style="display: none;">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-key text-blue-600 text-2xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800">ตั้งรหัสผ่านใหม่</h2>
+        <p class="text-sm text-slate-500 mt-1">กรุณากำหนดรหัสผ่านใหม่ของคุณ (ขั้นต่ำ 6 ตัวอักษร)</p>
+      </div>
+      <form onsubmit="handleUpdateNewPassword(event)">
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-slate-600 mb-2">New Password</label>
+          <input type="password" id="newRecoveryPassword" required minlength="6" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none" placeholder="••••••••">
+        </div>
+        <button type="submit" id="btnUpdatePassword" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+          <i class="fa-solid fa-floppy-disk mr-2"></i> บันทึกรหัสผ่านใหม่
+        </button>
+      </form>
+    </div>
+  </div>
   <div id="createUserModal" class="modal-overlay">
     <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
       <div class="flex justify-between items-center mb-6 border-b pb-3">
@@ -675,7 +693,8 @@
       </div>
 
     </div>
-  </div> <script>
+  </div> 
+  <script>
     const SUPABASE_URL = "https://icnvofzjmonueefelajk.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_75XCIAfjQqnd8tDxZg36Yg_cde3Bsoo";
 
@@ -699,7 +718,44 @@
 
     window.onload = function() { 
       checkAuth();
+      
+      // 🔴 เพิ่มระบบตรวจจับการ Reset Password
+      // เมื่อผู้ใช้กดลิงก์จากอีเมล Supabase จะส่งสถานะ 'PASSWORD_RECOVERY' กลับมา
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'PASSWORD_RECOVERY') {
+              // ซ่อนหน้าแอปและหน้า Login ทั้งหมด
+              document.getElementById('login-section').style.display = 'none';
+              document.getElementById('app-section').style.display = 'none';
+              // โชว์ Modal ตั้งรหัสผ่านใหม่
+              document.getElementById('resetPasswordModal').style.display = 'flex';
+          }
+      });
     };
+
+    // 🔴 เพิ่มฟังก์ชันสำหรับอัปเดตรหัสผ่านใหม่
+    async function handleUpdateNewPassword(e) {
+        e.preventDefault();
+        const newPassword = document.getElementById('newRecoveryPassword').value;
+        const btn = document.getElementById('btnUpdatePassword');
+        
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังบันทึก...';
+        btn.disabled = true;
+
+        try {
+            // โค้ดสำหรับอัปเดตรหัสผ่านใน Supabase
+            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+
+            alert("✅ เปลี่ยนรหัสผ่านสำเร็จ! กรุณาล็อกอินด้วยรหัสผ่านใหม่ครับ");
+            
+            // ล้าง URL (เอา token ออก) และรีเฟรชกลับหน้า Login
+            window.location.href = window.location.pathname; 
+        } catch (err) {
+            alert("เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน: " + err.message);
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> บันทึกรหัสผ่านใหม่';
+            btn.disabled = false;
+        }
+    }
 
     async function checkAuth() {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -728,7 +784,6 @@
         }
     }
 
-    // 🟢 ฟังก์ชันสำหรับให้ผู้ใช้กดลืมรหัสผ่านหน้า Login
     async function handleForgotPassword() {
         const email = document.getElementById('loginEmail').value.trim();
         
@@ -741,8 +796,9 @@
         if(!confirm(`ระบบจะส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปที่อีเมล: ${email} \nคุณยืนยันหรือไม่?`)) return;
 
         try {
-            // เรียกใช้ฟังก์ชัน reset password ของ Supabase
-            const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + window.location.pathname // ชี้ให้กลับมาที่หน้าเดิม
+            });
             if (error) throw error;
             
             alert(`✅ ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง ${email} เรียบร้อยแล้ว \nกรุณาเช็คในกล่องจดหมาย (Inbox) หรือโฟลเดอร์จดหมายขยะ (Spam) ของคุณครับ`);
@@ -786,7 +842,6 @@
         loadEmployeeList();    
     }
 
-    // 🔴 1. ระบบ Checkbox Access Control ปรับเปลี่ยนสีเทาเมนู เช็คจาก Database
     function applyRBAC(role, accessibleMenus) {
         const allMenuIds = ['nav-ceo', 'nav-vchef', 'nav-employee', 'nav-turnover', 'nav-scan', 'nav-myscan', 'nav-slip', 'nav-report', 'nav-usermgt'];
 
@@ -807,7 +862,6 @@
         }
     }
 
-    // 🔴 2. เปลี่ยนเงื่อนไขปุ่ม
     function switchTab(tabId, element) {
       if (element && element.classList.contains('disabled-nav')) {
           alert("🔒 คุณไม่มีสิทธิ์เข้าถึงเมนูนี้ครับ โปรดติดต่อ Admin");
@@ -826,7 +880,6 @@
       if(tabId === 'view-scan') { generateScanFilters(); loadAdminAttendanceLogs(); }
     }
 
-    // 🟢 สร้างตัวเลือกใน Dropdown ค้นหาหน้า Admin Scan
     function generateScanFilters() {
         const periodSelect = document.getElementById('filterScanPeriod');
         const targetSelect = document.getElementById('targetMonthFilter');
@@ -843,7 +896,6 @@
         }
     }
 
-    // 🟢 ดึงข้อมูลจากฐานข้อมูล Supabase สำหรับหน้า Admin
     async function loadAdminAttendanceLogs() {
         const tbody = document.getElementById('adminScanTableBody');
         if(!tbody) return;
@@ -870,7 +922,6 @@
         }
     }
 
-    // 🟢 แสดงผลข้อมูลลงตารางพร้อมระบบกรอง (Filter)
     function renderAdminScanTable() {
         const tbody = document.getElementById('adminScanTableBody');
         if(!tbody) return;
@@ -916,7 +967,6 @@
         });
     }
 
-    // 🔴 3. ระบบจัดการผู้ใช้งาน
     async function loadSystemUsers() {
         const tbody = document.getElementById('userManagementTableBody');
         if (!tbody) return;
@@ -1038,7 +1088,9 @@
     async function sendPasswordReset(email) {
         if(!confirm(`ระบบจะส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมล: ${email} ยืนยันหรือไม่?`)) return;
         try {
-            const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + window.location.pathname
+            });
             if (error) throw error;
             alert(`✅ ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง ${email} เรียบร้อยแล้ว`);
         } catch (err) {
@@ -1046,7 +1098,6 @@
         }
     }
 
-    // 🔴 5. Modal จัดการการสร้าง User
     function openCreateUserModal() { document.getElementById('createUserModal').classList.add('active'); }
     function closeCreateUserModal() {
         document.getElementById('createUserModal').classList.remove('active');
@@ -1077,7 +1128,6 @@
         }
     }
 
-    // 🟢 6. ดึงข้อมูลเวลาเข้าออกของฉัน (My Attendance)
     async function loadMyAttendance() {
         const tbody = document.getElementById('myScanTableBody');
         if(!tbody) return;
@@ -2163,7 +2213,6 @@
         } catch (err) { alert('เกิดข้อผิดพลาด: ' + err.message); }
     }
 
-    // 🟢 ฟังก์ชันนำเข้าข้อมูล (ปรับเป็น เข้า 08:30 น. และ เลิก 18:30 น.)
     async function importLogs() {
       const rawText = document.getElementById('rawFingerprintText').value.trim();
       if(!rawText) { alert('Please insert biometric raw logs data strings first.'); return; }
@@ -2202,12 +2251,10 @@
 
           if (scanIn) {
             const firstInMins = timeMinutes[0].totalMins;
-            // 🔴 เข้างาน 08:30 (8 * 60 + 30 = 510 นาที)
             if (firstInMins > 510) lateMinutes = firstInMins - 510; 
           }
           if (scanOut) {
             const lastOutMins = timeMinutes[timeMinutes.length - 1].totalMins;
-            // 🔴 เลิกงาน 18:30 (18 * 60 + 30 = 1110 นาที)
             if (lastOutMins > 1110) { 
               let rawOt = lastOutMins - 1110;
               if (lateMinutes > 0) rawOt = rawOt - lateMinutes; 
