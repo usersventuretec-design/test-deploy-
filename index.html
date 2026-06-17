@@ -2349,7 +2349,7 @@
       }
 
       const salary = Number(employee.salary || 0);
-      const minuteRate = ((salary / 30) / 8) / 60;
+      const minuteRate = ((salary / 30) / 9) / 60;
       const noWorkNoPay = Math.round((totalLateMinutes * minuteRate) * 100) / 100;
       const overtimeEarnings = Math.round((totalOtMinutes * minuteRate * 1.5) * 100) / 100;
       const socialSecurity = Math.min(750, Math.round((salary * 0.05) * 100) / 100);
@@ -2361,11 +2361,25 @@
       });
     }
 
-    function finalizeSlipsRender() {
+function finalizeSlipsRender() {
       const container = document.getElementById('slipsContainer'); container.innerHTML = "";
       loadedSlipsData.forEach((data, index) => { container.innerHTML += createSlipHTMLTemplate(index, data); });
       loadedSlipsData.forEach((data, index) => { recalculateIndividualTotals(index); });
       document.getElementById('dualSlipsWrapper').style.display = 'block';
+
+      // 🔴 เพิ่มระบบป้องกันสำหรับพนักงานทั่วไป (Staff)
+      if (currentUserRole !== 'admin') {
+          // 1. ซ่อนปุ่ม Save & Commit
+          const saveBtn = document.querySelector('button[onclick="saveDualSlipsFinal()"]');
+          if (saveBtn) saveBtn.style.display = 'none';
+
+          // 2. ล็อกช่อง Input ทั้งหมดในสลิปไม่ให้แก้ไขตัวเลขได้
+          const allSlipInputs = document.querySelectorAll('.slip-input');
+          allSlipInputs.forEach(input => {
+              input.readOnly = true;
+              input.style.cursor = 'not-allowed'; // เปลี่ยนรูปเมาส์ให้รู้ว่าพิมพ์ไม่ได้
+          });
+      }
     }
 
     function createSlipHTMLTemplate(index, data) {
@@ -2476,6 +2490,12 @@
     }
 
     async function saveDualSlipsFinal() {
+      // 🔴 ดักจับสิทธิ์ระดับฟังก์ชัน ป้องกันการแฮ็กบันทึกข้อมูล
+      if (currentUserRole !== 'admin') {
+          alert("❌ ไม่อนุญาตให้ดำเนินการ: คุณไม่มีสิทธิ์แก้ไขหรือบันทึกฐานข้อมูลเงินเดือนครับ");
+          return;
+      }
+
       const selectedMonth = document.getElementById('selectPayrollMonth1').value;
       try {
         for (let index = 0; index < loadedSlipsData.length; index++) {
@@ -2542,7 +2562,7 @@
             allEmployees.forEach(emp => {
                 const empLogs = logMap[emp.id] || { late: 0, ot: 0 };
                 const salary = Number(emp.salary || 0);
-                const minuteRate = ((salary / 30) / 8) / 60;
+                const minuteRate = ((salary / 30) / 9) / 60;
 
                 const noWorkNoPay = Math.round((empLogs.late * minuteRate) * 100) / 100;
                 const overtimeEarnings = Math.round((empLogs.ot * minuteRate * 1.5) * 100) / 100;
