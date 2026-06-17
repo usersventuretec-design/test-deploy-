@@ -719,7 +719,7 @@
                         <td class="py-2.5 w-1/2">${checkboxesHTML}</td>
                         <td class="align-top py-4">
                             <select onchange="updateUserRole('${profile.id}', this.value)" class="border border-slate-300 p-1 rounded text-xs w-24 mb-2 shadow-sm ${profile.role === 'admin' ? 'bg-amber-50 font-bold text-amber-700 border-amber-300' : ''}">
-                                <option value="user" ${profile.role !== 'admin' ? 'selected' : ''}>User (Staff)</option>
+                                <option value="staff" ${profile.role !== 'admin' ? 'selected' : ''}>User (Staff)</option>
                                 <option value="admin" ${profile.role === 'admin' ? 'selected' : ''}>Admin (CEO)</option>
                             </select>
                             <br>
