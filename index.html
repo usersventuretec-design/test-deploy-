@@ -703,6 +703,7 @@
     let currentUser = null;
     let currentUserRole = null;
     let currentUserMenus = []; 
+    let currentUserEmpId = null;
 
     let charts = {};
     let cachedReportData = [];
@@ -812,11 +813,10 @@
         window.location.reload();
     }
 
-    async function fetchRoleAndInitApp() {
-        let employeeName = "STAFF"; // ตั้งค่าเริ่มต้น
+   async function fetchRoleAndInitApp() {
+        let employeeName = "STAFF"; 
         
         try {
-            // เพิ่มการดึงค่า emp_id มาด้วย
             const { data: profile, error } = await supabaseClient
                 .from('profiles')
                 .select('role, accessible_menus, emp_id')
@@ -826,8 +826,8 @@
             if (error) throw error;
             currentUserRole = profile.role;
             currentUserMenus = profile.accessible_menus || [];
+            currentUserEmpId = profile.emp_id; // 🔴 เก็บค่า emp_id เอาไว้ใช้กรองข้อมูลสลิป
 
-            // ตรวจสอบว่ามีการผูกรหัสพนักงาน (emp_id) ไว้หรือไม่ ถ้ามีให้ไปดึงชื่อมา
             if (profile.emp_id) {
                 const { data: empData, error: empError } = await supabaseClient
                     .from('employees')
@@ -836,7 +836,7 @@
                     .single();
                     
                 if (empData && empData.name) {
-                    employeeName = empData.name; // นำชื่อจากฐานข้อมูลมาแทนที่
+                    employeeName = empData.name; 
                 }
             }
             
@@ -847,17 +847,19 @@
         }
 
         document.getElementById('profileEmail').innerText = currentUser.email;
-        
-        // ถ้าเป็น Admin ให้โชว์คำว่า ADMIN แต่ถ้าเป็น Staff ให้โชว์ชื่อจริงแทน
         document.getElementById('profileRole').innerText = currentUserRole === 'admin' ? 'ADMIN' : employeeName;
-
-        // อัปเดตรูป Avatar ให้สร้างรูปจากชื่อจริง
         document.getElementById('profileAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUserRole === 'admin' ? 'Admin' : employeeName)}&background=2563eb&color=fff`;
 
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('app-section').style.display = 'flex';
 
         applyRBAC(currentUserRole, currentUserMenus);
+
+        // 🔴 ซ่อน Option 2: Bulk Payroll สำหรับพนักงานทั่วไป (Staff)
+        const bulkOptionDiv = document.querySelector('#view-slip .bg-blue-50\\/20');
+        if (bulkOptionDiv) {
+            bulkOptionDiv.style.display = currentUserRole === 'admin' ? 'block' : 'none';
+        }
 
         generateDynamicMonths(); 
         loadDashboardData();   
@@ -2048,8 +2050,16 @@
 
         localEmployeesCache.forEach(e => {
           const text = `[ID ${e.id}] ${e.name} (${e.dept})`;
-          if(d1) d1.innerHTML += `<option value="${e.id}">${text}</option>`;
-          if(d2) d2.innerHTML += `<option value="${e.id}">${text}</option>`;
+          
+          // 🔴 เช็คสิทธิ์: ถ้าเป็นแอดมินให้เห็นทุกคน ถ้าเป็นพนักงานให้เห็นแค่ชื่อตัวเอง
+          const isAllowed = currentUserRole === 'admin' || String(e.id) === String(currentUserEmpId);
+
+          // นำไปใส่ Dropdown ในหน้า Payroll Slip เฉพาะรายชื่อที่ผ่านเงื่อนไขสิทธิ์
+          if (isAllowed) {
+              if(d1) d1.innerHTML += `<option value="${e.id}">${text}</option>`;
+              if(d2) d2.innerHTML += `<option value="${e.id}">${text}</option>`;
+          }
+
           if(dReport) dReport.innerHTML += `<option value="${e.id}">${text}</option>`;
           if(e.is_sales && dKpiSalesSelect) dKpiSalesSelect.innerHTML += `<option value="${e.id}">${e.name}</option>`;
 
