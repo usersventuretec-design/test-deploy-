@@ -25,6 +25,22 @@
     .nav-item { padding: 14px 24px; display: flex; align-items: center; cursor: pointer; border-left: 4px solid transparent; transition: 0.2s; font-size: 14px;}
     .nav-item:hover, .nav-item.active { background-color: #1e293b; color: white; border-left-color: #3b82f6; }
     .nav-item i { width: 24px; font-size: 1.1rem; }
+    
+    /* 🔴 CSS สำหรับเมนูที่ถูกระงับสิทธิ์ (สีเทาและกดไม่ได้) */
+    .nav-item.disabled-nav {
+        opacity: 0.35;
+        cursor: not-allowed;
+        background-color: transparent !important;
+        color: #64748b !important;
+        border-left-color: transparent !important;
+    }
+    .nav-item.disabled-nav i {
+        color: #64748b !important;
+    }
+    .nav-item.disabled-nav:hover {
+        background-color: rgba(255,255,255,0.05) !important;
+    }
+
     .main-content { margin-left: 260px; padding: 32px; width: calc(100% - 260px); min-height: 100vh; }
     .tab-view { display: none; animation: fadeIn 0.3s ease-in-out; }
     .tab-view.active { display: block; }
@@ -105,14 +121,16 @@
       </div>
       <div class="flex-1 mt-2">
         <div id="nav-ceo" class="nav-item active" onclick="switchTab('view-summary', this)"><i class="fa-solid fa-chart-pie"></i> CEO Dashboard</div>
-        <a id="nav-vchef" href="vchef-studio.html" class="nav-item text-amber-400 font-semibold" style="text-decoration: none;">
-          <i class="fa-solid fa-stroopwafel"></i> VChef & KPI Studio
-        </a>
+        <div id="nav-vchef" class="nav-item text-amber-400 font-semibold" onclick="window.location.href='vchef-studio.html'"><i class="fa-solid fa-stroopwafel"></i> VChef & KPI Studio</div>
         <div id="nav-employee" class="nav-item" onclick="switchTab('view-employee', this)"><i class="fa-solid fa-users-gear"></i> Employee Database</div>
         <div id="nav-turnover" class="nav-item" onclick="switchTab('view-turnover', this)"><i class="fa-solid fa-user-slash text-rose-500"></i> Employee Turnover Analytics</div>
         <div id="nav-scan" class="nav-item" onclick="switchTab('view-scan', this)"><i class="fa-solid fa-fingerprint"></i> Attendance Logs (Fingerprint)</div>
         <div id="nav-slip" class="nav-item" onclick="switchTab('view-slip', this)"><i class="fa-solid fa-file-invoice-dollar"></i> Payroll Slip Maker</div>
         <div id="nav-report" class="nav-item" onclick="switchTab('view-report', this)"><i class="fa-solid fa-table-list"></i> Expense Summary Report</div>
+        
+        <div id="nav-usermgt" class="nav-item border-t border-slate-700 mt-2" onclick="switchTab('view-usermgt', this)">
+            <i class="fa-solid fa-user-shield text-emerald-500"></i> User & Role Management
+        </div>
       </div>
       <div class="p-4 border-t border-slate-700 mt-auto flex flex-col gap-3">
         <div class="flex items-center">
@@ -513,6 +531,34 @@
         </div>
       </div>
 
+      <div id="view-usermgt" class="tab-view">
+          <div class="header-app flex justify-between items-center mb-6 card-ui py-4">
+              <div>
+                  <h2 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-user-shield text-emerald-600 mr-2"></i> System Users & Roles</h2>
+                  <p class="text-sm text-slate-500">จัดการสิทธิ์การเข้าถึงเมนู และส่งลิงก์รีเซ็ตรหัสผ่านให้พนักงาน</p>
+              </div>
+              <button onclick="alert('เนื่องจากความปลอดภัยของ Supabase การสร้าง User ใหม่พร้อมรหัสผ่านด้วยฝั่ง Client จะทำให้คุณเด้งออกจากระบบ แนะนำให้เชิญพนักงาน (Invite User) ผ่าน Supabase Dashboard ไปก่อนครับ')" class="btn-ui bg-emerald-600 hover:bg-emerald-700">
+                  <i class="fa-solid fa-user-plus"></i> Create New User
+              </button>
+          </div>
+
+          <div class="card-ui overflow-auto">
+              <table class="data-table w-full">
+                  <thead>
+                      <tr>
+                          <th>User ID (UUID)</th>
+                          <th>Email Address</th>
+                          <th>System Role (สิทธิ์)</th>
+                          <th>Action (รีเซ็ตรหัสผ่าน)</th>
+                      </tr>
+                  </thead>
+                  <tbody id="userManagementTableBody">
+                      <tr><td colspan="4" class="text-center py-8 text-slate-400"><i class="fa fa-spinner fa-spin mr-2"></i>Loading system accounts...</td></tr>
+                  </tbody>
+              </table>
+          </div>
+      </div>
+
     </div>
   </div> <script>
     const SUPABASE_URL = "https://icnvofzjmonueefelajk.supabase.co";
@@ -534,19 +580,16 @@
     let globalTimelineRevenue = [];
     let globalTimelinePayroll = [];
 
-    // 🟢 Initialize Application with Auth Check
     window.onload = function() { 
       checkAuth();
     };
 
-    // --- Authentication & RBAC Functions ---
     async function checkAuth() {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
             currentUser = session.user;
             await fetchRoleAndInitApp();
         } else {
-            // Not logged in
             document.getElementById('login-section').style.display = 'flex';
             document.getElementById('app-section').style.display = 'none';
         }
@@ -564,7 +607,7 @@
             alert("Login Failed: " + error.message);
             document.getElementById('loginBtnText').innerText = "Sign In";
         } else {
-            window.location.reload(); // Reload to run checkAuth() again
+            window.location.reload();
         }
     }
 
@@ -574,7 +617,6 @@
     }
 
     async function fetchRoleAndInitApp() {
-        // Fetch role from profiles table (You need to create this table in Supabase)
         try {
             const { data: profile, error } = await supabaseClient
                 .from('profiles')
@@ -585,58 +627,135 @@
             if (error) throw error;
             currentUserRole = profile.role;
         } catch (e) {
-            console.warn("Role fetch error (Table might not exist yet). Defaulting to 'admin'. Error: ", e);
-            currentUserRole = 'admin'; // กำหนดค่า fallback เป็น admin ก่อนหากยังไม่ได้สร้างตาราง
+            console.warn("Role fetch error: ", e);
+            currentUserRole = 'admin'; 
         }
 
-        // Update UI with User Info
         document.getElementById('profileEmail').innerText = currentUser.email;
         document.getElementById('profileRole').innerText = currentUserRole.toUpperCase();
 
-        // Switch Views
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('app-section').style.display = 'flex';
 
-        // Apply RBAC (กำหนดสิทธิ์ซ่อน/แสดงเมนู)
         applyRBAC(currentUserRole);
 
-        // Load App Data
         generateDynamicMonths(); 
         loadDashboardData();   
         loadEmployeeList();    
     }
 
+    // 🔴 ฟังก์ชันปิด/เปิดเมนูโดยใช้สีเทา (Disabled)
     function applyRBAC(role) {
-        // อ้างอิงเมนูต่างๆ ด้วย ID (ตั้งค่าไว้ที่ฝั่ง HTML ด้านบนแล้ว)
-        const navCEO = document.getElementById('nav-ceo');
-        const navVChef = document.getElementById('nav-vchef');
-        const navEmployee = document.getElementById('nav-employee');
-        const navTurnover = document.getElementById('nav-turnover');
-        const navScan = document.getElementById('nav-scan');
-        const navSlip = document.getElementById('nav-slip');
-        const navReport = document.getElementById('nav-report');
+        const menus = {
+            ceo: document.getElementById('nav-ceo'),
+            vchef: document.getElementById('nav-vchef'),
+            employee: document.getElementById('nav-employee'),
+            turnover: document.getElementById('nav-turnover'),
+            scan: document.getElementById('nav-scan'),
+            slip: document.getElementById('nav-slip'),
+            report: document.getElementById('nav-report'),
+            usermgt: document.getElementById('nav-usermgt')
+        };
 
-        // ตัวอย่างการตั้งค่าเงื่อนไข Role-Based Access Control
+        // ล้างค่าให้กดได้ทุกเมนูก่อน
+        Object.values(menus).forEach(menu => {
+            if (menu) menu.classList.remove('disabled-nav');
+        });
+
         if (role === 'staff') {
-            // พนักงานทั่วไป เห็นแค่หน้า สแกนนิ้วมือเท่านั้น
-            navCEO.style.display = 'none';
-            navVChef.style.display = 'none';
-            navEmployee.style.display = 'none';
-            navTurnover.style.display = 'none';
-            navSlip.style.display = 'none';
-            navReport.style.display = 'none';
-            
-            // บังคับเปลี่ยนหน้าเริ่มต้นไปที่หน้าสแกนนิ้ว
-            switchTab('view-scan', navScan);
+            if (menus.ceo) menus.ceo.classList.add('disabled-nav');
+            if (menus.vchef) menus.vchef.classList.add('disabled-nav');
+            if (menus.employee) menus.employee.classList.add('disabled-nav');
+            if (menus.turnover) menus.turnover.classList.add('disabled-nav');
+            if (menus.slip) menus.slip.classList.add('disabled-nav');
+            if (menus.report) menus.report.classList.add('disabled-nav');
+            if (menus.usermgt) menus.usermgt.classList.add('disabled-nav');
+            switchTab('view-scan', menus.scan);
         } else if (role === 'hr') {
-            // ฝ่ายบุคคล ไม่ให้เห็น Dashboard สรุปการเงิน
-            navCEO.style.display = 'none';
-            switchTab('view-employee', navEmployee);
+            if (menus.ceo) menus.ceo.classList.add('disabled-nav');
+            if (menus.usermgt) menus.usermgt.classList.add('disabled-nav');
+            switchTab('view-employee', menus.employee);
         }
-        // หาก role เป็น 'admin' หรือ 'ceo' จะเห็นทุกเมนูโดยอัตโนมัติ (ไม่ต้องเขียนเงื่อนไขซ่อน)
     }
-    // ----------------------------------------
 
+    // 🔴 เปลี่ยนเงื่อนไขปุ่มไม่ให้กดได้ถ้ามี Class .disabled-nav
+    function switchTab(tabId, element) {
+      if (element && element.classList.contains('disabled-nav')) {
+          alert("🔒 คุณไม่มีสิทธิ์เข้าถึงเมนูส่วนนี้ครับ (Access Denied)");
+          return;
+      }
+
+      document.querySelectorAll('.app-section, .tab-view').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      if (element) element.classList.add('active');
+      
+      if(tabId === 'view-report') loadPayrollReport();
+      if(tabId === 'view-ceo-setting') loadCompanyKPIHistoryList();
+      if(tabId === 'view-turnover') renderTurnoverViewOperations();
+      if(tabId === 'view-usermgt') loadSystemUsers(); // 🔴 โหลดข้อมูลเมื่อเปิดหน้าจัดการ User
+    }
+
+    // 🔴 ระบบจัดการผู้ใช้งาน 
+    async function loadSystemUsers() {
+        const tbody = document.getElementById('userManagementTableBody');
+        if (!tbody) return;
+
+        try {
+            const { data: profiles, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+
+            tbody.innerHTML = '';
+            profiles.forEach(profile => {
+                const roleSelect = `
+                    <select onchange="updateUserRole('${profile.id}', this.value)" class="border border-slate-300 p-1 rounded text-sm w-32 ${profile.role === 'admin' ? 'bg-amber-50 font-bold text-amber-700' : ''}">
+                        <option value="staff" ${profile.role === 'staff' ? 'selected' : ''}>Staff</option>
+                        <option value="hr" ${profile.role === 'hr' ? 'selected' : ''}>HR</option>
+                        <option value="manager" ${profile.role === 'manager' ? 'selected' : ''}>Manager</option>
+                        <option value="ceo" ${profile.role === 'ceo' ? 'selected' : ''}>CEO</option>
+                        <option value="admin" ${profile.role === 'admin' ? 'selected' : ''}>Admin</option>
+                    </select>
+                `;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="text-xs text-slate-400 font-mono">${profile.id}</td>
+                        <td class="font-semibold text-slate-700">${profile.email}</td>
+                        <td>${roleSelect}</td>
+                        <td>
+                            <button onclick="sendPasswordReset('${profile.email}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded text-xs font-semibold transition">
+                                <i class="fa-solid fa-envelope mr-1"></i> Send Reset Link
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-red-500 py-4">Error loading users: ${err.message}</td></tr>`;
+        }
+    }
+
+    async function updateUserRole(userId, newRole) {
+        try {
+            const { error } = await supabaseClient.from('profiles').update({ role: newRole }).eq('id', userId);
+            if (error) throw error;
+            console.log(`Role updated to ${newRole}`);
+        } catch (err) {
+            alert("Update failed: " + err.message);
+            loadSystemUsers(); 
+        }
+    }
+
+    async function sendPasswordReset(email) {
+        if(!confirm(`ระบบจะส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมล: ${email} ยืนยันหรือไม่?`)) return;
+        try {
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+            if (error) throw error;
+            alert(`✅ ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง ${email} เรียบร้อยแล้ว`);
+        } catch (err) {
+            alert("Error sending reset email: " + err.message);
+        }
+    }
 
     function generateDynamicMonths() {
         const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -682,17 +801,6 @@
         if(kpiSelect) kpiSelect.innerHTML = optionsHTML;
         if(slipSelect1) slipSelect1.innerHTML = optionsHTML;
         if(bulkSlipSelect) bulkSlipSelect.innerHTML = optionsHTML;
-    }
-
-    function switchTab(tabId, element) {
-      document.querySelectorAll('.app-section, .tab-view').forEach(s => s.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      element.classList.add('active');
-      
-      if(tabId === 'view-report') loadPayrollReport();
-      if(tabId === 'view-ceo-setting') loadCompanyKPIHistoryList();
-      if(tabId === 'view-turnover') renderTurnoverViewOperations();
     }
 
     const normalize = (str) => String(str).replace(/\s+/g, ' ').trim().toLowerCase();
