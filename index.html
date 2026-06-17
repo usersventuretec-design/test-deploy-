@@ -105,6 +105,10 @@
         <div class="mb-6">
           <label class="block text-sm font-semibold text-slate-600 mb-2">Password</label>
           <input type="password" id="loginPassword" required class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none" placeholder="••••••••">
+          
+          <div class="text-right mt-2">
+            <a href="#" onclick="handleForgotPassword()" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition">ลืมรหัสผ่าน? (Forgot Password)</a>
+          </div>
         </div>
         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
           <i class="fa-solid fa-right-to-bracket mr-2"></i> <span id="loginBtnText">Sign In</span>
@@ -721,6 +725,29 @@
             document.getElementById('loginBtnText').innerText = "Sign In";
         } else {
             window.location.reload();
+        }
+    }
+
+    // 🟢 ฟังก์ชันสำหรับให้ผู้ใช้กดลืมรหัสผ่านหน้า Login
+    async function handleForgotPassword() {
+        const email = document.getElementById('loginEmail').value.trim();
+        
+        if (!email) {
+            alert("⚠️ กรุณากรอกอีเมลของคุณในช่อง Email Address ด้านบนก่อนกดลืมรหัสผ่านครับ");
+            document.getElementById('loginEmail').focus();
+            return;
+        }
+
+        if(!confirm(`ระบบจะส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปที่อีเมล: ${email} \nคุณยืนยันหรือไม่?`)) return;
+
+        try {
+            // เรียกใช้ฟังก์ชัน reset password ของ Supabase
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+            if (error) throw error;
+            
+            alert(`✅ ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง ${email} เรียบร้อยแล้ว \nกรุณาเช็คในกล่องจดหมาย (Inbox) หรือโฟลเดอร์จดหมายขยะ (Spam) ของคุณครับ`);
+        } catch (err) {
+            alert("เกิดข้อผิดพลาดในการส่งอีเมลรีเซ็ตรหัสผ่าน: " + err.message);
         }
     }
 
