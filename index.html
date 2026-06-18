@@ -58,22 +58,15 @@
     }
 
     @media print {
-        /* 1. ตั้งค่าหน้ากระดาษ A4 และลดระยะขอบให้เหลือน้อยที่สุด */
         @page { size: A4 portrait; margin: 5mm; }
-        
         body, html { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; width: 100% !important; height: 100% !important; }
-        
-        /* 2. ซ่อน UI ที่ไม่เกี่ยวกับการปริ้น */
         .sidebar, .header-app, .btn-ui, #mobileOverlay, .md\:hidden, #login-section, #resetPasswordModal, #createUserModal { display: none !important; }
         .tab-view:not(#view-slip) { display: none !important; }
         #view-slip > div:not(#dualSlipsWrapper) { display: none !important; }
-        
         .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; }
-        
         #dualSlipsWrapper { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
         .slip-outer-container { width: 100% !important; max-width: 100% !important; min-width: 100% !important; display: block !important; margin: 0 !important; padding: 0 !important; }
         
-        /* 🔴 3. ปรับขนาดสลิปให้เหลือ 13cm (รับประกันว่า 2 ใบรวมกันไม่เกิน A4 แน่นอน) */
         .slip-box { 
             box-sizing: border-box !important;
             width: 100% !important; 
@@ -87,7 +80,6 @@
             overflow: hidden !important; 
         }
 
-        /* 🔴 4. บังคับบีบช่องไฟ บรรทัด และขนาดตัวอักษรข้างในให้พอดีกับ 13cm */
         .slip-box table { margin-top: 5px !important; }
         .slip-box table td, .slip-box table th {
             padding: 2px 8px !important; 
@@ -98,8 +90,6 @@
         .slip-box .slip-title { margin-bottom: 5px !important; font-size: 15px !important; }
         .slip-box .slip-meta-grid { margin-bottom: 5px !important; padding-bottom: 5px !important; font-size: 11px !important; }
         .slip-box .slip-input { font-size: 11px !important; }
-        
-        /* หมายเหตุตัวสีแดงด้านล่างสุด */
         .slip-box > div:last-child { margin-top: 5px !important; font-size: 10px !important; line-height: 1.2 !important; }
         
         ::-webkit-scrollbar { display: none; }
@@ -551,7 +541,32 @@
             <div class="relative w-full min-w-[400px]" style="height: 280px;"><canvas id="turnoverChart"></canvas></div>
         </div>
         <div class="card-ui overflow-auto">
-            <h3><i class="fa-solid fa-clipboard-user text-blue-800"></i> Workforce Lifecycle Ledger</h3>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-4">
+                <h3 class="!mb-0"><i class="fa-solid fa-clipboard-user text-blue-800"></i> Workforce Lifecycle Ledger</h3>
+                
+                <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Search Employee</label>
+                        <input type="text" id="filterTurnoverSearch" placeholder="พิมพ์ชื่อ หรือ ID..." class="border border-slate-300 p-2 rounded bg-white text-xs outline-none w-full md:w-48 shadow-sm" oninput="currentTurnoverPage = 1; renderTurnoverLedgerTable()">
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Department</label>
+                        <select id="filterTurnoverDept" class="border border-slate-300 p-2 rounded bg-white text-xs outline-none w-full md:w-32 shadow-sm" onchange="currentTurnoverPage = 1; renderTurnoverLedgerTable()">
+                            <option value="ALL">All Depts</option>
+                            <option value="MDT">MDT</option><option value="BSU">BSU</option><option value="EXP">EXP</option><option value="LGT">LGT</option><option value="HRC">HRC</option><option value="MKT">MKT</option><option value="ACC">ACC</option><option value="HR">HR</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Status</label>
+                        <select id="filterTurnoverStatus" class="border border-slate-300 p-2 rounded bg-white text-xs outline-none w-full md:w-32 shadow-sm" onchange="currentTurnoverPage = 1; renderTurnoverLedgerTable()">
+                            <option value="ALL">All Status</option>
+                            <option value="ACTIVE">Active (ปัจจุบัน)</option>
+                            <option value="RESIGNED">Resigned (ลาออก)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <table class="data-table w-full min-w-[900px]">
                 <thead>
                     <tr class="bg-slate-100 border-b text-xs uppercase">
@@ -562,6 +577,12 @@
                     <tr><td colspan="8" class="text-center py-4 text-slate-400">Loading workforce registry...</td></tr>
                 </tbody>
             </table>
+
+            <div id="turnoverLedgerPagination" class="flex justify-between items-center mt-4 text-sm font-medium text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200" style="display:none;">
+                <button onclick="changeTurnoverPage(-1)" id="btnPrevTurnoverPage" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-1.5 rounded transition disabled:opacity-40 disabled:cursor-not-allowed"><i class="fa-solid fa-chevron-left mr-2"></i> ก่อนหน้า</button>
+                <span id="turnoverPageInfo" class="bg-white px-4 py-1.5 rounded border border-slate-200">หน้า 1 จาก 1</span>
+                <button onclick="changeTurnoverPage(1)" id="btnNextTurnoverPage" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-1.5 rounded transition disabled:opacity-40 disabled:cursor-not-allowed">ถัดไป <i class="fa-solid fa-chevron-right ml-2"></i></button>
+            </div>
         </div>
       </div>
 
@@ -767,9 +788,11 @@
     let bulkProcessedPayloads = []; 
     let adminLogsCache = [];
     
-    // 🔴 Variables for Pagination
     let currentScanPage = 1;
     const scanRowsPerPage = 50;
+
+    let currentTurnoverPage = 1;
+    const turnoverRowsPerPage = 50;
     
     let globalTimelinePeriods = [];
     let globalTimelineRevenue = [];
@@ -909,7 +932,6 @@
 
        applyRBAC(currentUserRole, currentUserMenus);
 
-       // 🔴 ปรับ UI ในหน้า Slip เฉพาะ Staff
        if (currentUserRole !== 'admin') {
            const bulkOptionDiv = document.getElementById('bulkPayrollOptionBox') || document.querySelector('#view-slip .bg-blue-50\\/20');
            if (bulkOptionDiv) bulkOptionDiv.style.display = 'none';
@@ -989,7 +1011,6 @@
         const tbody = document.getElementById('adminScanTableBody');
         if(!tbody) return;
         
-        // Reset page to 1 when loading new data
         currentScanPage = 1;
         tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-blue-500"><i class="fa fa-spinner fa-spin mr-2"></i>Loading global attendance records...</td></tr>`;
 
@@ -1014,7 +1035,6 @@
         }
     }
 
-    // 🔴 Pagination Function
     function changeAdminScanPage(direction) {
         currentScanPage += direction;
         renderAdminScanTable();
@@ -1027,7 +1047,6 @@
         const deptFilter = document.getElementById('filterScanDept').value;
         const empFilter = document.getElementById('filterScanEmp').value;
 
-        // 1. กรองข้อมูลตามที่เลือก
         let filteredLogs = adminLogsCache.filter(log => {
             const empInfo = localEmployeesCache.find(e => String(e.id) === String(log.employee_id)) || {};
             const empDept = empInfo.dept || 'Unassigned';
@@ -1038,10 +1057,8 @@
             return matchDept && matchEmp;
         });
 
-        // 2. เรียงวันที่ล่าสุดขึ้นก่อน
         filteredLogs.sort((a, b) => new Date(b.date_str) - new Date(a.date_str));
 
-        // 🔴 3. ระบบ Pagination (แบ่งหน้า)
         const totalRows = filteredLogs.length;
         const totalPages = Math.ceil(totalRows / scanRowsPerPage) || 1;
         
@@ -1061,7 +1078,6 @@
             return;
         }
 
-        // วาดตารางเฉพาะ 50 บรรทัด
         pagedLogs.forEach(log => {
             const empInfo = localEmployeesCache.find(e => String(e.id) === String(log.employee_id)) || { name: 'Unknown User', dept: 'Unassigned' };
             
@@ -1080,7 +1096,6 @@
             `;
         });
 
-        // อัปเดต UI ของปุ่มเปลี่ยนหน้า
         const paginationBox = document.getElementById('adminScanPagination');
         if (paginationBox) {
             paginationBox.style.display = totalRows > 0 ? 'flex' : 'none';
@@ -2223,6 +2238,104 @@
       } catch (err) { alert('Error: ' + err.message); } finally { document.getElementById('empLoader').style.display = 'none'; }
     }
 
+    function changeTurnoverPage(direction) {
+        currentTurnoverPage += direction;
+        renderTurnoverLedgerTable();
+    }
+
+    function renderTurnoverLedgerTable() {
+        const ledgerBody = document.getElementById('turnoverLedgerTableBody');
+        if (!ledgerBody) return;
+
+        const searchKeyword = document.getElementById('filterTurnoverSearch')?.value.toLowerCase() || '';
+        const deptFilter = document.getElementById('filterTurnoverDept')?.value || 'ALL';
+        const statusFilter = document.getElementById('filterTurnoverStatus')?.value || 'ALL';
+
+        let activeSum = 0;
+        let resignedSum = 0;
+
+        const filteredStaffs = localEmployeesCache.filter(e => {
+            const isResigned = (e.resigned_date && String(e.resigned_date).trim() !== '');
+            const empStatus = isResigned ? 'RESIGNED' : 'ACTIVE';
+            const empDept = e.dept ? String(e.dept).toUpperCase() : 'UNASSIGNED';
+            const searchableText = `${e.id} ${e.name}`.toLowerCase();
+
+            const matchSearch = searchableText.includes(searchKeyword);
+            const matchDept = (deptFilter === 'ALL' || empDept === deptFilter);
+            const matchStatus = (statusFilter === 'ALL' || empStatus === statusFilter);
+
+            if (matchSearch && matchDept && matchStatus) {
+                if (isResigned) resignedSum++;
+                else activeSum++;
+                return true;
+            }
+            return false;
+        });
+
+        const totalRows = filteredStaffs.length;
+        const totalPages = Math.ceil(totalRows / turnoverRowsPerPage) || 1;
+        
+        if (currentTurnoverPage > totalPages) currentTurnoverPage = totalPages;
+        if (currentTurnoverPage < 1) currentTurnoverPage = 1;
+
+        const startIndex = (currentTurnoverPage - 1) * turnoverRowsPerPage;
+        const endIndex = startIndex + turnoverRowsPerPage;
+        const pagedStaffs = filteredStaffs.slice(startIndex, endIndex);
+
+        ledgerBody.innerHTML = '';
+
+        if (totalRows === 0) {
+            ledgerBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400">No matching records found.</td></tr>`;
+            document.getElementById('turnoverLedgerPagination').style.display = 'none';
+            return;
+        }
+
+        pagedStaffs.forEach(e => {
+            const isResigned = (e.resigned_date && String(e.resigned_date).trim() !== '');
+            let statusBadge = '';
+            let actionButtonHTML = '';
+
+            if (isResigned) {
+                statusBadge = `<span class="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800"><i class="fa fa-circle text-[8px] mr-1 text-rose-600"></i>Resigned</span>`;
+                actionButtonHTML = `<span class="text-xs text-slate-400 italic">Settled Log</span>`;
+            } else {
+                statusBadge = `<span class="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-800"><i class="fa fa-circle text-[8px] mr-1 text-green-600"></i>Active</span>`;
+                actionButtonHTML = `<button onclick="processStaffResignationPrompt('${e.id}', '${e.name}')" class="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded text-xs hover:bg-red-600 hover:text-white font-medium transition"><i class="fa-solid fa-user-xmark mr-1"></i>Mark Resigned</button>`;
+            }
+
+            ledgerBody.innerHTML += `
+                <tr class="border-b hover:bg-slate-50/50">
+                    <td><b>${e.id}</b></td>
+                    <td class="font-medium text-slate-800">${e.name}</td>
+                    <td class="font-bold text-slate-600">${e.dept || '-'}</td>
+                    <td>${e.position || '-'}</td>
+                    <td>${statusBadge}</td>
+                    <td>${e.joined_date || '-'}</td>
+                    <td>${e.resigned_date || '-'}</td>
+                    <td>${actionButtonHTML}</td>
+                </tr>
+            `;
+        });
+
+        ledgerBody.innerHTML += `
+            <tr class="total-row bg-slate-100 font-bold border-t border-slate-300">
+                <td colspan="4" class="p-3 text-right font-bold text-slate-700">Filtered Balance Summary:</td>
+                <td colspan="4" class="p-3 text-slate-800">
+                    Active: <span class="text-green-700 font-black mr-4">${activeSum} PPL</span> | 
+                    Resigned: <span class="text-rose-600 font-black">${resignedSum} PPL</span>
+                </td>
+            </tr>
+        `;
+
+        const paginationBox = document.getElementById('turnoverLedgerPagination');
+        if (paginationBox) {
+            paginationBox.style.display = totalRows > 0 ? 'flex' : 'none';
+            document.getElementById('turnoverPageInfo').innerText = `หน้า ${currentTurnoverPage} จาก ${totalPages} (รวม ${totalRows} รายการ)`;
+            document.getElementById('btnPrevTurnoverPage').disabled = currentTurnoverPage === 1;
+            document.getElementById('btnNextTurnoverPage').disabled = currentTurnoverPage === totalPages;
+        }
+    }
+
     async function renderTurnoverViewOperations() {
         const kpiContainer = document.getElementById('turnover-kpi-container');
         const ledgerBody = document.getElementById('turnoverLedgerTableBody');
@@ -2248,50 +2361,7 @@
               <div class="card-ui p-4 flex flex-col items-center border-t-4 border-slate-500"><p class="text-xs text-slate-500 font-bold mb-1">Accumulated Resigned</p><h2 class="text-2xl font-black text-slate-700">${totalResigned} PPL</h2><p class="text-xs text-slate-400 mt-1">Total staff turnover count</p></div>
             `;
 
-            ledgerBody.innerHTML = '';
-            let activeSum = 0;
-            let resignedSum = 0;
-
-            staffs.forEach(e => {
-                const isResigned = (e.resigned_date && String(e.resigned_date).trim() !== '');
-                let statusBadge = '';
-                let actionButtonHTML = '';
-
-                if (isResigned) {
-                    resignedSum++;
-                    statusBadge = `<span class="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800"><i class="fa fa-circle text-[8px] mr-1 text-rose-600"></i>Resigned</span>`;
-                    actionButtonHTML = `<span class="text-xs text-slate-400 italic">Settled Log</span>`;
-                } else {
-                    activeSum++;
-                    statusBadge = `<span class="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-800"><i class="fa fa-circle text-[8px] mr-1 text-green-600"></i>Active</span>`;
-                    actionButtonHTML = `<button onclick="processStaffResignationPrompt('${e.id}', '${e.name}')" class="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded text-xs hover:bg-red-600 hover:text-white font-medium transition"><i class="fa-solid fa-user-xmark mr-1"></i>Mark Resigned</button>`;
-                }
-
-                ledgerBody.innerHTML += `
-                    <tr class="border-b hover:bg-slate-50/50">
-                        <td><b>${e.id}</b></td>
-                        <td class="font-medium text-slate-800">${e.name}</td>
-                        <td class="font-bold text-slate-600">${e.dept || '-'}</td>
-                        <td>${e.position || '-'}</td>
-                        <td>${statusBadge}</td>
-                        <td>${e.joined_date || '-'}</td>
-                        <td>${e.resigned_date || '-'}</td>
-                        <td>${actionButtonHTML}</td>
-                    </tr>
-                `;
-            });
-
-            if (staffs.length > 0) {
-                ledgerBody.innerHTML += `
-                    <tr class="total-row bg-slate-100 font-bold border-t border-slate-300">
-                        <td colspan="4" class="p-3 text-right font-bold text-slate-700">Workforce Balance Summary:</td>
-                        <td colspan="4" class="p-3 text-slate-800">
-                            Total Active: <span class="text-green-700 font-black mr-4">${activeSum} PPL</span> | 
-                            Total Resigned: <span class="text-rose-600 font-black">${resignedSum} PPL</span>
-                        </td>
-                    </tr>
-                `;
-            }
+            renderTurnoverLedgerTable();
 
             const targetDepts = ['SALES', 'LGT', 'ACC', 'HR'];
             const departmentTurnoverRates = targetDepts.map(dCode => {
