@@ -43,13 +43,39 @@
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
     .modal-overlay.active { display: flex; }
 
-    @media print {
-        body { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; }
-        .sidebar, .header-app, .card-ui, .btn-ui, .control-panel-row, .card-header { display: none !important; }
-        body * { visibility: hidden; }
-        .slip-outer-container, .slip-outer-container * { visibility: visible; }
-        .slip-outer-container { position: absolute; left: 0; top: 0; width: 100%; max-width: 100% !important; display: flex !important; flex-direction: column !important; gap: 0 !important; padding: 0 !important; margin: 0 !important; }
-        .slip-box { box-sizing: border-box !important; width: 100% !important; height: 48vh !important; border: none !important; border-bottom: 1px dashed #000 !important; padding: 0.5cm 1cm !important; page-break-inside: avoid !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; }
+@media print {
+        /* 1. ตั้งค่าหน้ากระดาษ A4 */
+        @page { size: A4 portrait; margin: 10mm; }
+        
+        /* 2. รีเซ็ตพื้นหลังและระยะห่าง */
+        body, html { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; width: 100% !important; height: 100% !important; }
+        
+        /* 3. ซ่อน UI ทั้งหมดที่ไม่เกี่ยวกับการปริ้นด้วย display: none เพื่อไม่ให้กินพื้นที่กระดาษ */
+        .sidebar, .header-app, .btn-ui, #mobileOverlay, .md\:hidden, #login-section, #resetPasswordModal, #createUserModal { display: none !important; }
+        .tab-view:not(#view-slip) { display: none !important; }
+        #view-slip > div:not(#dualSlipsWrapper) { display: none !important; }
+        
+        /* 4. รีเซ็ต Layout กล่องหลักให้เต็มจอ 100% (ลบระยะที่โดน Sidebar ดันออก) */
+        .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; }
+        
+        /* 5. ขยายขนาดสลิปให้เต็มหน้ากระดาษ */
+        #dualSlipsWrapper { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+        .slip-outer-container { width: 100% !important; max-width: 100% !important; min-width: 100% !important; display: block !important; margin: 0 !important; padding: 0 !important; }
+        
+        /* 6. จัดการรายละเอียดกรอบสลิปแต่ละใบให้สวยงาม */
+        .slip-box { 
+            width: 100% !important; 
+            max-width: 100% !important; 
+            margin: 0 0 20px 0 !important; 
+            padding: 20px 25px !important; 
+            border: 1px solid #000 !important; 
+            box-shadow: none !important; 
+            page-break-inside: avoid !important; /* ป้องกันสลิปโดนตัดครึ่งขาดไปหน้าถัดไป */
+            transform: none !important;
+        }
+        
+        /* 7. ซ่อน Scrollbar เวลาปริ้น */
+        ::-webkit-scrollbar { display: none; }
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .card-ui { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); padding: 25px; margin-bottom: 25px;}
