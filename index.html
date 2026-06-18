@@ -44,48 +44,50 @@
     .modal-overlay.active { display: flex; }
 
 @media print {
-        /* 1. ตั้งค่าหน้ากระดาษ A4 และระยะขอบ */
-        @page { size: A4 portrait; margin: 10mm; }
+        /* 1. ตั้งค่าหน้ากระดาษ A4 และลดระยะขอบให้เหลือน้อยที่สุด */
+        @page { size: A4 portrait; margin: 5mm; }
         
-        /* 2. รีเซ็ตพื้นหลังและระยะห่าง */
         body, html { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; width: 100% !important; height: 100% !important; }
         
-        /* 3. ซ่อน UI ทั้งหมดที่ไม่เกี่ยวกับการปริ้นด้วย display: none */
+        /* 2. ซ่อน UI ที่ไม่เกี่ยวกับการปริ้น */
         .sidebar, .header-app, .btn-ui, #mobileOverlay, .md\:hidden, #login-section, #resetPasswordModal, #createUserModal { display: none !important; }
         .tab-view:not(#view-slip) { display: none !important; }
         #view-slip > div:not(#dualSlipsWrapper) { display: none !important; }
         
-        /* 4. รีเซ็ต Layout กล่องหลักให้เต็มจอ */
         .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; }
         
-        /* 5. ตั้งค่า Container ของสลิป */
         #dualSlipsWrapper { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
         .slip-outer-container { width: 100% !important; max-width: 100% !important; min-width: 100% !important; display: block !important; margin: 0 !important; padding: 0 !important; }
         
-        /* 🔴 6. บังคับขนาดสลิปให้พอดีครึ่งหน้า A4 (พิมพ์ 2 ใบจะต่อกัน 1 หน้าพอดี) */
+        /* 🔴 3. ปรับขนาดสลิปให้เหลือ 13cm (รับประกันว่า 2 ใบรวมกันไม่เกิน A4 แน่นอน) */
         .slip-box { 
             box-sizing: border-box !important;
             width: 100% !important; 
-            height: 13.5cm !important; /* บังคับความสูงครึ่งหน้ากระดาษ */
-            max-height: 13.5cm !important;
-            margin: 0 0 5mm 0 !important; /* ระยะห่างระหว่างใบสลิป */
+            height: 13cm !important; 
+            max-height: 13cm !important;
+            margin: 0 0 3mm 0 !important; 
             padding: 5mm 10mm !important; 
-            border: 1px dashed #ccc !important; /* กรอบสลิปจางๆ ให้ตัดง่าย */
+            border: 1px dashed #ccc !important;
             box-shadow: none !important; 
             page-break-inside: avoid !important;
             overflow: hidden !important; 
         }
 
-        /* 🔴 7. บีบอัดช่องไฟและระยะห่างในตารางเฉพาะตอนปริ้น เพื่อไม่ให้เนื้อหาล้นจาก 13.5cm */
+        /* 🔴 4. บังคับบีบช่องไฟ บรรทัด และขนาดตัวอักษรข้างในให้พอดีกับ 13cm */
+        .slip-box table { margin-top: 5px !important; }
         .slip-box table td, .slip-box table th {
-            padding: 4px 10px !important; 
-            line-height: 1.6 !important;
+            padding: 2px 8px !important; /* ลดความกว้างช่องว่าง */
+            line-height: 1.4 !important; /* ลดความห่างระหว่างบรรทัด */
+            font-size: 11.5px !important; /* ลดขนาดตัวอักษรในตารางนิดหน่อย */
         }
-        .slip-box .slip-header { margin-bottom: 8px !important; padding-bottom: 5px !important; }
-        .slip-box .slip-title { margin-bottom: 8px !important; }
-        .slip-box .slip-meta-grid { margin-bottom: 8px !important; padding-bottom: 8px !important; }
+        .slip-box .slip-header { margin-bottom: 5px !important; padding-bottom: 5px !important; }
+        .slip-box .slip-title { margin-bottom: 5px !important; font-size: 15px !important; }
+        .slip-box .slip-meta-grid { margin-bottom: 5px !important; padding-bottom: 5px !important; font-size: 11px !important; }
+        .slip-box .slip-input { font-size: 11px !important; }
         
-        /* 8. ซ่อน Scrollbar */
+        /* หมายเหตุตัวสีแดงด้านล่างสุด */
+        .slip-box > div:last-child { margin-top: 5px !important; font-size: 10px !important; line-height: 1.2 !important; }
+        
         ::-webkit-scrollbar { display: none; }
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
