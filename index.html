@@ -44,37 +44,48 @@
     .modal-overlay.active { display: flex; }
 
 @media print {
-        /* 1. ตั้งค่าหน้ากระดาษ A4 */
+        /* 1. ตั้งค่าหน้ากระดาษ A4 และระยะขอบ */
         @page { size: A4 portrait; margin: 10mm; }
         
         /* 2. รีเซ็ตพื้นหลังและระยะห่าง */
         body, html { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; width: 100% !important; height: 100% !important; }
         
-        /* 3. ซ่อน UI ทั้งหมดที่ไม่เกี่ยวกับการปริ้นด้วย display: none เพื่อไม่ให้กินพื้นที่กระดาษ */
+        /* 3. ซ่อน UI ทั้งหมดที่ไม่เกี่ยวกับการปริ้นด้วย display: none */
         .sidebar, .header-app, .btn-ui, #mobileOverlay, .md\:hidden, #login-section, #resetPasswordModal, #createUserModal { display: none !important; }
         .tab-view:not(#view-slip) { display: none !important; }
         #view-slip > div:not(#dualSlipsWrapper) { display: none !important; }
         
-        /* 4. รีเซ็ต Layout กล่องหลักให้เต็มจอ 100% (ลบระยะที่โดน Sidebar ดันออก) */
+        /* 4. รีเซ็ต Layout กล่องหลักให้เต็มจอ */
         .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; }
         
-        /* 5. ขยายขนาดสลิปให้เต็มหน้ากระดาษ */
+        /* 5. ตั้งค่า Container ของสลิป */
         #dualSlipsWrapper { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
         .slip-outer-container { width: 100% !important; max-width: 100% !important; min-width: 100% !important; display: block !important; margin: 0 !important; padding: 0 !important; }
         
-        /* 6. จัดการรายละเอียดกรอบสลิปแต่ละใบให้สวยงาม */
+        /* 🔴 6. บังคับขนาดสลิปให้พอดีครึ่งหน้า A4 (พิมพ์ 2 ใบจะต่อกัน 1 หน้าพอดี) */
         .slip-box { 
+            box-sizing: border-box !important;
             width: 100% !important; 
-            max-width: 100% !important; 
-            margin: 0 0 20px 0 !important; 
-            padding: 20px 25px !important; 
-            border: 1px solid #000 !important; 
+            height: 13.5cm !important; /* บังคับความสูงครึ่งหน้ากระดาษ */
+            max-height: 13.5cm !important;
+            margin: 0 0 5mm 0 !important; /* ระยะห่างระหว่างใบสลิป */
+            padding: 5mm 10mm !important; 
+            border: 1px dashed #ccc !important; /* กรอบสลิปจางๆ ให้ตัดง่าย */
             box-shadow: none !important; 
-            page-break-inside: avoid !important; /* ป้องกันสลิปโดนตัดครึ่งขาดไปหน้าถัดไป */
-            transform: none !important;
+            page-break-inside: avoid !important;
+            overflow: hidden !important; 
         }
+
+        /* 🔴 7. บีบอัดช่องไฟและระยะห่างในตารางเฉพาะตอนปริ้น เพื่อไม่ให้เนื้อหาล้นจาก 13.5cm */
+        .slip-box table td, .slip-box table th {
+            padding: 4px 10px !important; 
+            line-height: 1.6 !important;
+        }
+        .slip-box .slip-header { margin-bottom: 8px !important; padding-bottom: 5px !important; }
+        .slip-box .slip-title { margin-bottom: 8px !important; }
+        .slip-box .slip-meta-grid { margin-bottom: 8px !important; padding-bottom: 8px !important; }
         
-        /* 7. ซ่อน Scrollbar เวลาปริ้น */
+        /* 8. ซ่อน Scrollbar */
         ::-webkit-scrollbar { display: none; }
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
