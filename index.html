@@ -43,7 +43,7 @@
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
     .modal-overlay.active { display: flex; }
 
-    /* 🔴 Mobile UI Adjustments */
+    /* Mobile UI Adjustments */
     .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
     
     @media (max-width: 768px) {
@@ -649,9 +649,18 @@
                   <h2 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-clock-rotate-left text-emerald-600 mr-2"></i> ประวัติการสแกนนิ้วของฉัน</h2>
                   <p class="text-sm text-slate-500">ข้อมูลเวลาเข้า-ออกงาน</p>
               </div>
-              <button onclick="loadMyAttendance()" class="btn-ui bg-blue-600 hover:bg-blue-700 w-full md:w-auto justify-center">
-                  <i class="fa-solid fa-rotate mr-2"></i> รีเฟรชข้อมูล
-              </button>
+              
+              <div class="flex flex-col md:flex-row items-end gap-3 w-full md:w-auto">
+                  <div class="flex flex-col w-full md:w-auto">
+                      <label class="text-[10px] font-bold text-slate-500 uppercase">เลือกเดือน (Period)</label>
+                      <select id="filterMyScanPeriod" onchange="loadMyAttendance()" class="border border-gray-300 p-2 rounded bg-white text-slate-700 outline-none w-full md:w-40 text-xs md:text-sm font-semibold cursor-pointer shadow-sm">
+                          <option value="ALL">-- ดูทั้งหมด --</option>
+                      </select>
+                  </div>
+                  <button onclick="loadMyAttendance()" class="btn-ui bg-blue-600 hover:bg-blue-700 w-full md:w-auto justify-center h-[38px]">
+                      <i class="fa-solid fa-rotate mr-2"></i> รีเฟรชข้อมูล
+                  </button>
+              </div>
           </div>
 
           <div class="card-ui overflow-auto">
@@ -1270,23 +1279,38 @@
         const tbody = document.getElementById('myScanTableBody');
         if(!tbody) return;
         
+        if (!currentUserEmpId) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-rose-500 font-bold"><i class="fa-solid fa-circle-exclamation mr-2"></i> บัญชีของคุณยังไม่ได้ผูกรหัสพนักงาน กรุณาติดต่อ Admin ครับ</td></tr>`;
+            return;
+        }
+
         tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-blue-500"><i class="fa fa-spinner fa-spin mr-2"></i>กำลังดึงข้อมูลส่วนตัวของคุณ...</td></tr>`;
 
-        try {
-            const { data: myLogs, error } = await supabaseClient
-                .from('attendance_logs')
-                .select('*')
-                .order('date_str', { ascending: false });
+        const periodFilter = document.getElementById('filterMyScanPeriod')?.value || 'ALL';
 
+        try {
+            let query = supabaseClient.from('attendance_logs').select('*').eq('employee_id', currentUserEmpId);
+
+            if (periodFilter !== 'ALL') {
+                query = query.eq('payroll_period', periodFilter);
+            }
+
+            const { data: myLogs, error } = await query.order('date_str', { ascending: false }).limit(500);
             if (error) throw error;
 
             tbody.innerHTML = '';
             if (myLogs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">ไม่พบประวัติการสแกนนิ้วของคุณในระบบ (หรือแอดมินยังไม่ได้ผูกรหัสพนักงานให้คุณ)</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">ไม่พบประวัติการสแกนนิ้วของคุณในระบบ (หรือไม่มีข้อมูลในเดือนที่เลือก)</td></tr>`;
                 return;
             }
 
+            let totalLate = 0;
+            let totalOT = 0;
+
             myLogs.forEach(log => {
+                totalLate += (Number(log.late_minutes) || 0);
+                totalOT += (Number(log.ot_minutes) || 0);
+                
                 tbody.innerHTML += `
                     <tr class="border-b border-slate-50 hover:bg-slate-50/80 transition">
                         <td class="font-semibold text-slate-700">${log.payroll_period}</td>
@@ -1298,6 +1322,17 @@
                     </tr>
                 `;
             });
+
+            if (periodFilter !== 'ALL' && myLogs.length > 0) {
+                tbody.innerHTML += `
+                    <tr class="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 sticky bottom-0">
+                        <td colspan="4" class="p-3 text-right text-slate-700 font-bold">สรุปยอดรวมเฉพาะเดือน ${periodFilter}:</td>
+                        <td class="p-3 text-center text-red-600">${totalLate} นาที</td>
+                        <td class="p-3 text-center text-blue-600">${totalOT} นาที</td>
+                    </tr>
+                `;
+            }
+
         } catch (err) {
             tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500 py-4">Error: ${err.message}</td></tr>`;
         }
@@ -1314,6 +1349,7 @@
         const kpiSelect = document.getElementById('kpiPeriodMonth');
         const slipSelect1 = document.getElementById('selectPayrollMonth1');
         const bulkSlipSelect = document.getElementById('selectBulkPayrollMonth');
+        const myScanSelect = document.getElementById('filterMyScanPeriod'); 
         
         let optionsHTML = '';
         const startYear = 2025; 
@@ -1347,6 +1383,8 @@
         if(kpiSelect) kpiSelect.innerHTML = optionsHTML;
         if(slipSelect1) slipSelect1.innerHTML = optionsHTML;
         if(bulkSlipSelect) bulkSlipSelect.innerHTML = optionsHTML;
+        
+        if(myScanSelect) myScanSelect.innerHTML = '<option value="ALL">-- ดูทั้งหมด --</option>' + optionsHTML; 
     }
 
     const normalize = (str) => String(str).replace(/\s+/g, ' ').trim().toLowerCase();
