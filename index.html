@@ -70,27 +70,26 @@
         .slip-box { 
             box-sizing: border-box !important;
             width: 100% !important; 
-            height: 13cm !important; 
-            max-height: 13cm !important;
+            height: 13.5cm !important; 
             margin: 0 0 3mm 0 !important; 
-            padding: 5mm 10mm !important; 
+            padding: 4mm 8mm !important; 
             border: 1px dashed #ccc !important;
             box-shadow: none !important; 
             page-break-inside: avoid !important;
             overflow: hidden !important; 
         }
 
-        .slip-box table { margin-top: 5px !important; }
+        .slip-box table { margin-top: 2px !important; }
         .slip-box table td, .slip-box table th {
-            padding: 2px 8px !important; 
-            line-height: 1.4 !important; 
-            font-size: 11.5px !important; 
+            padding: 2px 6px !important; 
+            line-height: 1.3 !important; 
+            font-size: 11px !important; 
         }
-        .slip-box .slip-header { margin-bottom: 5px !important; padding-bottom: 5px !important; }
-        .slip-box .slip-title { margin-bottom: 5px !important; font-size: 15px !important; }
-        .slip-box .slip-meta-grid { margin-bottom: 5px !important; padding-bottom: 5px !important; font-size: 11px !important; }
+        .slip-box .slip-header { margin-bottom: 4px !important; padding-bottom: 4px !important; }
+        .slip-box .slip-title { margin-bottom: 4px !important; font-size: 14px !important; }
+        .slip-box .slip-meta-grid { margin-bottom: 4px !important; padding-bottom: 4px !important; font-size: 10.5px !important; gap: 4px !important;}
         .slip-box .slip-input { font-size: 11px !important; }
-        .slip-box > div:last-child { margin-top: 5px !important; font-size: 10px !important; line-height: 1.2 !important; }
+        .slip-box > div:last-child { margin-top: 4px !important; font-size: 9.5px !important; line-height: 1.1 !important; }
         
         ::-webkit-scrollbar { display: none; }
     }
@@ -731,9 +730,15 @@
       <div id="view-report" class="tab-view">
         <div class="card-ui">
             <h3><i class="fa-solid fa-sliders"></i> Filter Criteria</h3>
-            <div style="display: flex; flex-direction: column; md:flex-row gap-4 md:gap-20 margin-bottom: 15px; font-size: 14px; font-weight: 500;" class="mb-4">
-                <label style="cursor:pointer; color: var(--primary);"><input type="radio" name="reportMode" value="OVERVIEW" checked onchange="toggleReportFilterMode()"> General Overview</label>
-                <label style="cursor:pointer; color: var(--primary-light);"><input type="radio" name="reportMode" value="INDIVIDUAL" onchange="toggleReportFilterMode()"> Individual Annual Tax (ภ.ง.ด.)</label>
+            <div class="flex flex-col md:flex-row gap-3 mb-5">
+                <label class="cursor-pointer flex items-center gap-3 bg-slate-50 border border-slate-200 hover:border-blue-400 hover:bg-blue-50 px-4 py-3 rounded-lg transition w-full md:w-auto shadow-sm">
+                    <input type="radio" name="reportMode" value="OVERVIEW" checked onchange="toggleReportFilterMode()" class="w-4 h-4 accent-blue-600 cursor-pointer">
+                    <span class="text-sm font-bold text-slate-700">General Overview</span>
+                </label>
+                <label class="cursor-pointer flex items-center gap-3 bg-slate-50 border border-slate-200 hover:border-blue-400 hover:bg-blue-50 px-4 py-3 rounded-lg transition w-full md:w-auto shadow-sm">
+                    <input type="radio" name="reportMode" value="INDIVIDUAL" onchange="toggleReportFilterMode()" class="w-4 h-4 accent-blue-600 cursor-pointer">
+                    <span class="text-sm font-bold text-slate-700">Individual Annual Tax (ภ.ง.ด.)</span>
+                </label>
             </div>
             <div class="grid-form" id="filterAreaOverview">
                 <div class="input-wrapper"><label>Select Period:</label><select id="filterReportMonth" onchange="filterPayrollReportData()"><option value="ALL">-- All Months --</option></select></div>
