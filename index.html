@@ -37,8 +37,6 @@
     .nav-item.disabled-nav:hover { background-color: rgba(255,255,255,0.05) !important; }
 
     .main-content { margin-left: 260px; padding: 32px; width: calc(100% - 260px); min-height: 100vh; transition: margin 0.3s ease, width 0.3s ease; }
-    .tab-view { display: none; animation: fadeIn 0.3s ease-in-out; }
-    .tab-view.active { display: block; }
     
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
     .modal-overlay.active { display: flex; }
@@ -60,7 +58,7 @@
     @media print {
         @page { size: A4 portrait; margin: 5mm; }
         body, html { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; width: 100% !important; height: 100% !important; }
-        .sidebar, .header-app, .btn-ui, #mobileOverlay, .md\:hidden, #login-section, #resetPasswordModal, #createUserModal { display: none !important; }
+        .sidebar, .header-app, .btn-ui, #mobileOverlay, .md\:hidden, #login-section, #resetPasswordModal, #createUserModal, #myProfileModal { display: none !important; }
         .tab-view:not(#view-slip) { display: none !important; }
         #view-slip > div:not(#dualSlipsWrapper) { display: none !important; }
         .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; }
@@ -70,32 +68,66 @@
         .slip-box { 
             box-sizing: border-box !important;
             width: 100% !important; 
-            height: 13.5cm !important; 
+            height: 13cm !important; 
+            max-height: 13cm !important;
             margin: 0 0 3mm 0 !important; 
-            padding: 4mm 8mm !important; 
+            padding: 5mm 10mm !important; 
             border: 1px dashed #ccc !important;
             box-shadow: none !important; 
             page-break-inside: avoid !important;
             overflow: hidden !important; 
         }
 
-        .slip-box table { margin-top: 2px !important; }
+        .slip-box table { margin-top: 5px !important; }
         .slip-box table td, .slip-box table th {
-            padding: 2px 6px !important; 
-            line-height: 1.3 !important; 
-            font-size: 11px !important; 
+            padding: 2px 8px !important; 
+            line-height: 1.4 !important; 
+            font-size: 11.5px !important; 
         }
-        .slip-box .slip-header { margin-bottom: 4px !important; padding-bottom: 4px !important; }
-        .slip-box .slip-title { margin-bottom: 4px !important; font-size: 14px !important; }
-        .slip-box .slip-meta-grid { margin-bottom: 4px !important; padding-bottom: 4px !important; font-size: 10.5px !important; gap: 4px !important;}
+        .slip-box .slip-header { margin-bottom: 5px !important; padding-bottom: 5px !important; }
+        .slip-box .slip-title { margin-bottom: 5px !important; font-size: 15px !important; }
+        .slip-box .slip-meta-grid { margin-bottom: 5px !important; padding-bottom: 5px !important; font-size: 11px !important; gap: 4px !important;}
         .slip-box .slip-input { font-size: 11px !important; }
-        .slip-box > div:last-child { margin-top: 4px !important; font-size: 9.5px !important; line-height: 1.1 !important; }
+        .slip-box > div:last-child { margin-top: 5px !important; font-size: 10px !important; line-height: 1.2 !important; }
         
         ::-webkit-scrollbar { display: none; }
     }
     
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* 🔴 ชุดโค้ดอัปเกรดแอนิเมชัน (Modern UI Animations) */
+    @keyframes fadeSlideUp {
+        from { opacity: 0; transform: translateY(25px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+    
+    .tab-view.active .card-ui, .tab-view.active .header-app {
+        animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .tab-view.active .header-app { animation-delay: 0.05s; }
+    .tab-view.active > .card-ui:nth-of-type(1) { animation-delay: 0.1s; }
+    .tab-view.active > .card-ui:nth-of-type(2) { animation-delay: 0.15s; }
+    .tab-view.active > .card-ui:nth-of-type(3) { animation-delay: 0.2s; }
+    .tab-view.active > .grid:nth-of-type(1) { animation-delay: 0.1s; animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .tab-view.active > .grid:nth-of-type(2) { animation-delay: 0.15s; animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .tab-view.active > .grid:nth-of-type(3) { animation-delay: 0.2s; animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+    @keyframes modalPop {
+        0% { opacity: 0; transform: scale(0.95) translateY(-20px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-overlay { transition: background-color 0.3s ease; }
+    .modal-overlay.active > div {
+        animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    .btn-ui { background-color: #1e3a8a; color: white; padding: 10px 24px; border: none; border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap;}
+    .btn-ui:hover { background-color: #2563eb; }
+    .btn-ui:active { transform: scale(0.95); } 
+    
+    .nav-item { transition: all 0.3s ease; }
+    .nav-item:active { transform: scale(0.98); }
+    
     .card-ui { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); padding: 25px; margin-bottom: 25px;}
     .card-ui h3 { font-size: 16px; margin-bottom: 20px; color: #1e3a8a; display: flex; align-items: center; gap: 8px; font-weight: 600;}
     .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
@@ -105,15 +137,16 @@
     input, select, textarea { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px; outline: none; background: rgba(255, 255, 255, 0.9); color: #1e293b; width: 100%; box-sizing: border-box;}
     textarea { height: 120px; resize: none; font-family: monospace; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; background: rgba(255, 255, 255, 0.9); color: #1e293b; }
     input:focus, select:focus, textarea:focus { background: #ffffff; border-color: rgba(37, 99, 235, 0.6); box-shadow: 0 0 12px rgba(37, 99, 235, 0.15); }
-    .btn-ui { background-color: #1e3a8a; color: white; padding: 10px 24px; border: none; border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap;}
-    .btn-ui:hover { background-color: #2563eb; }
+    
     table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     table.data-table th { background-color: #f8fafc; padding: 12px; color: #1e3a8a; border-bottom: 2px solid var(--border-color); border-top: 1px solid var(--border-color); text-align: left; font-weight: bold; white-space: nowrap;}
     table.data-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap;}
     table.data-table tr.total-row bg-slate-100 td { background-color: #e2e8f0; font-weight: 600; color: #0f172a; border-top: 2px solid #94a3b8; border-bottom: 2px double #94a3b8; }
+    
     .loading { display: none; color: #2563eb; font-size: 14px; align-items: center; gap: 8px; margin-top: 10px; }
     .loading i { animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
     .slip-outer-container { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 25px; }
     .slip-box { background-color: white; border: 1px solid #000; padding: 20px 30px; color: #000; font-family: 'Prompt', sans-serif; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
     .slip-header { display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding-bottom: 8px; margin-bottom: 12px; align-items: center; }
@@ -128,14 +161,10 @@
     .row-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .slip-input { width: 80px; border: none; border-bottom: 1px dotted #ccc; text-align: right; font-family: inherit; font-size: 11.5px; color: #000; outline: none; padding: 1px; background: transparent; }
     .slip-total-box { display: flex; justify-content: space-between; font-weight: 600; padding: 2px 0; }
-    /* 🔴 โค้ดสำหรับซ่อนแถบเลื่อน (Scrollbar) แต่ยังเลื่อนได้ปกติ */
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-    .no-scrollbar {
-        -ms-overflow-style: none;  /* สำหรับ IE และ Edge */
-        scrollbar-width: none;  /* สำหรับ Firefox */
-    }
+
+    /* 🔴 ซ่อนแถบเลื่อน (Scrollbar) แต่ยังเลื่อนได้ปกติ */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-100 text-slate-800 font-sans relative overflow-x-hidden">
@@ -187,6 +216,7 @@
       </form>
     </div>
   </div>
+  
   <div id="createUserModal" class="modal-overlay">
     <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md mx-4">
       <div class="flex justify-between items-center mb-6 border-b pb-3">
@@ -212,6 +242,36 @@
             </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div id="myProfileModal" class="modal-overlay">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm mx-4 relative">
+      <button onclick="closeMyProfileModal()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 text-xl transition"><i class="fa-solid fa-xmark"></i></button>
+      
+      <div class="text-center mb-6">
+        <img src="" id="modalProfileAvatar" class="w-20 h-20 rounded-full mx-auto mb-3 border-4 border-blue-50 shadow-sm">
+        <h2 class="text-xl font-bold text-slate-800" id="modalProfileName">Loading...</h2>
+        <p class="text-sm text-blue-600 font-semibold" id="modalProfilePosition">...</p>
+      </div>
+      
+      <div class="space-y-3 text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">
+        <div class="flex justify-between border-b border-slate-200 pb-2">
+            <span class="text-slate-500">รหัสพนักงาน</span><span class="font-bold text-slate-800" id="modalProfileId">-</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-200 pb-2">
+            <span class="text-slate-500">อีเมล</span><span class="font-bold text-slate-800" id="modalProfileEmail">-</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-200 pb-2">
+            <span class="text-slate-500">แผนก (Dept)</span><span class="font-bold text-slate-800" id="modalProfileDept">-</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-200 pb-2">
+            <span class="text-slate-500">วันที่เริ่มงาน</span><span class="font-bold text-slate-800" id="modalProfileJoined">-</span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-slate-500">สาขาที่ประจำ</span><span class="font-bold text-slate-800" id="modalProfileBranch">-</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -243,8 +303,8 @@
         </div>
       </div>
       <div class="p-4 border-t border-slate-700 mt-auto flex flex-col gap-3">
-        <div class="flex items-center">
-          <img src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" id="profileAvatar" class="w-10 h-10 rounded-full" alt="Profile">
+        <div class="flex items-center cursor-pointer hover:bg-slate-800 p-2 -mx-2 rounded transition" onclick="openMyProfileModal()" title="คลิกเพื่อดูข้อมูลส่วนตัว">
+          <img src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" id="profileAvatar" class="w-10 h-10 rounded-full shadow-sm" alt="Profile">
           <div class="ml-3">
             <p class="text-sm font-bold text-white uppercase truncate w-32" id="profileRole">Admin</p>
             <p class="text-[11px] text-slate-400 truncate w-32" id="profileEmail">user@email.com</p>
@@ -739,6 +799,7 @@
       <div id="view-report" class="tab-view">
         <div class="card-ui">
             <h3><i class="fa-solid fa-sliders"></i> Filter Criteria</h3>
+            
             <div class="flex flex-col md:flex-row gap-3 mb-5">
                 <label class="cursor-pointer flex items-center gap-3 bg-slate-50 border border-slate-200 hover:border-blue-400 hover:bg-blue-50 px-4 py-3 rounded-lg transition w-full md:w-auto shadow-sm">
                     <input type="radio" name="reportMode" value="OVERVIEW" checked onchange="toggleReportFilterMode()" class="w-4 h-4 accent-blue-600 cursor-pointer">
@@ -749,6 +810,7 @@
                     <span class="text-sm font-bold text-slate-700">Individual Annual Tax (ภ.ง.ด.)</span>
                 </label>
             </div>
+            
             <div class="grid-form" id="filterAreaOverview">
                 <div class="input-wrapper"><label>Select Period:</label><select id="filterReportMonth" onchange="filterPayrollReportData()"><option value="ALL">-- All Months --</option></select></div>
                 <div class="input-wrapper"><label>Department:</label><select id="filterReportDept" onchange="filterPayrollReportData()"><option value="ALL">-- All Divisions --</option><option value="MDT">MDT</option><option value="BSU">BSU</option><option value="EXP">EXP</option><option value="LGT">LGT</option><option value="HRC">HRC</option><option value="MKT">MKT</option><option value="ACC">ACC</option><option value="HR">HR</option></select></div>
@@ -970,6 +1032,48 @@
        loadDashboardData();   
        loadEmployeeList();    
    }
+
+    // 🔴 ฟังก์ชันเปิด/ปิด Modal ข้อมูลส่วนตัว
+    async function openMyProfileModal() {
+        document.getElementById('myProfileModal').classList.add('active');
+        
+        document.getElementById('modalProfileEmail').innerText = currentUser ? currentUser.email : '-';
+        document.getElementById('modalProfileAvatar').src = document.getElementById('profileAvatar').src;
+        document.getElementById('modalProfileName').innerText = document.getElementById('profileRole').innerText;
+        document.getElementById('modalProfileId').innerText = currentUserEmpId || 'ยังไม่ผูกรหัส';
+        
+        if (!currentUserEmpId) {
+            document.getElementById('modalProfilePosition').innerText = currentUserRole === 'admin' ? 'System Administrator' : 'Staff';
+            document.getElementById('modalProfileDept').innerText = '-';
+            document.getElementById('modalProfileJoined').innerText = '-';
+            document.getElementById('modalProfileBranch').innerText = '-';
+            return;
+        }
+
+        try {
+            const { data: emp, error } = await supabaseClient
+                .from('employees')
+                .select('*')
+                .eq('id', currentUserEmpId)
+                .single();
+                
+            if (error) throw error;
+            
+            if (emp) {
+                document.getElementById('modalProfileName').innerText = emp.name || '-';
+                document.getElementById('modalProfilePosition').innerText = emp.position || 'Staff';
+                document.getElementById('modalProfileDept').innerText = emp.dept || '-';
+                document.getElementById('modalProfileJoined').innerText = emp.joined_date || '-';
+                document.getElementById('modalProfileBranch').innerText = emp.assigned_branch || '-';
+            }
+        } catch (err) {
+            console.error("Error fetching profile details:", err);
+        }
+    }
+
+    function closeMyProfileModal() {
+        document.getElementById('myProfileModal').classList.remove('active');
+    }
 
     function applyRBAC(role, accessibleMenus) {
         const allMenuIds = ['nav-ceo', 'nav-vchef', 'nav-employee', 'nav-turnover', 'nav-scan', 'nav-myscan', 'nav-slip', 'nav-report', 'nav-usermgt'];
@@ -1364,8 +1468,6 @@
         const slipSelect1 = document.getElementById('selectPayrollMonth1');
         const bulkSlipSelect = document.getElementById('selectBulkPayrollMonth');
         const myScanSelect = document.getElementById('filterMyScanPeriod'); 
-
-        // 🔴 1. เพิ่มตัวแปรสำหรับ Dropdown ในหน้า Report
         const reportMonthSelect = document.getElementById('filterReportMonth'); 
         
         let optionsHTML = '';
@@ -1383,7 +1485,6 @@
 
         if(targetSelect && !targetSelect.innerHTML) targetSelect.innerHTML = optionsHTML;
         if(compareSelect && !compareSelect.innerHTML) {
-            // (ละโค้ด compareSelect เดิมไว้)
             let compHTML = '';
             for (let y = endYear; y >= startYear; y--) {
                 compHTML += `<optgroup label="--- Year ${y} ---">`;
@@ -1403,8 +1504,6 @@
         if(bulkSlipSelect) bulkSlipSelect.innerHTML = optionsHTML;
         
         if(myScanSelect) myScanSelect.innerHTML = '<option value="ALL">-- ดูทั้งหมด --</option>' + optionsHTML; 
-
-        // 🔴 2. ยัดตัวเลือกเดือนเข้าไปใน Dropdown ของหน้า Report
         if(reportMonthSelect) reportMonthSelect.innerHTML = '<option value="ALL">-- Show All Periods --</option>' + optionsHTML; 
     }
 
@@ -2887,7 +2986,7 @@
         }
     }
 
-   async function loadPayrollReport() {
+    async function loadPayrollReport() {
         try {
           const { data } = await supabaseClient.from('monthly_payroll_summary').select('*');
           if (!data) return;
@@ -2895,18 +2994,8 @@
             month: r.payroll_month, id: r.employee_id, name: r.name, dept: r.dept, position: r.position,
             basic: Number(r.basic_salary), ot: Number(r.ot_earnings), noWork: Number(r.no_work_no_pay), othersDeduct: Number(r.others_deduct), netAmount: Number(r.net_amount)
           }));
-          
-          // 🔴 สั่งรัน Filter ตารางได้เลย (ลบ populateReportDropdowns ออกไปแล้ว)
-          filterPayrollReportData(); 
+          filterPayrollReportData();
         } catch (err) { console.error(err); }
-    }
-    
-    function populateReportDropdowns(data) {
-        const months = [...new Set(data.map(item => String(item.month).trim()))];
-        const dropdownOverview = document.getElementById('filterReportMonth');
-        if(!dropdownOverview) return;
-        dropdownOverview.innerHTML = '<option value="ALL">-- Show All Periods --</option>';
-        months.forEach(m => { dropdownOverview.innerHTML += `<option value="${m}">${m}</option>`; });
     }
     
     function toggleReportFilterMode() {
