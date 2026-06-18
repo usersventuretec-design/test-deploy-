@@ -1355,6 +1355,9 @@
         const slipSelect1 = document.getElementById('selectPayrollMonth1');
         const bulkSlipSelect = document.getElementById('selectBulkPayrollMonth');
         const myScanSelect = document.getElementById('filterMyScanPeriod'); 
+
+        // 🔴 1. เพิ่มตัวแปรสำหรับ Dropdown ในหน้า Report
+        const reportMonthSelect = document.getElementById('filterReportMonth'); 
         
         let optionsHTML = '';
         const startYear = 2025; 
@@ -1371,6 +1374,7 @@
 
         if(targetSelect && !targetSelect.innerHTML) targetSelect.innerHTML = optionsHTML;
         if(compareSelect && !compareSelect.innerHTML) {
+            // (ละโค้ด compareSelect เดิมไว้)
             let compHTML = '';
             for (let y = endYear; y >= startYear; y--) {
                 compHTML += `<optgroup label="--- Year ${y} ---">`;
@@ -1390,6 +1394,9 @@
         if(bulkSlipSelect) bulkSlipSelect.innerHTML = optionsHTML;
         
         if(myScanSelect) myScanSelect.innerHTML = '<option value="ALL">-- ดูทั้งหมด --</option>' + optionsHTML; 
+
+        // 🔴 2. ยัดตัวเลือกเดือนเข้าไปใน Dropdown ของหน้า Report
+        if(reportMonthSelect) reportMonthSelect.innerHTML = '<option value="ALL">-- Show All Periods --</option>' + optionsHTML; 
     }
 
     const normalize = (str) => String(str).replace(/\s+/g, ' ').trim().toLowerCase();
@@ -2871,7 +2878,7 @@
         }
     }
 
-    async function loadPayrollReport() {
+   async function loadPayrollReport() {
         try {
           const { data } = await supabaseClient.from('monthly_payroll_summary').select('*');
           if (!data) return;
@@ -2879,7 +2886,9 @@
             month: r.payroll_month, id: r.employee_id, name: r.name, dept: r.dept, position: r.position,
             basic: Number(r.basic_salary), ot: Number(r.ot_earnings), noWork: Number(r.no_work_no_pay), othersDeduct: Number(r.others_deduct), netAmount: Number(r.net_amount)
           }));
-          populateReportDropdowns(cachedReportData); filterPayrollReportData();
+          
+          // 🔴 สั่งรัน Filter ตารางได้เลย (ลบ populateReportDropdowns ออกไปแล้ว)
+          filterPayrollReportData(); 
         } catch (err) { console.error(err); }
     }
     
