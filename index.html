@@ -814,57 +814,66 @@
     }
 
    async function fetchRoleAndInitApp() {
-        let employeeName = "STAFF"; 
-        
-        try {
-            const { data: profile, error } = await supabaseClient
-                .from('profiles')
-                .select('role, accessible_menus, emp_id')
-                .eq('id', currentUser.id)
-                .single();
+       let employeeName = "STAFF"; 
+       
+       try {
+           const { data: profile, error } = await supabaseClient
+               .from('profiles')
+               .select('role, accessible_menus, emp_id')
+               .eq('id', currentUser.id)
+               .single();
 
-            if (error) throw error;
-            currentUserRole = profile.role;
-            currentUserMenus = profile.accessible_menus || [];
-            currentUserEmpId = profile.emp_id; // 🔴 เก็บค่า emp_id เอาไว้ใช้กรองข้อมูลสลิป
+           if (error) throw error;
+           currentUserRole = profile.role;
+           currentUserMenus = profile.accessible_menus || [];
+           currentUserEmpId = profile.emp_id; 
 
-            if (profile.emp_id) {
-                const { data: empData, error: empError } = await supabaseClient
-                    .from('employees')
-                    .select('name')
-                    .eq('id', profile.emp_id)
-                    .single();
-                    
-                if (empData && empData.name) {
-                    employeeName = empData.name; 
-                }
-            }
-            
-        } catch (e) {
-            console.warn("Role fetch error: ", e);
-            currentUserRole = 'admin'; 
-            currentUserMenus = ['nav-ceo', 'nav-vchef', 'nav-employee', 'nav-turnover', 'nav-scan', 'nav-myscan', 'nav-slip', 'nav-report', 'nav-usermgt'];
-        }
+           if (profile.emp_id) {
+               const { data: empData, error: empError } = await supabaseClient
+                   .from('employees')
+                   .select('name')
+                   .eq('id', profile.emp_id)
+                   .single();
+                   
+               if (empData && empData.name) {
+                   employeeName = empData.name; 
+               }
+           }
+           
+       } catch (e) {
+           console.warn("Role fetch error: ", e);
+           currentUserRole = 'admin'; 
+           currentUserMenus = ['nav-ceo', 'nav-vchef', 'nav-employee', 'nav-turnover', 'nav-scan', 'nav-myscan', 'nav-slip', 'nav-report', 'nav-usermgt'];
+       }
 
-        document.getElementById('profileEmail').innerText = currentUser.email;
-        document.getElementById('profileRole').innerText = currentUserRole === 'admin' ? 'ADMIN' : employeeName;
-        document.getElementById('profileAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUserRole === 'admin' ? 'Admin' : employeeName)}&background=2563eb&color=fff`;
+       document.getElementById('profileEmail').innerText = currentUser.email;
+       document.getElementById('profileRole').innerText = currentUserRole === 'admin' ? 'ADMIN' : employeeName;
+       document.getElementById('profileAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUserRole === 'admin' ? 'Admin' : employeeName)}&background=2563eb&color=fff`;
 
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('app-section').style.display = 'flex';
+       document.getElementById('login-section').style.display = 'none';
+       document.getElementById('app-section').style.display = 'flex';
 
-        applyRBAC(currentUserRole, currentUserMenus);
+       applyRBAC(currentUserRole, currentUserMenus);
 
-        // 🔴 ซ่อน Option 2: Bulk Payroll สำหรับพนักงานทั่วไป (Staff)
-        const bulkOptionDiv = document.querySelector('#view-slip .bg-blue-50\\/20');
-        if (bulkOptionDiv) {
-            bulkOptionDiv.style.display = currentUserRole === 'admin' ? 'block' : 'none';
-        }
+       // 🔴 ปรับ UI ในหน้า Slip เฉพาะ Staff
+       if (currentUserRole !== 'admin') {
+           // 1. ซ่อนกล่อง Option 2 (Bulk Payroll)
+           const bulkOptionDiv = document.getElementById('bulkPayrollOptionBox');
+           if (bulkOptionDiv) bulkOptionDiv.style.display = 'none';
 
-        generateDynamicMonths(); 
-        loadDashboardData();   
-        loadEmployeeList();    
-    }
+           // 2. ซ่อนกล่องเลือก "Secondary Employee 2"
+           const secondarySelectWrapper = document.getElementById('selectEmployeeSlip2')?.closest('.input-wrapper');
+           if (secondarySelectWrapper) secondarySelectWrapper.style.display = 'none';
+           
+           // 3. ปรับเปลี่ยน Grid จาก 3 ช่อง ให้เหลือแค่ 2 ช่องเพื่อให้ UI สวยงามขึ้น
+           const slipGridForm = document.querySelector('#view-slip .grid-form');
+           if (slipGridForm) slipGridForm.style.gridTemplateColumns = '1.5fr 1.5fr';
+       }
+
+       generateDynamicMonths(); 
+       loadDashboardData();   
+       loadEmployeeList();    
+   }
 
     function applyRBAC(role, accessibleMenus) {
         const allMenuIds = ['nav-ceo', 'nav-vchef', 'nav-employee', 'nav-turnover', 'nav-scan', 'nav-myscan', 'nav-slip', 'nav-report', 'nav-usermgt'];
