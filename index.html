@@ -857,8 +857,8 @@
 
        // 🔴 ปรับ UI ในหน้า Slip เฉพาะ Staff
        if (currentUserRole !== 'admin') {
-           // 1. ซ่อนกล่อง Option 2 (Bulk Payroll)
-           const bulkOptionDiv = document.getElementById('bulkPayrollOptionBox');
+           // 1. ซ่อนกล่อง Option 2 (Bulk Payroll) ใช้ QuerySelector ดักคลาสพื้นหลังสีฟ้าโดยตรง
+           const bulkOptionDiv = document.getElementById('bulkPayrollOptionBox') || document.querySelector('#view-slip .bg-blue-50\\/20');
            if (bulkOptionDiv) bulkOptionDiv.style.display = 'none';
 
            // 2. ซ่อนกล่องเลือก "Secondary Employee 2"
@@ -874,7 +874,6 @@
        loadDashboardData();   
        loadEmployeeList();    
    }
-
     function applyRBAC(role, accessibleMenus) {
         const allMenuIds = ['nav-ceo', 'nav-vchef', 'nav-employee', 'nav-turnover', 'nav-scan', 'nav-myscan', 'nav-slip', 'nav-report', 'nav-usermgt'];
 
