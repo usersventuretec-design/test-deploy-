@@ -94,47 +94,7 @@
         ::-webkit-scrollbar { display: none; }
     }
     
-    /* 🔴 ชุดโค้ดอัปเกรดแอนิเมชัน (Modern UI Animations) */
-    
-    /* 1. แอนิเมชันเวลาเปลี่ยนเมนูเพจ (Fade & Slide Up) */
-    @keyframes fadeSlideUp {
-        from { opacity: 0; transform: translateY(25px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .tab-view { display: none; }
-    .tab-view.active { display: block; }
-    
-    /* ไล่ระดับความหน่วงให้ Card แต่ละใบโผล่มาไม่พร้อมกัน (ลูกเล่น Staggered) */
-    .tab-view.active .card-ui, .tab-view.active .header-app {
-        animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-    .tab-view.active .header-app { animation-delay: 0.05s; }
-    .tab-view.active > .card-ui:nth-of-type(1) { animation-delay: 0.1s; }
-    .tab-view.active > .card-ui:nth-of-type(2) { animation-delay: 0.15s; }
-    .tab-view.active > .card-ui:nth-of-type(3) { animation-delay: 0.2s; }
-    .tab-view.active > .grid:nth-of-type(1) { animation-delay: 0.1s; animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
-    .tab-view.active > .grid:nth-of-type(2) { animation-delay: 0.15s; animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
-    .tab-view.active > .grid:nth-of-type(3) { animation-delay: 0.2s; animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
-
-    /* 2. แอนิเมชันกล่อง Popup (Modal Zoom In) */
-    @keyframes modalPop {
-        0% { opacity: 0; transform: scale(0.95) translateY(-20px); }
-        100% { opacity: 1; transform: scale(1) translateY(0); }
-    }
-    .modal-overlay { transition: background-color 0.3s ease; }
-    .modal-overlay.active > div {
-        animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    
-    /* 3. แอนิเมชันเวลากดปุ่ม (Button Active Feedback) */
-    .btn-ui { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-    .btn-ui:active { transform: scale(0.95); } /* กดแล้วปุ่มยุบตัว 5% */
-    
-    /* 4. แอนิเมชัน Hover เมนูด้านซ้ายให้สมูทขึ้น */
-    .nav-item { transition: all 0.3s ease; }
-    .nav-item:active { transform: scale(0.98); }
-    
-    /* แอนิเมชัน Loading หมุนๆ สมูทขึ้น */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .card-ui { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); padding: 25px; margin-bottom: 25px;}
     .card-ui h3 { font-size: 16px; margin-bottom: 20px; color: #1e3a8a; display: flex; align-items: center; gap: 8px; font-weight: 600;}
